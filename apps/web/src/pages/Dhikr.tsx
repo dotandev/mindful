@@ -1,6 +1,8 @@
 import { track } from "@mindfulverse/core/analytics";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+
+import { usePrefersReducedMotion } from "../lib/usePrefersReducedMotion";
 
 // Mass-transmitted adhkar only — universally known formulas, no authored
 // religious content. Arabic + transliteration + meaning, per the plan.
@@ -151,10 +153,6 @@ const SETS: DhikrSet[] = [
 const INHALE_MS = 4000;
 const EXHALE_MS = 6000;
 
-function prefersReducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
 function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
   const [itemIndex, setItemIndex] = useState(0);
   const [count, setCount] = useState(0);
@@ -162,7 +160,7 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
   const [finished, setFinished] = useState(false);
   /** Brief acknowledgment shown between dhikrs in a multi-item set. */
   const [interstitial, setInterstitial] = useState<DhikrItem | null>(null);
-  const reduced = useRef(prefersReducedMotion());
+  const reduced = usePrefersReducedMotion();
 
   const item = set.items[itemIndex];
 
@@ -275,7 +273,7 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
     );
   }
 
-  const scale = reduced.current ? 1 : phase === "in" ? 1 : 0.78;
+  const scale = reduced ? 1 : phase === "in" ? 1 : 0.78;
   const duration = phase === "in" ? INHALE_MS : EXHALE_MS;
   // The circle grows and the type eases down for longer formulas — the words
   // must sit comfortably, never squeezed. 310 still fits a 360px-wide phone.
@@ -403,13 +401,11 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
         </svg>
         {/* The breathing circle. key={count} restarts the tap pulse. */}
         <div
-          key={reduced.current ? undefined : count}
+          key={reduced ? undefined : count}
           style={{
             alignItems: "center",
             animation:
-              reduced.current || count === 0
-                ? "none"
-                : "dhikr-tap .3s ease-out",
+              reduced || count === 0 ? "none" : "dhikr-tap .3s ease-out",
             background: "var(--indigo-wash)",
             border: "2px solid var(--indigo)",
             borderRadius: "50%",
@@ -419,7 +415,7 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
             padding: 18,
             position: "absolute",
             transform: `scale(${scale})`,
-            transition: reduced.current
+            transition: reduced
               ? "none"
               : `transform ${duration}ms ease-in-out`,
           }}
@@ -439,7 +435,7 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
         </div>
       </div>
 
-      {!reduced.current && (
+      {!reduced && (
         <p
           className="muted"
           aria-hidden="true"

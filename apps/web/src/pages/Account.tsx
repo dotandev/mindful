@@ -431,7 +431,11 @@ export default function Account() {
             </div>
           )}
 
-          {error && <p className="form-error">{error}</p>}
+          {error && (
+            <p className="form-error" role="alert" aria-live="assertive">
+              {error}
+            </p>
+          )}
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             <button
@@ -573,7 +577,11 @@ export default function Account() {
                 {reminderNotice}
               </p>
             )}
-            {reminderError && <p className="form-error">{reminderError}</p>}
+            {reminderError && (
+              <p className="form-error" role="alert" aria-live="assertive">
+                {reminderError}
+              </p>
+            )}
           </div>
 
           <div className="auth-section">
@@ -623,7 +631,11 @@ export default function Account() {
                   required
                 />
               </label>
-              {error && <p className="form-error">{error}</p>}
+              {error && (
+                <p className="form-error" role="alert" aria-live="assertive">
+                  {error}
+                </p>
+              )}
               <button
                 className="btn"
                 type="submit"
@@ -683,7 +695,11 @@ export default function Account() {
                     required
                   />
                 </label>
-                {error && <p className="form-error">{error}</p>}
+                {error && (
+                  <p className="form-error" role="alert" aria-live="assertive">
+                    {error}
+                  </p>
+                )}
                 <button
                   className="btn"
                   type="submit"
