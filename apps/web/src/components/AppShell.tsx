@@ -164,7 +164,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className={collapsed ? "shell shell-collapsed" : "shell"}>
-      <nav className="sidebar" aria-label="Primary">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+      <nav className="sidebar" aria-label="Sidebar navigation">
         <div className="side-wordmark" aria-hidden={collapsed}>
           <span className="wordmark-full">
             <BrandMark size={30} />
@@ -211,10 +214,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </button>
       </nav>
 
-      <main className="container">{children}</main>
+      <main id="main-content" className="container" tabIndex={-1}>
+        {children}
+      </main>
       <InstallPrompt />
 
-      <nav className="tabbar" aria-label="Primary">
+      <nav className="tabbar" aria-label="Bottom navigation">
         {tabs
           .filter((t) => t.phone)
           .map((t) => (
