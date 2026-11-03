@@ -200,7 +200,7 @@ function SurahReader() {
               {surahNumber !== 1 && surahNumber !== 9 && (
                 <div className="surah-opening">
                   <DyeRule />
-                  <p className="arabic" lang="ar">
+                  <p className="arabic" lang="ar" dir="rtl">
                     {BASMALAH}
                   </p>
                 </div>

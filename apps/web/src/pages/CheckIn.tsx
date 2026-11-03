@@ -94,7 +94,7 @@ function AyahView({
 }) {
   return (
     <div className={`ci-ayah${onCloth ? " on-cloth" : ""}`}>
-      <div className="arabic" lang="ar">
+      <div className="arabic" lang="ar" dir="rtl">
         {ayah.arabic}
       </div>
       <div className="translation">{ayah.translation}</div>

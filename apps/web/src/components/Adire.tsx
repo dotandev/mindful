@@ -73,7 +73,7 @@ export function TitlePlate({
   return (
     <header className="cloth title-plate fade-rise">
       {arabic ? (
-        <div className="plate-arabic" lang="ar" aria-hidden="true">
+        <div className="plate-arabic" lang="ar" dir="rtl" aria-hidden="true">
           {arabic}
         </div>
       ) : null}

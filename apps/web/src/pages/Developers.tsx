@@ -333,7 +333,7 @@ export default function Developers() {
           one shown as a card.
         </p>
         <article className="cloth dev-example" aria-label="Example verse card">
-          <p className="arabic" lang="ar">
+          <p className="arabic" lang="ar" dir="rtl">
             {SAMPLE_ARABIC}
           </p>
           <p className="translation">{SAMPLE_TRANSLATION}</p>

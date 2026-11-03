@@ -175,6 +175,7 @@ export default function Home() {
             <p
               className="arabic"
               lang="ar"
+              dir="rtl"
               style={{ fontSize: "calc(2rem * var(--read-scale,1))" }}
             >
               {hero.arabic}

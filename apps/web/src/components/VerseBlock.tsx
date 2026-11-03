@@ -30,7 +30,7 @@ export default function VerseBlock({
         <span className="roundel">{ayah.ayah}</span>
         <span className="rule" />
       </div>
-      <p className="arabic" lang="ar">
+      <p className="arabic" lang="ar" dir="rtl">
         {ayah.arabic}
       </p>
       <p className="translation">{ayah.translation}</p>
