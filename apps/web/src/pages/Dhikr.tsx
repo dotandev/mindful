@@ -151,6 +151,69 @@ const SETS: DhikrSet[] = [
 const INHALE_MS = 4000;
 const EXHALE_MS = 6000;
 
+const SOUND_KEY = "mindfulverse.dhikrSound.v1";
+
+function readSoundPref(): boolean {
+  try {
+    return localStorage.getItem(SOUND_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function playTick() {
+  try {
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AudioCtx) {
+      return;
+    }
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(560, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(280, ctx.currentTime + 0.03);
+    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.03);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.03);
+  } catch {
+    /* audio is best-effort */
+  }
+}
+
+function playCompletionChime() {
+  try {
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AudioCtx) {
+      return;
+    }
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(523.25, now);
+    osc.frequency.setValueAtTime(659.25, now + 0.08);
+    gain.gain.setValueAtTime(0.07, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  } catch {
+    /* audio is best-effort */
+  }
+}
+
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -162,6 +225,7 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
   const [finished, setFinished] = useState(false);
   /** Brief acknowledgment shown between dhikrs in a multi-item set. */
   const [interstitial, setInterstitial] = useState<DhikrItem | null>(null);
+  const [sound, setSound] = useState(readSoundPref);
   const reduced = useRef(prefersReducedMotion());
 
   const item = set.items[itemIndex];
@@ -215,12 +279,27 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
     };
   }, []);
 
+  function toggleSound() {
+    setSound((s) => {
+      const next = !s;
+      try {
+        localStorage.setItem(SOUND_KEY, next ? "1" : "0");
+      } catch {
+        /* storage is best-effort */
+      }
+      return next;
+    });
+  }
+
   function tap() {
     if (finished || interstitial) {
       return;
     }
     if (navigator.vibrate) {
       navigator.vibrate(8);
+    }
+    if (sound) {
+      playTick();
     }
     const next = count + 1;
     if (next < item.count) {
@@ -229,6 +308,9 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
     }
     setCount(next);
     // item complete
+    if (sound) {
+      playCompletionChime();
+    }
     if (itemIndex + 1 < set.items.length) {
       setInterstitial(item);
       window.setTimeout(() => {
@@ -320,8 +402,11 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
     <div
       // click (not pointerdown) so a scroll on a small phone never counts.
       onClick={(e) => {
-        // Don't count taps on the exit button.
-        if ((e.target as HTMLElement).closest("[data-exit]")) {
+        // Don't count taps on the exit or sound buttons.
+        if (
+          (e.target as HTMLElement).closest("[data-exit]") ||
+          (e.target as HTMLElement).closest("[data-sound]")
+        ) {
           return;
         }
         tap();
@@ -335,16 +420,31 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
         userSelect: "none",
       }}
     >
-      <button
-        type="button"
-        data-exit
-        className="btn ghost"
-        onClick={onExit}
-        style={{ float: "left" }}
+      <div
+        style={{
+          alignItems: "center",
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 8,
+        }}
       >
-        ← Leave quietly
-      </button>
-      <div style={{ clear: "both", paddingTop: 8 }} />
+        <button type="button" data-exit className="btn ghost" onClick={onExit}>
+          ← Leave quietly
+        </button>
+        <button
+          type="button"
+          data-sound
+          className="btn ghost"
+          onClick={toggleSound}
+          aria-label={
+            sound ? "Mute tap audio feedback" : "Enable tap audio feedback"
+          }
+          title={sound ? "Mute audio" : "Enable audio"}
+          style={{ fontSize: ".88rem" }}
+        >
+          {sound ? "Sound on" : "Sound off"}
+        </button>
+      </div>
 
       <p className="eyebrow">
         {set.title}
