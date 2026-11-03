@@ -248,6 +248,7 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
         <p
           className="arabic"
           lang="ar"
+          dir="rtl"
           style={{ fontSize: "1.7rem", textAlign: "center" }}
         >
           تَقَبَّلَ ٱللَّهُ
@@ -294,6 +295,7 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
         <p
           className="arabic"
           lang="ar"
+          dir="rtl"
           style={{ fontSize: "1.8rem", textAlign: "center" }}
         >
           {interstitial.arabic}
@@ -427,6 +429,7 @@ function Practice({ set, onExit }: { set: DhikrSet; onExit: () => void }) {
           <span
             className="arabic"
             lang="ar"
+            dir="rtl"
             style={{
               display: "block",
               fontSize: arabicSize,

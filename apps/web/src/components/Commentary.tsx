@@ -89,6 +89,7 @@ export function CommentaryBody({
       <p
         className="arabic"
         lang="ar"
+        dir="rtl"
         style={{
           borderBottom: "1px solid var(--line)",
           fontSize: "1.4rem",

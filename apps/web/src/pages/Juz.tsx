@@ -266,6 +266,7 @@ function JuzReader() {
                   <p
                     className="arabic"
                     lang="ar"
+                    dir="rtl"
                     style={{ padding: "10px 0 4px", textAlign: "center" }}
                   >
                     {BASMALAH}

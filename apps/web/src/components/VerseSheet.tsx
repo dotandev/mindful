@@ -69,6 +69,7 @@ export default function VerseSheet({
           <p
             className="arabic"
             lang="ar"
+            dir="rtl"
             style={{ fontSize: "1.5rem", lineHeight: 2, margin: "0 0 12px" }}
           >
             {ayah.arabic}

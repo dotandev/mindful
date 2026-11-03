@@ -857,7 +857,7 @@ function SurahTadabburPage() {
               </span>
               <span className="rule" />
             </div>
-            <p className="arabic" lang="ar" style={{ margin: 0 }}>
+            <p className="arabic" lang="ar" dir="rtl" style={{ margin: 0 }}>
               {a.arabic}
             </p>
             <p className="translation" style={{ margin: "12px 0 0" }}>
