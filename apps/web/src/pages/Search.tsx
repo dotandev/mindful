@@ -179,7 +179,11 @@ export default function Search() {
         <h1>Find a verse</h1>
       </header>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", gap: 10 }}>
+      <form
+        onSubmit={handleSubmit}
+        role="search"
+        style={{ display: "flex", gap: 10 }}
+      >
         <input
           type="search"
           value={input}
@@ -211,7 +215,12 @@ export default function Search() {
           </p>
         ) : (
           <section aria-label="Search results">
-            <p className="muted" style={{ marginBottom: 6 }}>
+            <p
+              className="muted"
+              aria-live="polite"
+              aria-atomic="true"
+              style={{ marginBottom: 6 }}
+            >
               {outcome.capped
                 ? `Showing first ${MAX_RESULTS}`
                 : `${outcome.results.length} ${outcome.results.length === 1 ? "verse" : "verses"}`}
