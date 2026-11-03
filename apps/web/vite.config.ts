@@ -7,6 +7,9 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig({
   // .env / .env.local stay at the repo root (shared with the InsForge CLI setup).
   envDir: "../..", // resolved against this app root
+  build: {
+    chunkSizeWarningLimit: 1200,
+  },
   plugins: [
     react(),
     VitePWA({
