@@ -20,6 +20,7 @@ import {
   TadabburIcon,
 } from "../components/Adire";
 import FollowUpCard from "../components/FollowUpCard";
+import { usePrefersReducedMotion } from "../lib/usePrefersReducedMotion";
 
 import "./home.css";
 
@@ -75,9 +76,7 @@ export default function Home() {
   const [surahName, setSurahName] = useState<string>("");
   const [surahNames, setSurahNames] = useState<Map<number, string>>(new Map());
   const [mounted, setMounted] = useState(false);
-  const reduced =
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
     document.title = "MindfulVerse";
@@ -175,6 +174,7 @@ export default function Home() {
             <p
               className="arabic"
               lang="ar"
+              dir="rtl"
               style={{ fontSize: "calc(2rem * var(--read-scale,1))" }}
             >
               {hero.arabic}

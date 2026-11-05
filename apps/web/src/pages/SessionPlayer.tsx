@@ -22,16 +22,9 @@ import type { CSSProperties, ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import FeedbackLink from "../components/FeedbackLink";
+import { usePrefersReducedMotion } from "../lib/usePrefersReducedMotion";
 
 // Motion helpers — transform + opacity only, all under 400ms. No index.css edits.
-
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
 
 /**
  * Fades + rises its children in when `show` becomes true. Re-triggering is the
@@ -164,7 +157,7 @@ export default function SessionPlayer() {
 function SessionFlow({ session }: { session: TadabburSession }) {
   const [phase, setPhase] = useState<number>(-1);
   const [started, setStarted] = useState(false);
-  const reduce = useMemo(() => prefersReducedMotion(), []);
+  const reduce = usePrefersReducedMotion();
 
   // Saved progress, read once when the session opens.
   const saved = useMemo(() => getSessionProgress(session.id), [session.id]);
@@ -395,7 +388,7 @@ function StepView({ step, reduce }: { step: SessionStep; reduce: boolean }) {
                   </span>
                   <span className="rule" />
                 </div>
-                <p className="arabic" style={{ margin: 0 }}>
+                <p className="arabic" lang="ar" dir="rtl" style={{ margin: 0 }}>
                   {a.arabic}
                 </p>
                 <p className="translation" style={{ margin: "12px 0 0" }}>

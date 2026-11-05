@@ -14,6 +14,7 @@ export default function Sheet({
   onClose: () => void;
   children: ReactNode;
 }) {
+  const sheetRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   // Move focus into the dialog, and hand it back to the opener on close.
@@ -27,6 +28,39 @@ export default function Sheet({
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
+        return;
+      }
+      if (e.key === "Tab" && sheetRef.current) {
+        const focusable = [
+          ...sheetRef.current.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          ),
+        ];
+        if (focusable.length === 0) {
+          e.preventDefault();
+          return;
+        }
+        const first = focusable[0];
+        const last = focusable.at(-1);
+        if (!first || !last) {
+          return;
+        }
+
+        if (e.shiftKey) {
+          if (
+            document.activeElement === first ||
+            !sheetRef.current.contains(document.activeElement)
+          ) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else if (
+          document.activeElement === last ||
+          !sheetRef.current.contains(document.activeElement)
+        ) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
     document.addEventListener("keydown", onKey);
@@ -71,6 +105,7 @@ export default function Sheet({
       {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pointer-only backdrop; Escape and the close button cover the keyboard */}
       <div className="sheet-backdrop" onClick={onClose} />
       <aside
+        ref={sheetRef}
         className="sheet"
         role="dialog"
         aria-modal="true"

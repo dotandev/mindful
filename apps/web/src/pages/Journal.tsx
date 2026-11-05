@@ -85,6 +85,7 @@ function EntryVerse({ verseKey }: { verseKey: string }) {
       <span
         className="arabic"
         lang="ar"
+        dir="rtl"
         style={{ display: "block", fontSize: "1.35rem", lineHeight: 1.9 }}
       >
         {ayah.arabic}
