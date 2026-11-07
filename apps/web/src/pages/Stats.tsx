@@ -30,7 +30,6 @@ interface StatsSnapshot {
   checkinViews: number;
   topEmotions: [string, number][];
   journalCount: number;
-  payTaps: number;
   versesShared: number;
   dhikrCompleted: number;
   readViewSwitches: number;
@@ -70,7 +69,6 @@ function computeStats(): StatsSnapshot {
   let surahTadabburStarted = 0;
   let sessionsCompleted = 0;
   let checkinViews = 0;
-  let payTaps = 0;
   let versesShared = 0;
   let dhikrCompleted = 0;
   let readViewSwitches = 0;
@@ -107,10 +105,6 @@ function computeStats(): StatsSnapshot {
         if (e.emotion) {
           emotions.set(e.emotion, (emotions.get(e.emotion) ?? 0) + 1);
         }
-        break;
-      }
-      case "intent_pay_tap": {
-        payTaps++;
         break;
       }
       case "share_verse": {
@@ -168,7 +162,6 @@ function computeStats(): StatsSnapshot {
     checkinViews,
     topEmotions,
     journalCount: getEntries().length,
-    payTaps,
     versesShared,
     dhikrCompleted,
     readViewSwitches,
@@ -207,7 +200,6 @@ function summaryText(s: StatsSnapshot): string {
     }`,
     `Check-ins: ${s.checkinViews} · emotions: ${emotions}`,
     `Journal entries: ${s.journalCount}`,
-    `Pay-intent taps: ${s.payTaps}`,
     `Verses shared: ${s.versesShared}`,
     `Dhikr completed: ${s.dhikrCompleted}`,
     `Follow-ups: ${s.followUpsAnswered} of ${s.followUpsShown} answered (${followUpNote(s)})`,
@@ -357,7 +349,6 @@ export default function Stats() {
               label="Journal entries"
               value={String(stats.journalCount)}
             />
-            <Metric label="Pay-intent taps" value={String(stats.payTaps)} />
             <Metric label="Verses shared" value={String(stats.versesShared)} />
             <Metric
               label="Dhikr completed"

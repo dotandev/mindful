@@ -96,4 +96,4 @@ The merge story, in three sentences: everything is written to `localStorage` fir
 
 - The translation renders the divine name as "God". It is shown word for word, as the license requires.
 - Ibn Kathir wrote commentary on passages, so some verses share a note with a neighboring verse.
-- Recitation audio, payments, and more languages are planned for later. See `ROADMAP.md`.
+- Recitation audio and more languages are planned for later. MindfulVerse is free, with no paid plan. See `ROADMAP.md`.
