@@ -21,7 +21,7 @@ import type { Ayah, SurahMeta } from "@mindfulverse/core/types";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, View } from "react-native";
-import type { ListRenderItem, ViewToken } from "react-native";
+import type { ListRenderItem, ListViewToken } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { chunkAyahs, rowIndexFor } from "../../src/components/Reader/chunks";
@@ -163,10 +163,10 @@ function SurahReader({ surah }: { surah: string }) {
   const topRef = useRef<number | null>(null);
   // FlatList requires a stable callback; it only touches refs/stable values.
   const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken<Row>[] }) => {
+    ({ viewableItems }: { viewableItems: ListViewToken[] }) => {
       const visible = viewableItems
         .filter((t) => t.isViewable && t.item)
-        .map((t) => t.item);
+        .map((t): Row => t.item);
       const top = topmostRow(visible);
       if (top !== null) {
         topRef.current = top.first;
@@ -410,7 +410,7 @@ function SurahReader({ surah }: { surah: string }) {
           keyExtractor={(r) => r.key}
           renderItem={renderItem}
           ListHeaderComponent={header}
-          ListFooterComponent={footer}
+          ListFooterComponent={footer ?? undefined}
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={VIEWABILITY}
           onScrollToIndexFailed={onScrollToIndexFailed}

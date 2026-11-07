@@ -1,6 +1,6 @@
 # @mindfulverse/mobile
 
-The MindfulVerse Android app (iOS later). Expo SDK 57, React Native 0.86, React 19, Expo Router, TypeScript. It shares `packages/core` with the web app.
+The MindfulVerse Android app (iOS later). Expo SDK 58, React Native 0.88, React 19.3, Expo Router, TypeScript. It shares `packages/core` with the web app.
 
 Architecture and conventions for screen work: [`docs/superpowers/plans/2026-10-06-rn-phase2-mobile.md`](../../docs/superpowers/plans/2026-10-06-rn-phase2-mobile.md).
 
@@ -74,7 +74,7 @@ npm run check:bundle -w @mindfulverse/mobile   # one React copy, data as assets,
 npm run doctor -w @mindfulverse/mobile         # expo-doctor
 ```
 
-`expo-doctor` reports one known, accepted failure: "duplicate dependencies: react 19.2.3 / 18.3.1". The web app is on React 18, which npm hoists to the root. Metro pins React to this app's copy (see `metro.config.js`), and `check:bundle` proves only one React is bundled. React is not a native module, so the native build is unaffected.
+`expo-doctor` reports one known, accepted failure: "duplicate dependencies: react 19.3.0 / 18.3.1". The web app is on React 18, which npm hoists to the root. Metro pins React to this app's copy (see `metro.config.js`), and `check:bundle` proves only one React is bundled. React is not a native module, so the native build is unaffected.
 
 ## Push (daily reminders): Android
 

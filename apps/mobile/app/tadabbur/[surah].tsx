@@ -45,7 +45,11 @@ import {
   ScrollView,
   View,
 } from "react-native";
-import type { TextInput } from "react-native";
+import type {
+  HostInstance,
+  ScrollViewInstance,
+  TextInputInstance,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ActionLink } from "../../src/components/Reader/ActionLink";
@@ -244,14 +248,14 @@ function TadabburPage() {
   }, [phase, status, ayahs, count, n]);
 
   // Each verse starts at the top: Next sits below the reflection area.
-  const scrollRef = useRef<ScrollView>(null);
-  const contentRef = useRef<View>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const contentRef = useRef<HostInstance>(null);
   useEffect(() => {
     scrollRef.current?.scrollTo({ animated: false, y: 0 });
   }, [phase]);
 
   // Keep the focused reflection input above the keyboard.
-  const focused = useRef<TextInput | null>(null);
+  const focused = useRef<TextInputInstance | null>(null);
   const revealFocused = useCallback(() => {
     const input = focused.current;
     const content = contentRef.current;
@@ -273,7 +277,7 @@ function TadabburPage() {
     return () => sub.remove();
   }, [revealFocused]);
   const onFocusInput = useCallback(
-    (input: TextInput) => {
+    (input: TextInputInstance) => {
       focused.current = input;
       if (Keyboard.isVisible()) {
         revealFocused();

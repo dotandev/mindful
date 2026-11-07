@@ -3,7 +3,7 @@
 import { forwardRef } from "react";
 import type { ReactNode } from "react";
 import { Pressable, TextInput, View } from "react-native";
-import type { TextInputProps } from "react-native";
+import type { TextInputInstance, TextInputProps } from "react-native";
 
 import { fonts, radius, space, type as scale, useTheme } from "../../theme";
 import { Text } from "../../ui";
@@ -11,7 +11,7 @@ import { Text } from "../../ui";
 /** Labelled text input (web's .field). The label is also the input's
  *  accessibility label, so screen readers announce it on focus. */
 export const Field = forwardRef<
-  TextInput,
+  TextInputInstance,
   TextInputProps & { label: string; hint?: string }
 >(({ label, hint, style, ...rest }, ref) => {
   const { colors } = useTheme();
