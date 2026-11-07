@@ -9,7 +9,7 @@ A **prioritized menu, not a to-do list.** Having the data is not a reason to bui
 | **Bar** | Day-7 return ≥ 25–30% on 50+ non-friend users within ~4 weeks |
 | **Outcome** | Cleared — v1 (accounts, sync, reminders) built and shipped 2026-09-15 |
 | **Measured by** | Vercel Analytics (visits) + testers' `/stats` copies (behavior) |
-| **Still gated** | Billing stays blocked on a commercial-safe translation license (see v1 row 3) |
+| **Pricing** | Free for everyone, decided 2026-11-07. No subscription or paywall is planned (see v1 row 3) |
 
 ## v0 — shipped (live at mindfulverse.vercel.app)
 
@@ -21,18 +21,18 @@ A **prioritized menu, not a to-do list.** Having the data is not a reason to bui
 | Dhikr & breath | 8 sets, breathing circle, tap counting, wake lock, adaptive sizing |
 | Journal | Local-only, verse/session attribution, export, backup nudge |
 | Search + topics browse | Translation search; verses-by-topic index into the reader |
-| Modern English translation | Talal Itani / ClearQuran (CC BY-NC-ND — non-commercial; see v1 billing blocker) |
+| Modern English translation | Talal Itani / ClearQuran (CC BY-NC-ND — non-commercial, which fits a free app; attribution required) |
 | User-controlled dark theme | Default light, user toggle; never follows OS |
 | Growth & measurement | Share-a-verse, OG preview card, PWA install prompt, `/stats`, WhatsApp feedback link, analytics |
 | Identity | West African indigo, adire band, Fraunces + KFGQPC Hafs, offline PWA |
 
-## v1 — shipped 2026-09-15 (monetization spine)
+## v1 — shipped 2026-09-15 (accounts, sync, reminders)
 
 | Priority | Feature | Status | Why | Effort | Depends on |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Accounts (email/OAuth) | **Shipped** | Identity for sync + billing | Medium | Backend (first server component) |
+| 1 | Accounts (email/OAuth) | **Shipped** | Identity for sync | Medium | Backend (first server component) |
 | 2 | Journal cloud sync | **Shipped** | The #1 trust gap — localStorage is fragile | Medium | Accounts |
-| 3 | Subscription billing (Stripe + Play) | Blocked | Diaspora-pays hypothesis; paywall sessions library + journal history — **never the Qur'an itself** | Medium | Accounts + **commercial-safe translation license** (current Itani translation is CC BY-NC-ND: non-commercial — obtain publisher permission or swap before any revenue) |
+| 3 | Subscription billing | **Dropped** (2026-11-07) | MindfulVerse stays free; the $3/month willingness-to-pay question was removed. If charging is ever reconsidered, the Itani translation's non-commercial licence must be cleared first | — | — |
 | 4 | Push notifications / daily reminder | **Shipped** | Biggest retention lever a PWA lacks | Medium | Backend |
 | 5 | React Native app | Deferred | Store presence, reliable notifications, better offline | High | v1 validated on web |
 

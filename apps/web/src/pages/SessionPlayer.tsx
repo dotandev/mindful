@@ -560,7 +560,7 @@ function TafsirDisclosure({ verseKeys }: { verseKeys: string[] }) {
   );
 }
 
-// Final screen: journal entry + willingness-to-pay intent probe
+// Final screen: journal entry
 
 function FinalScreen({
   session,
@@ -571,7 +571,6 @@ function FinalScreen({
 }) {
   const [body, setBody] = useState("");
   const [saved, setSaved] = useState(false);
-  const [payTapped, setPayTapped] = useState(false);
   const mounted = useMounted("final");
 
   // Fire session_complete exactly once when the final screen mounts, and
@@ -597,14 +596,6 @@ function FinalScreen({
     });
     track({ context: "session", type: "journal_save" });
     setSaved(true);
-  }
-
-  function tapPay() {
-    if (payTapped) {
-      return;
-    }
-    track({ type: "intent_pay_tap", where: "session_end" });
-    setPayTapped(true);
   }
 
   return (
@@ -665,46 +656,9 @@ function FinalScreen({
         </div>
       </FadeRise>
 
-      {/* A quiet, one-time willingness-to-pay probe — an invitation, not a nag. */}
-      <FadeRise show={mounted} reduce={reduce} delay={reduce ? 0 : 120}>
-        <div
-          className="card stack"
-          style={{
-            background: "var(--surface-2)",
-            borderColor: "var(--line-strong)",
-          }}
-        >
-          {payTapped ? (
-            <p className="soft" style={{ margin: 0 }}>
-              Thanks, noted. Your reflections stay here for you, free, either
-              way.
-            </p>
-          ) : (
-            <div className="stack">
-              <p className="eyebrow" style={{ margin: 0 }}>
-                A small question
-              </p>
-              <p className="soft" style={{ margin: 0 }}>
-                There are more guided sessions we’d love to open up. If they
-                cost around $3 a month, would that be worth it to you?
-              </p>
-              <div>
-                <button
-                  type="button"
-                  className="btn secondary"
-                  onClick={tapPay}
-                >
-                  Yes, I’d pay for that
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </FadeRise>
-
       {/* Feedback lands best right after an experience, while the opinion
           is fresh. The subject tells us this one came from a session end. */}
-      <FadeRise show={mounted} reduce={reduce} delay={reduce ? 0 : 180}>
+      <FadeRise show={mounted} reduce={reduce} delay={reduce ? 0 : 120}>
         <FeedbackLink
           subject="Feedback on a MindfulVerse session"
           label="How was this session? Tell me over email"

@@ -1,11 +1,10 @@
 // Lightweight, privacy-respecting event logging for the v0 retention experiment.
 // No third-party SDK: events are buffered in localStorage so we can inspect
-// return-visit behaviour and the "would you pay?" intent signal without a backend.
+// return-visit behaviour without a backend.
 //
 // The kill/greenlight metrics from the plan are all derivable from these events:
 //   - Day-1/3/7 return  -> "app_open" timestamps
 //   - session completion -> "session_start" vs "session_complete"
-//   - willingness-to-pay  -> "intent_pay_tap"
 
 import type { FollowUpAnswer } from "./followUps";
 
@@ -15,7 +14,6 @@ export type AnalyticsEvent =
   | { type: "session_complete"; sessionId: string }
   | { type: "checkin_view"; emotion?: string }
   | { type: "journal_save"; context: string }
-  | { type: "intent_pay_tap"; where: string }
   | { type: "share_verse"; verseKey: string; where: string }
   | { type: "dhikr_start"; setId: string }
   | { type: "dhikr_complete"; setId: string }
