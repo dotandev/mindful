@@ -54,6 +54,17 @@
 }
 .home-lead-suggestions {
   gap: 10px;
+  margin-bottom: 0;
+  padding: 0;
+  list-style: none;
+}
+.home-lead-subhead {
+  margin: 20px 0 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.home-lead-subhead + .home-lead-suggestions {
+  margin-top: 10px;
 }
 .home-lead-quiet {
   display: inline-flex;
