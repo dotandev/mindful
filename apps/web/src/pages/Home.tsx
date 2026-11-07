@@ -1,3 +1,4 @@
+import { getCircleSurah, STARTER_SURAHS } from "@mindfulverse/core/circleSurah";
 import { todayVerseKey } from "@mindfulverse/core/dailyVerse";
 import { loadAyahsByKeys, loadSurahs } from "@mindfulverse/core/data";
 import { checkedInToday } from "@mindfulverse/core/journal";
@@ -21,6 +22,7 @@ import {
 } from "../components/Adire";
 import FollowUpCard from "../components/FollowUpCard";
 import { usePrefersReducedMotion } from "../lib/usePrefersReducedMotion";
+import { starterLabel, surahLabel } from "./home-lead";
 
 import "./home.css";
 
@@ -69,10 +71,8 @@ const entries: Entry[] = [
   },
 ];
 
-const SUGGESTED_SURAHS = [
-  { name: "Al-'Asr", number: 103 },
-  { name: "Ash-Sharh", number: 94 },
-] as const;
+const LEAD_LINE =
+  "Write why you’re reading, ponder it verse by verse with Ibn Kathir, and keep a page for it. A week later, we’ll ask how your action went.";
 
 function whereYouAre(ayah: number, meta: SurahMeta | undefined): string {
   if (!meta) {
@@ -92,7 +92,7 @@ function SurahLead({
   const current = latestSurahTadabbur();
   if (current) {
     const meta = surahs.get(current.surah);
-    const name = meta?.name ?? `Surah ${current.surah}`;
+    const name = surahLabel(current.surah, meta);
     return (
       <section aria-label="Your surah" className="cloth home-lead fade-rise">
         <p className="cloth-eyebrow">Your surah</p>
@@ -117,27 +117,47 @@ function SurahLead({
       </section>
     );
   }
+  const circle = getCircleSurah();
+  if (circle) {
+    const name = surahLabel(circle.surah, surahs.get(circle.surah));
+    return (
+      <section
+        aria-label="Your circle is reading"
+        className="cloth home-lead fade-rise"
+      >
+        <p className="cloth-eyebrow">Your circle is reading</p>
+        <h2 className="home-lead-title">{name}</h2>
+        <p className="cloth-soft home-lead-line">{LEAD_LINE}</p>
+        <div className="home-lead-actions">
+          <Link to={`/tadabbur/${circle.surah}`} className="btn cloth-btn">
+            Begin {name}
+          </Link>
+          <Link to="/sessions" className="home-lead-quiet">
+            Choose another surah
+          </Link>
+        </div>
+      </section>
+    );
+  }
   return (
     <section
       aria-label="Begin with a surah"
       className="cloth home-lead fade-rise"
     >
       <h2 className="home-lead-title">Begin with a surah</h2>
-      <p className="cloth-soft home-lead-line">
-        Write why you’re reading, ponder it verse by verse with Ibn Kathir, and
-        keep a page for it. A week later, we’ll ask how your action went.
-      </p>
-      <div className="home-lead-suggestions">
-        {SUGGESTED_SURAHS.map((s) => (
-          <Link
-            key={s.number}
-            to={`/tadabbur/${s.number}`}
-            className="btn cloth-btn"
-          >
-            {s.name}
-          </Link>
+      <p className="cloth-soft home-lead-line">{LEAD_LINE}</p>
+      <h3 id="home-starters" className="home-lead-subhead">
+        Short surahs to begin with
+      </h3>
+      <ul aria-labelledby="home-starters" className="home-lead-suggestions">
+        {STARTER_SURAHS.map((n) => (
+          <li key={n}>
+            <Link to={`/tadabbur/${n}`} className="btn cloth-btn">
+              {starterLabel(n, surahs.get(n))}
+            </Link>
+          </li>
         ))}
-      </div>
+      </ul>
       <Link to="/sessions" className="home-lead-quiet">
         Choose another surah
       </Link>
