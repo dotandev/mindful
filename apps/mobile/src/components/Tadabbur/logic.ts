@@ -1,5 +1,6 @@
 // Pure tadabbur logic, ported from web's pages/SurahTadabbur.tsx. No
 // react-native imports, so vitest runs it.
+import { formatTadabburBody } from "@mindfulverse/core/tadabburBody";
 
 /** Ibn Kathir comments on passages: a run of ayahs stores its commentary under
  *  the first ayah of the group. Find the entry covering this ayah.
@@ -111,18 +112,12 @@ export function composeReflection(
   if (!hasText(d)) {
     return null;
   }
-  const parts: string[] = [];
-  if (d.lessons.trim()) {
-    parts.push(`Lessons: ${d.lessons.trim()}`);
-  }
-  if (d.stirs.trim()) {
-    parts.push(`Reflection: ${d.stirs.trim()}`);
-  }
-  if (d.action.trim()) {
-    parts.push(`Action: ${d.action.trim()}`);
-  }
   return {
-    body: parts.join("\n\n"),
+    body: formatTadabburBody({
+      action: d.action,
+      lessons: d.lessons,
+      reflection: d.stirs,
+    }),
     context: { kind: "tadabbur", ref: verseKey },
     prompt: `Tadabbur on ${verseKey}`,
   };
