@@ -8,8 +8,8 @@ import {
 } from "@mindfulverse/core/progress";
 import { useAccount } from "@mindfulverse/core/sync/auth";
 import { TRANSLATION_SOURCE_URL } from "@mindfulverse/core/translation";
-import type { Ayah } from "@mindfulverse/core/types";
-import { useEffect, useState } from "react";
+import type { Ayah, SurahMeta } from "@mindfulverse/core/types";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import {
@@ -37,7 +37,7 @@ function greeting(hour: number): string {
   return "Peace be upon you this evening";
 }
 
-// The daily check-in is the habit and leads from the verse above; these are
+// The surah journal leads; these are
 // the places to go when there is more time, or a need.
 // An entry with `soon` renders inert, with a "Soon" pill instead of a chevron.
 interface Entry {
@@ -69,17 +69,110 @@ const entries: Entry[] = [
   },
 ];
 
+const SUGGESTED_SURAHS = [
+  { name: "Al-'Asr", number: 103 },
+  { name: "Ash-Sharh", number: 94 },
+] as const;
+
+function whereYouAre(ayah: number, meta: SurahMeta | undefined): string {
+  if (!meta) {
+    return `You’ve pondered up to verse ${ayah}.`;
+  }
+  if (ayah >= meta.ayahCount) {
+    return `You’ve pondered all ${meta.ayahCount} verses.`;
+  }
+  return `Verse ${ayah} of ${meta.ayahCount}`;
+}
+
+function SurahLead({
+  surahs,
+}: {
+  surahs: Map<number, SurahMeta>;
+}): JSX.Element {
+  const current = latestSurahTadabbur();
+  if (current) {
+    const meta = surahs.get(current.surah);
+    const name = meta?.name ?? `Surah ${current.surah}`;
+    return (
+      <section aria-label="Your surah" className="cloth home-lead fade-rise">
+        <p className="cloth-eyebrow">Your surah</p>
+        <h2 className="home-lead-title">Continue {name}</h2>
+        <p className="cloth-soft home-lead-line">
+          {whereYouAre(current.ayah, meta)}
+        </p>
+        <div className="home-lead-actions">
+          <Link
+            to={`/tadabbur/${current.surah}?v=${current.ayah}`}
+            className="btn cloth-btn"
+          >
+            Resume
+          </Link>
+          <Link
+            to={`/tadabbur/${current.surah}/journal`}
+            className="home-lead-quiet"
+          >
+            Your page for {name}
+          </Link>
+        </div>
+      </section>
+    );
+  }
+  return (
+    <section
+      aria-label="Begin with a surah"
+      className="cloth home-lead fade-rise"
+    >
+      <h2 className="home-lead-title">Begin with a surah</h2>
+      <p className="cloth-soft home-lead-line">
+        Write why you’re reading, ponder it verse by verse with Ibn Kathir, and
+        keep a page for it. A week later, we’ll ask how your action went.
+      </p>
+      <div className="home-lead-suggestions">
+        {SUGGESTED_SURAHS.map((s) => (
+          <Link
+            key={s.number}
+            to={`/tadabbur/${s.number}`}
+            className="btn cloth-btn"
+          >
+            {s.name}
+          </Link>
+        ))}
+      </div>
+      <Link to="/sessions" className="home-lead-quiet">
+        Choose another surah
+      </Link>
+    </section>
+  );
+}
+
 export default function Home() {
   const { user, loading: accountLoading } = useAccount();
   const accountId = user?.id ?? null;
   const [hero, setHero] = useState<Ayah | null>(null);
-  const [surahName, setSurahName] = useState<string>("");
-  const [surahNames, setSurahNames] = useState<Map<number, string>>(new Map());
+  const [surahs, setSurahs] = useState<Map<number, SurahMeta>>(new Map());
   const [mounted, setMounted] = useState(false);
   const reduced = usePrefersReducedMotion();
+  const surahNames = useMemo(
+    () => new Map([...surahs.values()].map((s) => [s.number, s.name])),
+    [surahs]
+  );
 
   useEffect(() => {
     document.title = "MindfulVerse";
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    loadSurahs()
+      .then((list) => {
+        if (active) {
+          setSurahs(new Map(list.map((s) => [s.number, s])));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -91,20 +184,9 @@ export default function Home() {
     }
     todayVerseKey(accountId)
       .then((key) => loadAyahsByKeys([key]))
-      .then(async (a) => {
-        if (!active) {
-          return;
-        }
-        const ayah = a[0] ?? null;
-        setHero(ayah);
-        // oxlint-disable-next-line promise/no-nesting -- fallback for this one load only
-        const surahs = await loadSurahs().catch(() => []);
-        if (!active) {
-          return;
-        }
-        setSurahNames(new Map(surahs.map((s) => [s.number, s.name])));
-        if (ayah) {
-          setSurahName(surahs.find((s) => s.number === ayah.surah)?.name ?? "");
+      .then((a) => {
+        if (active) {
+          setHero(a[0] ?? null);
         }
       })
       .catch(() => {});
@@ -131,7 +213,7 @@ export default function Home() {
   const streak = currentStreak();
   const lastRead = getLastRead();
   const doneToday = checkedInToday();
-  const deeper = latestSurahTadabbur();
+  const surahName = hero ? (surahs.get(hero.surah)?.name ?? "") : "";
   const navEntries: Entry[] = lastRead
     ? entries.map((e) =>
         e.to === "/read"
@@ -165,60 +247,41 @@ export default function Home() {
         </p>
       )}
 
-      <section
-        aria-label="Today’s verse"
-        className="cloth home-verse fade-rise"
-      >
+      <SurahLead surahs={surahs} />
+
+      <FollowUpCard surahNames={surahNames} />
+
+      <section aria-label="Today’s verse" className="card home-verse">
+        <p className="eyebrow home-verse-eyebrow">Today’s verse</p>
         {hero ? (
           <>
-            <p
-              className="arabic"
-              lang="ar"
-              dir="rtl"
-              style={{ fontSize: "calc(2rem * var(--read-scale,1))" }}
-            >
+            <p className="arabic" lang="ar" dir="rtl">
               {hero.arabic}
             </p>
             <p className="translation home-verse-translation">
               {hero.translation}
             </p>
-            <p className="cloth-soft home-verse-ref">
+            <p className="muted home-verse-ref">
               {surahName ? `${surahName} ` : ""}
               {hero.surah}:{hero.ayah}
             </p>
           </>
         ) : (
-          <p className="cloth-soft">Opening today’s verse…</p>
+          <p className="muted">Opening today’s verse…</p>
         )}
 
         <div className="home-today">
           {doneToday ? (
-            <>
-              <p className="cloth-soft" style={{ margin: 0 }}>
-                Today’s reflection is saved.
-              </p>
-              <Link
-                to={
-                  deeper
-                    ? `/tadabbur/${deeper.surah}?v=${deeper.ayah}`
-                    : "/sessions"
-                }
-                className="btn cloth-btn"
-              >
-                {deeper
-                  ? `Continue ${surahNames.get(deeper.surah) ?? `Surah ${deeper.surah}`}`
-                  : "Begin tadabbur"}
-              </Link>
-            </>
+            <p className="soft" style={{ margin: 0 }}>
+              Today’s reflection is saved.
+            </p>
           ) : (
-            <Link to="/checkin" className="btn cloth-btn">
+            <Link to="/checkin" className="btn secondary">
               Reflect on today’s verse
             </Link>
           )}
         </div>
       </section>
-
-      <FollowUpCard surahNames={surahNames} />
 
       <nav aria-label="Sections" className="home-entries" style={reveal(260)}>
         {navEntries.map((e) => {
