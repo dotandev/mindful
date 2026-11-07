@@ -241,6 +241,11 @@ export default function Account() {
             user ? "About my MindfulVerse account" : "Feedback on MindfulVerse"
           }
         />
+
+        <Small>
+          We count which days the app was opened, anonymously. Nothing you write
+          leaves your device unless you sign in to sync.
+        </Small>
       </Screen>
     </KeyboardAvoidingView>
   );

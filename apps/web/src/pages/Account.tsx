@@ -768,6 +768,11 @@ export default function Account() {
       )}
 
       <Appearance />
+
+      <p className="soft" style={{ fontSize: ".9rem", margin: 0 }}>
+        We count which days the app was opened, anonymously. Nothing you write
+        leaves your device unless you sign in to sync.
+      </p>
     </div>
   );
 }
