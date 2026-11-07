@@ -1,5 +1,5 @@
-// Follow-ups: about a week after someone keeps a tadabbur reflection with an
-// "Action:", the app asks "how did it go?". Pure selection logic plus small
+// Follow-ups: about a week after someone keeps a tadabbur reflection or a
+// topic session with an "Action:", the app asks "how did it go?". Pure selection logic plus small
 // device-local state helpers; the card UI lives in the web app.
 import { addEntry } from "./journal";
 import { parseTadabburBody } from "./tadabburBody";
@@ -19,15 +19,23 @@ export interface FollowUpState {
   lastActedDay: string | null; // Date#toDateString()
 }
 
+export type FollowUpKind = "tadabbur" | "session";
+
 export interface DueFollowUp {
   entry: JournalEntry;
+  kind: FollowUpKind;
+  ref: string;
+  /** Same as `ref`; kept for callers written before session follow-ups. */
   verseKey: string;
   action: string;
 }
 
+const isFollowUpKind = (kind: string | undefined): kind is FollowUpKind =>
+  kind === "tadabbur" || kind === "session";
+
 const emptyState = (): FollowUpState => ({ skipped: {}, lastActedDay: null });
 
-/** The oldest kept tadabbur entry whose follow-up is due, or null. */
+/** The oldest kept tadabbur or session entry whose follow-up is due, or null. */
 export function dueFollowUp(
   entries: JournalEntry[],
   now: Date,
@@ -46,7 +54,9 @@ export function dueFollowUp(
 
   let best: DueFollowUp | null = null;
   for (const entry of entries) {
-    if (entry.context?.kind !== "tadabbur" || !entry.context.ref) {
+    const kind = entry.context?.kind;
+    const ref = entry.context?.ref;
+    if (!isFollowUpKind(kind) || !ref) {
       continue;
     }
     const age = nowMs - entry.createdAt;
@@ -65,7 +75,7 @@ export function dueFollowUp(
       continue;
     }
     if (!best || entry.createdAt < best.entry.createdAt) {
-      best = { entry, verseKey: entry.context.ref, action };
+      best = { action, entry, kind, ref, verseKey: ref };
     }
   }
   return best;
@@ -136,12 +146,13 @@ export function answerFollowUp(
   answer: FollowUpAnswer,
   note: string,
   now: Date,
-  state: FollowUpState
+  state: FollowUpState,
+  label: string = due.ref
 ): FollowUpState {
   const trimmed = note.trim();
   addEntry({
     context: { kind: "followup", ref: due.entry.id },
-    prompt: `How did it go? (${due.verseKey})`,
+    prompt: `How did it go? (${label})`,
     body: trimmed ? `${answer}\n\n${trimmed}` : answer,
   });
   return { ...state, lastActedDay: now.toDateString() };

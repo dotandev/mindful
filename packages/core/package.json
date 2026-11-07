@@ -5,6 +5,7 @@
   "description": "Platform-neutral MindfulVerse logic shared by the web and mobile apps (no DOM, no react-native).",
   "type": "module",
   "exports": {
+    "./activeDays": "./activeDays.ts",
     "./analytics": "./analytics.ts",
     "./brand": "./brand.ts",
     "./dailyVerse": "./dailyVerse.ts",
@@ -14,6 +15,7 @@
     "./journal": "./journal.ts",
     "./journalGroups": "./journalGroups.ts",
     "./progress": "./progress.ts",
+    "./sessionDraft": "./sessionDraft.ts",
     "./readingPrefs": "./readingPrefs.ts",
     "./surahNames": "./surahNames.ts",
     "./sync/auth": "./sync/auth.tsx",

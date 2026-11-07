@@ -12,12 +12,18 @@ import {
   recordSessionComplete,
   recordSessionStep,
 } from "@mindfulverse/core/progress";
+import {
+  clearSessionDraft,
+  readSessionDraft,
+  writeSessionDraft,
+} from "@mindfulverse/core/sessionDraft";
+import { formatSessionBody } from "@mindfulverse/core/tadabburBody";
 import type {
   Ayah,
   SessionStep,
   TadabburSession,
 } from "@mindfulverse/core/types";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -562,6 +568,17 @@ function TafsirDisclosure({ verseKeys }: { verseKeys: string[] }) {
 
 // Final screen: journal entry
 
+const textareaStyle: CSSProperties = {
+  background: "var(--surface)",
+  border: "1px solid var(--line)",
+  borderRadius: "var(--radius)",
+  color: "var(--ink)",
+  font: "inherit",
+  padding: 12,
+  resize: "vertical",
+  width: "100%",
+};
+
 function FinalScreen({
   session,
   reduce,
@@ -569,8 +586,11 @@ function FinalScreen({
   session: TadabburSession;
   reduce: boolean;
 }) {
-  const [body, setBody] = useState("");
+  const [draft] = useState(() => readSessionDraft(session.id));
+  const [body, setBody] = useState(draft.body);
+  const [action, setAction] = useState(draft.action);
   const [saved, setSaved] = useState(false);
+  const actionId = useId();
   const mounted = useMounted("final");
 
   // Fire session_complete exactly once when the final screen mounts, and
@@ -590,10 +610,11 @@ function FinalScreen({
       return;
     }
     addEntry({
-      body: body.trim(),
+      body: formatSessionBody(body, action),
       context: { kind: "session", ref: session.id },
       prompt: session.journalPrompt,
     });
+    clearSessionDraft(session.id);
     track({ context: "session", type: "journal_save" });
     setSaved(true);
   }
@@ -626,21 +647,40 @@ function FinalScreen({
           ) : (
             <div className="stack">
               <textarea
+                aria-label={session.journalPrompt}
                 value={body}
-                onChange={(e) => setBody(e.target.value)}
+                onChange={(e) => {
+                  setBody(e.target.value);
+                  writeSessionDraft(session.id, {
+                    action,
+                    body: e.target.value,
+                  });
+                }}
                 placeholder="Write what stayed with you…"
                 rows={6}
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--line)",
-                  borderRadius: "var(--radius)",
-                  color: "var(--ink)",
-                  font: "inherit",
-                  padding: 12,
-                  resize: "vertical",
-                  width: "100%",
-                }}
+                style={textareaStyle}
               />
+              <label htmlFor={actionId} style={{ display: "block" }}>
+                <span
+                  className="soft"
+                  style={{ display: "block", marginBottom: 6 }}
+                >
+                  What will you do? (optional)
+                </span>
+                <textarea
+                  id={actionId}
+                  value={action}
+                  onChange={(e) => {
+                    setAction(e.target.value);
+                    writeSessionDraft(session.id, {
+                      action: e.target.value,
+                      body,
+                    });
+                  }}
+                  rows={2}
+                  style={textareaStyle}
+                />
+              </label>
               <div>
                 <button
                   type="button"
