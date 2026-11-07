@@ -25,6 +25,7 @@
       "expo-font",
       "expo-asset",
       "expo-secure-store",
+      "expo-sharing",
       [
         "expo-splash-screen",
         {

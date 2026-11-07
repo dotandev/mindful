@@ -29,7 +29,7 @@ import {
   toSections,
 } from "../../src/components/Journal/journalText";
 import { space, useTheme } from "../../src/theme";
-import { BrandMark, Button, Screen, Text } from "../../src/ui";
+import { BrandMark, Button, LinkPressable, Screen, Text } from "../../src/ui";
 
 /** Empty state: quiet and minimal — one line of intent, one way to begin. */
 function EmptyJournal() {
@@ -71,6 +71,36 @@ interface Section {
   group: JournalGroup;
   title: string;
   data: JournalEntry[];
+}
+
+/** A surah group's two ways on, each a full 44dp tap target. */
+function SurahLinks({ surah }: { surah: number }) {
+  const { colors } = useTheme();
+  const params = { surah: String(surah) };
+  const linkText = { color: colors.indigo, fontSize: 14.5, lineHeight: 22 };
+  const press = ({ pressed }: { pressed: boolean }) => ({
+    justifyContent: "center" as const,
+    minHeight: 44,
+    opacity: pressed ? 0.6 : 1,
+  });
+  return (
+    <View
+      style={{ columnGap: space.md, flexDirection: "row", flexWrap: "wrap" }}
+    >
+      <LinkPressable
+        href={{ params, pathname: "/tadabbur/[surah]" }}
+        style={press}
+      >
+        <Text style={linkText}>Continue this surah’s tadabbur</Text>
+      </LinkPressable>
+      <LinkPressable
+        href={{ params, pathname: "/tadabbur/journal/[surah]" }}
+        style={press}
+      >
+        <Text style={linkText}>Your page on this surah</Text>
+      </LinkPressable>
+    </View>
+  );
 }
 
 function RowSeparator() {
@@ -284,21 +314,8 @@ export default function Journal() {
                 style={{ fontSize: 14.5, lineHeight: 22, marginTop: 2 }}
               >
                 {n === 1 ? "1 reflection" : `${n} reflections`}
-                {g.surah ? (
-                  <>
-                    {" · "}
-                    <Link
-                      href={{
-                        params: { surah: String(g.surah) },
-                        pathname: "/tadabbur/[surah]",
-                      }}
-                      style={{ color: colors.indigo }}
-                    >
-                      Continue this surah’s tadabbur
-                    </Link>
-                  </>
-                ) : null}
               </Text>
+              {g.surah ? <SurahLinks surah={g.surah} /> : null}
             </View>
           );
         }}

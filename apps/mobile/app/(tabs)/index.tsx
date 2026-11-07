@@ -16,6 +16,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Linking, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
+import { FollowUpCard } from "../../src/components/Home/FollowUpCard";
 import {
   HomeEntry,
   HomeEntryDivider,
@@ -208,6 +209,8 @@ export default function Home() {
           </View>
         </AdireCloth>
       </FadeRise>
+
+      <FollowUpCard surahNames={surahNames} reduce={reduce} />
 
       <View accessibilityLabel="Sections" style={{ marginTop: space.sm }}>
         <HomeEntry
