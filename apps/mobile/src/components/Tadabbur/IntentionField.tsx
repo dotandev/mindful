@@ -2,6 +2,7 @@ import { track } from "@mindfulverse/core/analytics";
 import { addEntry, getEntries } from "@mindfulverse/core/journal";
 import { useState } from "react";
 import { TextInput, View } from "react-native";
+import type { TextInputInstance } from "react-native";
 
 import { tapSuccess } from "../../platform/haptics";
 import { fonts, radius, space, useTheme } from "../../theme";
@@ -41,7 +42,7 @@ export function IntentionField({
   surah: number;
   surahName: string;
   onSaved?: () => void;
-  onFocusInput?: (input: TextInput) => void;
+  onFocusInput?: (input: TextInputInstance) => void;
 }) {
   const { colors } = useTheme();
   const [saved, setSaved] = useState<string | null>(() =>
@@ -51,7 +52,7 @@ export function IntentionField({
   const [draft, setDraft] = useState("");
   const [focused, setFocused] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [input, setInput] = useState<TextInput | null>(null);
+  const [input, setInput] = useState<TextInputInstance | null>(null);
 
   function save() {
     const entry = composeIntention(surah, surahName, draft);

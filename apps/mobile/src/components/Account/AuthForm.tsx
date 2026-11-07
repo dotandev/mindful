@@ -5,7 +5,7 @@ import { insforge } from "@mindfulverse/core/sync/insforge";
 // errors and analytics). OAuth is web-only for now (PKCE needs crypto.subtle,
 // absent on Hermes), so no provider buttons here.
 import { useEffect, useRef, useState } from "react";
-import type { TextInput } from "react-native";
+import type { TextInputInstance } from "react-native";
 import { Platform, View } from "react-native";
 
 import { signIn, signUp, verifyEmail } from "../../session";
@@ -40,7 +40,7 @@ export function AuthForm({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [googleOnWeb, setGoogleOnWeb] = useState(false);
-  const passwordRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInputInstance>(null);
   const mounted = useRef(true);
   useEffect(() => () => void (mounted.current = false), []);
 

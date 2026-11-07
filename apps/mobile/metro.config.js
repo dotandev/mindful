@@ -13,7 +13,7 @@ const config = getDefaultConfig(projectRoot);
 //    dependency such as react-freeze or use-latest-callback) would otherwise
 //    walk up to the root copy, and two Reacts in one bundle break hooks.
 //    These packages are always resolved as if imported from this app.
-//    Expo SDK 57's "autolinking module resolution" (sticky react/react-native
+//    Expo's "autolinking module resolution" (sticky react/react-native
 //    resolution, on by default) already dedupes react and react-native; this
 //    rule is the explicit guarantee, and also covers scheduler and the SDK.
 //    `npm run check:bundle` verifies the result on an export.

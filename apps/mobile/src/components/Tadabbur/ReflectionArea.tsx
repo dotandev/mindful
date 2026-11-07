@@ -11,6 +11,7 @@ import { track } from "@mindfulverse/core/analytics";
 import { addEntry } from "@mindfulverse/core/journal";
 import { memo, useEffect, useRef, useState } from "react";
 import { TextInput, View } from "react-native";
+import type { TextInputInstance } from "react-native";
 
 import { tapSuccess, tickSelection } from "../../platform/haptics";
 import { fonts, radius, space, useTheme } from "../../theme";
@@ -68,14 +69,14 @@ export const ReflectionArea = memo(
     initial: Draft;
     onDraft: (verseKey: string, d: Draft) => void;
     /** Lets the screen scroll the focused input above the keyboard. */
-    onFocusInput: (input: TextInput) => void;
+    onFocusInput: (input: TextInputInstance) => void;
   }) => {
     const { colors } = useTheme();
     const [draft, setDraft] = useState<Draft>(initial);
     const [status, setStatus] = useState<"idle" | "kept" | "failed">("idle");
     const [step, setStep] = useState(0);
     const [focused, setFocused] = useState(false);
-    const input = useRef<TextInput | null>(null);
+    const input = useRef<TextInputInstance | null>(null);
     const moved = useRef(false);
 
     const q = QUESTIONS[step];
