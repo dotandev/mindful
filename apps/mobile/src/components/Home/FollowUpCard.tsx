@@ -1,6 +1,7 @@
 // Home follow-up (web: apps/web/src/components/FollowUpCard.tsx): about a week
-// after a tadabbur reflection with an "Action:", ask calmly how it went.
+// after a tadabbur or session reflection with an "Action:", ask calmly how it went.
 import { track } from "@mindfulverse/core/analytics";
+import { loadSessions } from "@mindfulverse/core/data";
 import {
   answerFollowUp,
   dueFollowUp,
@@ -34,6 +35,19 @@ const ACK_FADE_MS = 600;
 
 type Phase = "ask" | "note" | "kept" | "gone";
 
+const SESSION_FALLBACK = "A session you sat with";
+
+function headingFor(
+  due: DueFollowUp,
+  surahNames: Map<number, string>,
+  sessionTitles: Map<string, string>
+): string {
+  if (due.kind === "session") {
+    return sessionTitles.get(due.ref) ?? SESSION_FALLBACK;
+  }
+  return followUpHeading(due.ref, surahNames);
+}
+
 const pickDue = (): DueFollowUp | null =>
   dueFollowUp(getEntries(), new Date(), loadFollowUpState());
 
@@ -55,6 +69,27 @@ export function FollowUpCard({
   const shown = useRef(new Set<string>());
   const fade = useRef(new Animated.Value(1)).current;
   const verseKey = due?.verseKey;
+  const sessionId = due?.kind === "session" ? due.ref : null;
+  const [sessionTitles, setSessionTitles] = useState<Map<string, string>>(
+    () => new Map()
+  );
+
+  useEffect(() => {
+    if (!sessionId) {
+      return;
+    }
+    let alive = true;
+    loadSessions()
+      .then((sessions) => {
+        if (alive) {
+          setSessionTitles(new Map(sessions.map((x) => [x.id, x.title])));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [sessionId]);
 
   useEffect(() => {
     if (verseKey && !shown.current.has(verseKey)) {
@@ -151,7 +186,14 @@ export function FollowUpCard({
       return;
     }
     saveFollowUpState(
-      answerFollowUp(due, answer, text, new Date(), loadFollowUpState())
+      answerFollowUp(
+        due,
+        answer,
+        text,
+        new Date(),
+        loadFollowUpState(),
+        due.kind === "session" ? sessionTitles.get(due.ref) : undefined
+      )
     );
     track({ answer, type: "followup_answered" });
     tapSuccess();
@@ -183,7 +225,7 @@ export function FollowUpCard({
             marginTop: 2,
           }}
         >
-          {followUpHeading(due.verseKey, surahNames)}
+          {headingFor(due, surahNames, sessionTitles)}
         </Text>
         <Text variant="soft" style={{ marginBottom: space.xs }}>
           You wrote:

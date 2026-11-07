@@ -9,8 +9,9 @@ import {
 import { getSizeKey, scaleFor } from "@mindfulverse/core/readingPrefs";
 import { useAccount } from "@mindfulverse/core/sync/auth";
 import type { Ayah } from "@mindfulverse/core/types";
-// Home (web: apps/web/src/pages/Home.tsx): greeting, streak, the verse of the
-// day, the check-in / go-deeper action, and the places to go with more time.
+// Home (web: apps/web/src/pages/Home.tsx): greeting, streak, the surah journal
+// first, a due follow-up, the verse of the day, a few themes, then the places
+// to go with more time.
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Linking, View } from "react-native";
@@ -22,24 +23,16 @@ import {
   HomeEntryDivider,
 } from "../../src/components/Home/HomeEntry";
 import {
-  deeperLabel,
   greeting,
   readDesc,
   streakLine,
-  tadabburTarget,
 } from "../../src/components/Home/homeModel";
 import type { VersePos } from "../../src/components/Home/homeModel";
+import { SurahLead } from "../../src/components/Home/SurahLead";
+import { ThemeSection } from "../../src/components/Home/ThemeSection";
 import { space, useTheme } from "../../src/theme";
-import {
-  AdireCloth,
-  ArabicText,
-  Button,
-  DyeRule,
-  Screen,
-  Text,
-  useOnCloth,
-} from "../../src/ui";
-import { FadeRise, useReducedMotion } from "../../src/ui/FadeRise";
+import { ArabicText, Button, Card, DyeRule, Screen, Text } from "../../src/ui";
+import { useReducedMotion } from "../../src/ui/FadeRise";
 import { ReadIcon, TadabburIcon } from "../../src/ui/icons";
 
 interface Local {
@@ -66,7 +59,6 @@ function readLocal(): Local {
 
 export default function Home() {
   const { colors } = useTheme();
-  const cloth = useOnCloth();
   const { user, loading: accountLoading } = useAccount();
   const accountId = user?.id ?? null;
   const reduce = useReducedMotion();
@@ -124,11 +116,12 @@ export default function Home() {
 
   const { hour, streak, lastRead, doneToday, deeper, scale } = local;
   const returning = streakLine(streak);
-  const tadabbur = tadabburTarget(deeper);
-  const tadabburHref = {
-    params: { surah: String(tadabbur.surah), v: String(tadabbur.ayah) },
-    pathname: "/tadabbur/[surah]",
-  } as const;
+  const tadabburHref = deeper
+    ? ({
+        params: { surah: String(deeper.surah), v: String(deeper.ayah) },
+        pathname: "/tadabbur/[surah]",
+      } as const)
+    : "/tadabbur";
   const surahName = hero ? surahNames.get(hero.surah) : undefined;
 
   return (
@@ -141,76 +134,52 @@ export default function Home() {
         {returning ? <StreakBeads streak={streak} label={returning} /> : null}
       </View>
 
-      <FadeRise reduce={reduce} style={{ marginTop: 6 }}>
-        <AdireCloth style={{ padding: space.lg, paddingTop: 20 }}>
-          <View accessibilityLabel="Today’s verse">
-            {hero ? (
-              <View>
-                <ArabicText scale={scale} style={{ color: cloth.strong }}>
-                  {hero.arabic}
-                </ArabicText>
-                <Text
-                  variant="translation"
-                  style={{
-                    color: cloth.strong,
-                    fontSize: 20.4,
-                    lineHeight: 31,
-                    marginTop: 6,
-                  }}
-                >
-                  {hero.translation}
-                </Text>
-                <Text
-                  style={{
-                    color: cloth.soft,
-                    fontSize: 14.5,
-                    lineHeight: 20,
-                    marginTop: 10,
-                  }}
-                >
-                  {surahName ? `${surahName} ` : ""}
-                  {hero.surah}:{hero.ayah}
-                </Text>
-              </View>
-            ) : (
-              <Text style={{ color: cloth.soft, marginTop: 10 }}>
-                {heroError
-                  ? "Today’s verse is still being gathered. Come back in a little while and it will be waiting for you."
-                  : "Opening today’s verse…"}
-              </Text>
-            )}
-
-            <View style={{ alignItems: "flex-start", gap: 10, marginTop: 22 }}>
-              {doneToday ? (
-                <>
-                  <Text
-                    style={{
-                      color: cloth.soft,
-                      fontSize: 15.5,
-                      lineHeight: 22,
-                    }}
-                  >
-                    Today’s reflection is saved.
-                  </Text>
-                  <Button
-                    kind="cloth"
-                    title={deeperLabel(deeper, surahNames)}
-                    onPress={() => router.push(tadabburHref)}
-                  />
-                </>
-              ) : (
-                <Button
-                  kind="cloth"
-                  title="Reflect on today’s verse"
-                  onPress={() => router.push("/checkin")}
-                />
-              )}
-            </View>
-          </View>
-        </AdireCloth>
-      </FadeRise>
+      <SurahLead deeper={deeper} surahNames={surahNames} reduce={reduce} />
 
       <FollowUpCard surahNames={surahNames} reduce={reduce} />
+
+      <Card accessibilityLabel="Today’s verse" style={{ marginTop: space.sm }}>
+        {hero ? (
+          <View>
+            <ArabicText scale={scale}>{hero.arabic}</ArabicText>
+            <Text
+              variant="translation"
+              style={{ fontSize: 19, lineHeight: 29, marginTop: 6 }}
+            >
+              {hero.translation}
+            </Text>
+            <Text
+              variant="muted"
+              style={{ fontSize: 14.5, lineHeight: 20, marginTop: 10 }}
+            >
+              {surahName ? `${surahName} ` : ""}
+              {hero.surah}:{hero.ayah}
+            </Text>
+          </View>
+        ) : (
+          <Text variant="soft">
+            {heroError
+              ? "Today’s verse is still being gathered. Come back in a little while and it will be waiting for you."
+              : "Opening today’s verse…"}
+          </Text>
+        )}
+
+        <View style={{ alignItems: "flex-start" }}>
+          {doneToday ? (
+            <Text variant="soft" style={{ fontSize: 15.5, lineHeight: 22 }}>
+              Today’s reflection is saved.
+            </Text>
+          ) : (
+            <Button
+              kind="secondary"
+              title="Reflect on today’s verse"
+              onPress={() => router.push("/checkin")}
+            />
+          )}
+        </View>
+      </Card>
+
+      <ThemeSection />
 
       <View accessibilityLabel="Sections" style={{ marginTop: space.sm }}>
         <HomeEntry

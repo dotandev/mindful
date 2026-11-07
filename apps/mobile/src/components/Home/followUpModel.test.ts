@@ -14,6 +14,8 @@ const reflection: JournalEntry = {
 const due: DueFollowUp = {
   action: "Call my mother",
   entry: reflection,
+  kind: "tadabbur",
+  ref: "2:255",
   verseKey: "2:255",
 };
 

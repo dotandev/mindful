@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 
-import { formatTadabburBody, parseTadabburBody } from "./tadabburBody";
+import {
+  formatSessionBody,
+  formatTadabburBody,
+  parseTadabburBody,
+} from "./tadabburBody";
 
 describe("tadabbur body", () => {
   it("round-trips all four parts", () => {
@@ -49,5 +53,23 @@ describe("tadabbur body", () => {
     expect(formatTadabburBody({ action: "x", lessons: "  " })).toBe(
       "Action: x"
     );
+  });
+});
+
+describe(formatSessionBody, () => {
+  it("keeps the reflection unchanged when there is no action", () => {
+    expect(formatSessionBody("  Reflection: odd\n\nfree text ", " ")).toBe(
+      "Reflection: odd\n\nfree text"
+    );
+    expect(formatSessionBody("plain words", "")).toBe("plain words");
+  });
+
+  it("labels both parts when there is an action", () => {
+    const body = formatSessionBody(" it stayed ", " call mum ");
+    expect(body).toBe("Reflection: it stayed\n\nAction: call mum");
+    expect(parseTadabburBody(body)).toStrictEqual({
+      action: "call mum",
+      reflection: "it stayed",
+    });
   });
 });

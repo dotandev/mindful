@@ -1,4 +1,5 @@
 import { track } from "@mindfulverse/core/analytics";
+import { loadSessions } from "@mindfulverse/core/data";
 import {
   answerFollowUp,
   dueFollowUp,
@@ -19,6 +20,18 @@ const ACK_FADE_MS = 600;
 
 type Phase = "ask" | "note" | "kept" | "gone";
 
+function headingFor(
+  due: DueFollowUp,
+  surahNames: Map<number, string>,
+  sessionTitles: Map<string, string>
+): string {
+  if (due.kind === "session") {
+    return sessionTitles.get(due.ref) ?? "A session you sat with";
+  }
+  const surahName = surahNames.get(Number(due.ref.split(":")[0]));
+  return surahName ? `${surahName} ${due.ref}` : due.ref;
+}
+
 export default function FollowUpCard({
   surahNames,
 }: {
@@ -37,6 +50,27 @@ export default function FollowUpCard({
   const noteId = useId();
   const shown = useRef(new Set<string>());
   const verseKey = due?.verseKey;
+  const sessionId = due?.kind === "session" ? due.ref : null;
+  const [sessionTitles, setSessionTitles] = useState<Map<string, string>>(
+    () => new Map()
+  );
+
+  useEffect(() => {
+    if (!sessionId) {
+      return;
+    }
+    let alive = true;
+    loadSessions()
+      .then((sessions) => {
+        if (alive) {
+          setSessionTitles(new Map(sessions.map((x) => [x.id, x.title])));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [sessionId]);
 
   useEffect(() => {
     if (verseKey && !shown.current.has(verseKey)) {
@@ -92,9 +126,7 @@ export default function FollowUpCard({
     return null;
   }
 
-  const surahNumber = Number(due.verseKey.split(":")[0]);
-  const surahName = surahNames.get(surahNumber);
-  const heading = surahName ? `${surahName} ${due.verseKey}` : due.verseKey;
+  const heading = headingFor(due, surahNames, sessionTitles);
 
   function skip() {
     if (!due) {
@@ -126,7 +158,8 @@ export default function FollowUpCard({
       answer,
       text,
       new Date(),
-      loadFollowUpState()
+      loadFollowUpState(),
+      due.kind === "session" ? sessionTitles.get(due.ref) : undefined
     );
     saveFollowUpState(next);
     track({ type: "followup_answered", answer });

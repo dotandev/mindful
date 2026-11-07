@@ -35,6 +35,15 @@ export function formatTadabburBody(parts: TadabburParts): string {
   return paragraphs.join(PARAGRAPH_BREAK);
 }
 
+// A blank action leaves the reflection exactly as session entries were always
+// saved; an action switches to labelled parts so follow-ups can find it.
+export function formatSessionBody(reflection: string, action: string): string {
+  if (!action.trim()) {
+    return reflection.trim();
+  }
+  return formatTadabburBody({ action, reflection });
+}
+
 function labelOf(paragraph: string): PartKey | null {
   for (const key of PART_ORDER) {
     if (paragraph.startsWith(`${TADABBUR_LABELS[key]}: `)) {

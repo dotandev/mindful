@@ -13,7 +13,7 @@ import {
 } from "./followUps";
 import type { FollowUpState } from "./followUps";
 import { addEntry } from "./journal";
-import { formatTadabburBody } from "./tadabburBody";
+import { formatSessionBody, formatTadabburBody } from "./tadabburBody";
 import type { JournalEntry } from "./types";
 
 vi.mock(import("./journal"), () => ({
@@ -145,6 +145,65 @@ describe(dueFollowUp, () => {
   });
 });
 
+describe("dueFollowUp for topic sessions", () => {
+  function session(id: string, ageMs: number, body: string): JournalEntry {
+    return {
+      id,
+      createdAt: now.getTime() - ageMs,
+      prompt: "p",
+      body,
+      context: { kind: "session", ref: "patience" },
+    };
+  }
+  const withAction = formatSessionBody("it stayed", "call mum");
+
+  it("is due between 7 and 30 days with the session id as ref", () => {
+    const due = dueFollowUp([session("s", 8 * DAY, withAction)], now, empty());
+    expect(due).toMatchObject({
+      action: "call mum",
+      kind: "session",
+      ref: "patience",
+      verseKey: "patience",
+    });
+    expect(
+      dueFollowUp([session("s", 6 * DAY, withAction)], now, empty())
+    ).toBeNull();
+    expect(
+      dueFollowUp(
+        [session("s", FOLLOW_UP_MAX_MS + 1, withAction)],
+        now,
+        empty()
+      )
+    ).toBeNull();
+  });
+
+  it("is not due without an action", () => {
+    const plain = formatSessionBody("it stayed", "  ");
+    expect(
+      dueFollowUp([session("s", 8 * DAY, plain)], now, empty())
+    ).toBeNull();
+  });
+
+  it("is not due once answered", () => {
+    const answer: JournalEntry = {
+      id: "f",
+      createdAt: now.getTime(),
+      prompt: "x",
+      body: "Yes",
+      context: { kind: "followup", ref: "s" },
+    };
+    expect(
+      dueFollowUp([session("s", 8 * DAY, withAction), answer], now, empty())
+    ).toBeNull();
+  });
+
+  it("competes with tadabbur entries by age and marks the kind", () => {
+    const list = [tadabbur("t", 9 * DAY), session("s", 12 * DAY, withAction)];
+    expect(dueFollowUp(list, now, empty())?.kind).toBe("session");
+    expect(dueFollowUp(list.slice(0, 1), now, empty())?.kind).toBe("tadabbur");
+  });
+});
+
 describe("follow-up state storage", () => {
   it("returns empty state for corrupt, null or missing stores", () => {
     const bad = { getItem: () => "{bad" };
@@ -197,6 +256,17 @@ describe("skipFollowUp / answerFollowUp", () => {
     answerFollowUp(due, "Yes", "  ", now, empty());
     expect(addEntry).toHaveBeenLastCalledWith(
       expect.objectContaining({ body: "Yes" })
+    );
+  });
+
+  it("uses the label in the prompt when given", () => {
+    const due = dueFollowUp([tadabbur("a", 8 * DAY)], now, empty());
+    if (!due) {
+      throw new Error("expected a due follow-up");
+    }
+    answerFollowUp(due, "Yes", "", now, empty(), "On patience");
+    expect(addEntry).toHaveBeenLastCalledWith(
+      expect.objectContaining({ prompt: "How did it go? (On patience)" })
     );
   });
 
