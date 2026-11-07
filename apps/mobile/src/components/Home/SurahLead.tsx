@@ -1,5 +1,7 @@
 // Home's lead card (web: apps/web/src/pages/Home.tsx): the surah journal comes
-// first. Continue the surah in progress, or begin with a short one.
+// first. Continue the surah in progress, begin the surah your circle is
+// reading, or begin with a short one.
+import type { SurahMeta } from "@mindfulverse/core/types";
 import { router } from "expo-router";
 import type { Href } from "expo-router";
 import { Pressable, View } from "react-native";
@@ -7,13 +9,16 @@ import { Pressable, View } from "react-native";
 import { fonts, space } from "../../theme";
 import { AdireCloth, Button, Text, useOnCloth } from "../../ui";
 import { FadeRise } from "../../ui/FadeRise";
-import type { VersePos } from "./homeModel";
 import {
   BEGIN_LINE,
   BEGIN_TITLE,
+  CIRCLE_EYEBROW,
   continueTitle,
-  SUGGESTED_SURAHS,
+  STARTERS_HEADING,
+  starterLabel,
+  surahName,
 } from "./leadModel";
+import type { Lead } from "./leadModel";
 
 const surahHref = (surah: number, ayah?: number): Href => ({
   params:
@@ -24,59 +29,125 @@ const surahHref = (surah: number, ayah?: number): Href => ({
 });
 
 export function SurahLead({
-  deeper,
+  lead,
+  surahs,
   surahNames,
   reduce,
 }: {
-  deeper: VersePos | null;
+  lead: Lead;
+  surahs: Map<number, SurahMeta>;
   surahNames: Map<number, string>;
   reduce: boolean;
 }) {
-  const cloth = useOnCloth();
   return (
     <FadeRise reduce={reduce} style={{ marginTop: 6 }}>
       <AdireCloth style={{ padding: space.lg, paddingTop: 20 }}>
-        {deeper ? (
-          <View style={{ alignItems: "flex-start", gap: 14 }}>
-            <Text variant="h2" style={{ color: cloth.strong }}>
-              {continueTitle(deeper.surah, surahNames)}
-            </Text>
-            <Button
-              kind="cloth"
-              title={`Resume at verse ${deeper.ayah}`}
-              onPress={() => router.push(surahHref(deeper.surah, deeper.ayah))}
-            />
-            <QuietLink
-              title="Open this surah’s page"
-              href={{
-                params: { surah: String(deeper.surah) },
-                pathname: "/tadabbur/journal/[surah]",
-              }}
-            />
-          </View>
-        ) : (
-          <View style={{ alignItems: "flex-start", gap: 14 }}>
-            <Text variant="h2" style={{ color: cloth.strong }}>
-              {BEGIN_TITLE}
-            </Text>
-            <Text style={{ color: cloth.soft, fontSize: 16.5, lineHeight: 25 }}>
-              {BEGIN_LINE}
-            </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-              {SUGGESTED_SURAHS.map((s) => (
-                <Button
-                  key={s.number}
-                  kind="cloth"
-                  title={surahNames.get(s.number) ?? s.name}
-                  onPress={() => router.push(surahHref(s.number))}
-                />
-              ))}
-            </View>
-            <QuietLink title="Choose another surah" href="/tadabbur" />
-          </View>
-        )}
+        <View style={{ alignItems: "flex-start", gap: 14 }}>
+          <LeadBody lead={lead} surahs={surahs} surahNames={surahNames} />
+        </View>
       </AdireCloth>
     </FadeRise>
+  );
+}
+
+function LeadBody({
+  lead,
+  surahs,
+  surahNames,
+}: {
+  lead: Lead;
+  surahs: Map<number, SurahMeta>;
+  surahNames: Map<number, string>;
+}) {
+  const cloth = useOnCloth();
+  if (lead.kind === "continue") {
+    return (
+      <>
+        <Text variant="h2" style={{ color: cloth.strong }}>
+          {continueTitle(lead.surah, surahNames)}
+        </Text>
+        <Button
+          kind="cloth"
+          title={`Resume at verse ${lead.ayah}`}
+          onPress={() => router.push(surahHref(lead.surah, lead.ayah))}
+        />
+        <QuietLink
+          title="Open this surah’s page"
+          href={{
+            params: { surah: String(lead.surah) },
+            pathname: "/tadabbur/journal/[surah]",
+          }}
+        />
+      </>
+    );
+  }
+  if (lead.kind === "circle") {
+    const name = surahName(lead.surah, surahs);
+    return (
+      <>
+        <View style={{ gap: 4 }}>
+          <Text
+            style={{
+              color: cloth.soft,
+              fontFamily: fonts.readMedium,
+              fontSize: 14.5,
+              lineHeight: 20,
+            }}
+          >
+            {CIRCLE_EYEBROW}
+          </Text>
+          <Text variant="h2" style={{ color: cloth.strong }}>
+            {name}
+          </Text>
+        </View>
+        <BeginLine />
+        <Button
+          kind="cloth"
+          title={`Begin ${name}`}
+          onPress={() => router.push(surahHref(lead.surah))}
+        />
+        <QuietLink title="Choose another surah" href="/tadabbur" />
+      </>
+    );
+  }
+  return (
+    <>
+      <Text variant="h2" style={{ color: cloth.strong }}>
+        {BEGIN_TITLE}
+      </Text>
+      <BeginLine />
+      <Text
+        accessibilityRole="header"
+        style={{
+          color: cloth.strong,
+          fontFamily: fonts.readSemiBold,
+          fontSize: 15.5,
+          lineHeight: 22,
+        }}
+      >
+        {STARTERS_HEADING}
+      </Text>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+        {lead.surahs.map((n) => (
+          <Button
+            key={n}
+            kind="cloth"
+            title={starterLabel(n, surahs)}
+            onPress={() => router.push(surahHref(n))}
+          />
+        ))}
+      </View>
+      <QuietLink title="Choose another surah" href="/tadabbur" />
+    </>
+  );
+}
+
+function BeginLine() {
+  const cloth = useOnCloth();
+  return (
+    <Text style={{ color: cloth.soft, fontSize: 16.5, lineHeight: 25 }}>
+      {BEGIN_LINE}
+    </Text>
   );
 }
 

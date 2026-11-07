@@ -1,10 +1,12 @@
-import type { TadabburSession } from "@mindfulverse/core/types";
+import type { SurahMeta, TadabburSession } from "@mindfulverse/core/types";
 import { describe, expect, it } from "vitest";
 
 import {
   BEGIN_LINE,
+  chooseLead,
   continueTitle,
-  SUGGESTED_SURAHS,
+  starterLabel,
+  surahName,
   themePicks,
 } from "./leadModel";
 
@@ -60,11 +62,49 @@ describe(themePicks, () => {
   });
 });
 
-describe("begin copy", () => {
-  it("suggests Al-'Asr and Ash-Sharh", () => {
-    expect(SUGGESTED_SURAHS.map((s) => s.number)).toStrictEqual([103, 94]);
+describe(chooseLead, () => {
+  const deeper = { ayah: 4, surah: 2 };
+
+  it("continues a surah in progress before the circle's surah", () => {
+    expect(chooseLead(deeper, 94)).toStrictEqual({
+      ayah: 4,
+      kind: "continue",
+      surah: 2,
+    });
   });
 
+  it("suggests the circle's surah before the starters", () => {
+    expect(chooseLead(null, 94)).toStrictEqual({ kind: "circle", surah: 94 });
+  });
+
+  it("ignores a circle value that isn't a surah number", () => {
+    for (const bad of [0, 115, 2.5, "x", null, undefined]) {
+      expect(chooseLead(null, bad)).toStrictEqual({
+        kind: "starters",
+        surahs: [1, 103, 93, 94],
+      });
+    }
+  });
+});
+
+describe(starterLabel, () => {
+  const surahs = new Map<number, SurahMeta>([
+    [103, { ayahCount: 3, name: "Al-'Asr", number: 103 }],
+    [999, { ayahCount: 1, name: "One", number: 999 }],
+  ]);
+
+  it("shows the name and verse count", () => {
+    expect(starterLabel(103, surahs)).toBe("Al-'Asr · 3 verses");
+    expect(starterLabel(999, surahs)).toBe("One · 1 verse");
+  });
+
+  it("falls back to the number before the list loads", () => {
+    expect(starterLabel(94, new Map())).toBe("Surah 94");
+    expect(surahName(94, new Map())).toBe("Surah 94");
+  });
+});
+
+describe("begin copy", () => {
   it("keeps the agreed line", () => {
     expect(BEGIN_LINE).toContain("with Ibn Kathir");
   });

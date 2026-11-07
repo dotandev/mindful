@@ -1,22 +1,62 @@
 // Pure logic for Home's lead card and "Or ponder a theme" (web:
 // apps/web/src/pages/Home.tsx). No React Native imports, so vitest runs it.
+import {
+  parseSurahNumber,
+  STARTER_SURAHS,
+} from "@mindfulverse/core/circleSurah";
 import type { SessionProgress } from "@mindfulverse/core/progress";
-import type { TadabburSession } from "@mindfulverse/core/types";
+import type { SurahMeta, TadabburSession } from "@mindfulverse/core/types";
+
+import type { VersePos } from "./homeModel";
 
 export const BEGIN_TITLE = "Begin with a surah";
 export const BEGIN_LINE =
   "Write why you’re reading, ponder it verse by verse with Ibn Kathir, and keep a page for it. A week later, we’ll ask how your action went.";
 
-export interface SuggestedSurah {
-  number: number;
-  name: string;
+export const CIRCLE_EYEBROW = "Your circle is reading";
+export const STARTERS_HEADING = "Short surahs to begin with";
+
+/** What Home's lead card offers, most specific first. */
+export type Lead =
+  | { kind: "continue"; surah: number; ayah: number }
+  | { kind: "circle"; surah: number }
+  | { kind: "starters"; surahs: readonly number[] };
+
+/** A surah tadabbur in progress beats the circle's surah, which beats the
+ *  short starter surahs. A circle value that isn't a surah number is ignored. */
+export function chooseLead(
+  deeper: VersePos | null,
+  circleSurah: unknown
+): Lead {
+  if (deeper) {
+    return { ayah: deeper.ayah, kind: "continue", surah: deeper.surah };
+  }
+  const circle = parseSurahNumber(circleSurah);
+  if (circle !== null) {
+    return { kind: "circle", surah: circle };
+  }
+  return { kind: "starters", surahs: STARTER_SURAHS };
 }
 
-/** Short surahs a first tadabbur can finish in one sitting. */
-export const SUGGESTED_SURAHS: readonly SuggestedSurah[] = [
-  { name: "Al-'Asr", number: 103 },
-  { name: "Ash-Sharh", number: 94 },
-];
+export function surahName(
+  surah: number,
+  surahs: Map<number, SurahMeta>
+): string {
+  return surahs.get(surah)?.name ?? `Surah ${surah}`;
+}
+
+/** "Al-'Asr · 3 verses"; just the name until the surah list has loaded. */
+export function starterLabel(
+  surah: number,
+  surahs: Map<number, SurahMeta>
+): string {
+  const meta = surahs.get(surah);
+  if (!meta) {
+    return surahName(surah, surahs);
+  }
+  const verses = meta.ayahCount === 1 ? "1 verse" : `${meta.ayahCount} verses`;
+  return `${meta.name} · ${verses}`;
+}
 
 export const THEME_PICKS = 3;
 

@@ -120,6 +120,7 @@ function RootNavigator() {
         <Stack.Screen name="read/[surah]" options={{ title: "" }} />
         <Stack.Screen name="tadabbur/[surah]" options={{ title: "Tadabbur" }} />
         <Stack.Screen name="checkin" options={{ title: "Check-in" }} />
+        <Stack.Screen name="circle/[surah]" options={{ headerShown: false }} />
       </Stack>
     </>
   );

@@ -1,3 +1,4 @@
+import { getCircleSurah } from "@mindfulverse/core/circleSurah";
 import { todayVerseKey } from "@mindfulverse/core/dailyVerse";
 import { loadAyahsByKeys, loadSurahs } from "@mindfulverse/core/data";
 import { checkedInToday } from "@mindfulverse/core/journal";
@@ -8,12 +9,12 @@ import {
 } from "@mindfulverse/core/progress";
 import { getSizeKey, scaleFor } from "@mindfulverse/core/readingPrefs";
 import { useAccount } from "@mindfulverse/core/sync/auth";
-import type { Ayah } from "@mindfulverse/core/types";
+import type { Ayah, SurahMeta } from "@mindfulverse/core/types";
 // Home (web: apps/web/src/pages/Home.tsx): greeting, streak, the surah journal
 // first, a due follow-up, the verse of the day, a few themes, then the places
 // to go with more time.
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Linking, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
@@ -28,6 +29,7 @@ import {
   streakLine,
 } from "../../src/components/Home/homeModel";
 import type { VersePos } from "../../src/components/Home/homeModel";
+import { chooseLead } from "../../src/components/Home/leadModel";
 import { SurahLead } from "../../src/components/Home/SurahLead";
 import { ThemeSection } from "../../src/components/Home/ThemeSection";
 import { space, useTheme } from "../../src/theme";
@@ -41,13 +43,16 @@ interface Local {
   lastRead: VersePos | null;
   doneToday: boolean;
   deeper: VersePos | null;
+  circleSurah: number | null;
   scale: number;
 }
 
 // Nothing in core is reactive: read it all again whenever Home regains focus
-// (back from the check-in, the reader, a tadabbur, or a sync).
+// (back from the check-in, the reader, a tadabbur, a sync, or a circle link
+// opened while Home sat underneath).
 function readLocal(): Local {
   return {
+    circleSurah: getCircleSurah()?.surah ?? null,
     deeper: latestSurahTadabbur(),
     doneToday: checkedInToday(),
     hour: new Date().getHours(),
@@ -66,7 +71,11 @@ export default function Home() {
   const [verseKey, setVerseKey] = useState<string | null>(null);
   const [hero, setHero] = useState<Ayah | null>(null);
   const [heroError, setHeroError] = useState(false);
-  const [surahNames, setSurahNames] = useState<Map<number, string>>(new Map());
+  const [surahs, setSurahs] = useState<Map<number, SurahMeta>>(new Map());
+  const surahNames = useMemo(
+    () => new Map([...surahs].map(([n, s]) => [n, s.name])),
+    [surahs]
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -83,8 +92,7 @@ export default function Home() {
     let alive = true;
     loadSurahs()
       .then(
-        (list) =>
-          alive && setSurahNames(new Map(list.map((s) => [s.number, s.name])))
+        (list) => alive && setSurahs(new Map(list.map((s) => [s.number, s])))
       )
       .catch(() => {});
     return () => {
@@ -114,7 +122,8 @@ export default function Home() {
     };
   }, [verseKey]);
 
-  const { hour, streak, lastRead, doneToday, deeper, scale } = local;
+  const { hour, streak, lastRead, doneToday, deeper, circleSurah, scale } =
+    local;
   const returning = streakLine(streak);
   const tadabburHref = deeper
     ? ({
@@ -134,7 +143,12 @@ export default function Home() {
         {returning ? <StreakBeads streak={streak} label={returning} /> : null}
       </View>
 
-      <SurahLead deeper={deeper} surahNames={surahNames} reduce={reduce} />
+      <SurahLead
+        lead={chooseLead(deeper, circleSurah)}
+        surahs={surahs}
+        surahNames={surahNames}
+        reduce={reduce}
+      />
 
       <FollowUpCard surahNames={surahNames} reduce={reduce} />
 
