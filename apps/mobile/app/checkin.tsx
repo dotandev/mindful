@@ -373,7 +373,7 @@ export default function CheckIn() {
           <Reveal reduce={reduce} style={{ gap: space.lg }}>
             {/* Verse of the day: the anchor, laid on the dyed cloth, as Home's
                 hero is. */}
-            <AdireCloth style={{ padding: space.lg, paddingTop: 20 }}>
+            <AdireCloth style={{ paddingHorizontal: 20, paddingVertical: 18 }}>
               {dailyError ? (
                 <Text style={{ color: cloth.soft, marginTop: 10 }}>
                   Today’s verse is still being gathered. Come back in a little
