@@ -222,7 +222,7 @@ function SurahLead({
       <ul aria-labelledby="home-starters" className="home-lead-suggestions">
         {STARTER_SURAHS.map((n) => (
           <li key={n}>
-            <Link to={`/tadabbur/${n}`} className="btn cloth-btn">
+            <Link to={`/tadabbur/${n}`} className="btn cloth-quiet">
               {starterLabel(n, surahs.get(n))}
             </Link>
           </li>
