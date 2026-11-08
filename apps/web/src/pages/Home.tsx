@@ -8,11 +8,7 @@ import { getCircleSurah, STARTER_SURAHS } from "@mindfulverse/core/circleSurah";
 import { todayVerseKey } from "@mindfulverse/core/dailyVerse";
 import { loadAyahsByKeys, loadSurahs } from "@mindfulverse/core/data";
 import { checkedInToday } from "@mindfulverse/core/journal";
-import {
-  currentStreak,
-  getLastRead,
-  latestSurahTadabbur,
-} from "@mindfulverse/core/progress";
+import { getLastRead, latestSurahTadabbur } from "@mindfulverse/core/progress";
 import { useAccount } from "@mindfulverse/core/sync/auth";
 import { TRANSLATION_SOURCE_URL } from "@mindfulverse/core/translation";
 import type { Ayah, SurahMeta } from "@mindfulverse/core/types";
@@ -330,7 +326,6 @@ export default function Home() {
 
   // oxlint-disable-next-line react/purity -- the greeting follows the clock on each render
   const hours = new Date().getHours();
-  const streak = currentStreak();
   const lastRead = getLastRead();
   const doneToday = checkedInToday();
   const surahName = hero ? (surahs.get(hero.surah)?.name ?? "") : "";
@@ -352,20 +347,6 @@ export default function Home() {
         <p className="home-date">{todayLabel()}</p>
         <h1 className="home-greeting">{greeting(hours)}</h1>
       </header>
-
-      {streak >= 2 && (
-        <p className="home-streak soft" style={reveal(60)}>
-          <span className="home-beads" aria-hidden="true">
-            {Array.from({ length: 7 }, (_, i) => (
-              <i
-                key={i}
-                className={i < Math.min(streak, 7) ? "on" : undefined}
-              />
-            ))}
-          </span>
-          Day {streak} of returning to the Qur’an
-        </p>
-      )}
 
       <SurahLead surahs={surahs} joined={joined} />
 

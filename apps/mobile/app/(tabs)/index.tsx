@@ -8,21 +8,16 @@ import { getCircleSurah } from "@mindfulverse/core/circleSurah";
 import { todayVerseKey } from "@mindfulverse/core/dailyVerse";
 import { loadAyahsByKeys, loadSurahs } from "@mindfulverse/core/data";
 import { checkedInToday, getEntries } from "@mindfulverse/core/journal";
-import {
-  currentStreak,
-  getLastRead,
-  latestSurahTadabbur,
-} from "@mindfulverse/core/progress";
+import { getLastRead, latestSurahTadabbur } from "@mindfulverse/core/progress";
 import { getSizeKey, scaleFor } from "@mindfulverse/core/readingPrefs";
 import { useAccount } from "@mindfulverse/core/sync/auth";
 import type { Ayah, SurahMeta } from "@mindfulverse/core/types";
-// Home (web: apps/web/src/pages/Home.tsx): greeting, streak, the surah journal
+// Home (web: apps/web/src/pages/Home.tsx): greeting, the surah journal
 // first, a due follow-up, the verse of the day, a few themes, then the places
 // to go with more time.
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Linking, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
 
 import { CirclesIcon } from "../../src/components/Circles/CirclesIcon";
 import { useCircleCountLine } from "../../src/components/Circles/useCircleCount";
@@ -31,11 +26,7 @@ import {
   HomeEntry,
   HomeEntryDivider,
 } from "../../src/components/Home/HomeEntry";
-import {
-  greeting,
-  readDesc,
-  streakLine,
-} from "../../src/components/Home/homeModel";
+import { greeting, readDesc } from "../../src/components/Home/homeModel";
 import type { VersePos } from "../../src/components/Home/homeModel";
 import { chooseLead } from "../../src/components/Home/leadModel";
 import { SurahLead } from "../../src/components/Home/SurahLead";
@@ -50,7 +41,6 @@ import { ReadIcon, TadabburIcon } from "../../src/ui/icons";
 
 interface Local {
   hour: number;
-  streak: number;
   lastRead: VersePos | null;
   doneToday: boolean;
   deeper: VersePos | null;
@@ -71,7 +61,6 @@ function readLocal(): Local {
     lastRead: getLastRead(),
     rhythm: rhythmView(getEntries(), new Date()),
     scale: scaleFor(getSizeKey()),
-    streak: currentStreak(),
   };
 }
 
@@ -142,17 +131,8 @@ export default function Home() {
     };
   }, [verseKey]);
 
-  const {
-    hour,
-    streak,
-    lastRead,
-    doneToday,
-    deeper,
-    circleSurah,
-    rhythm,
-    scale,
-  } = local;
-  const returning = streakLine(streak);
+  const { hour, lastRead, doneToday, deeper, circleSurah, rhythm, scale } =
+    local;
   const tadabburHref = deeper
     ? ({
         params: { surah: String(deeper.surah), v: String(deeper.ayah) },
@@ -168,7 +148,6 @@ export default function Home() {
           {todayLabel()}
         </Text>
         <Text variant="h2">{greeting(hour)}</Text>
-        {returning ? <StreakBeads streak={streak} label={returning} /> : null}
       </View>
 
       <SurahLead
@@ -293,38 +272,6 @@ function todayLabel(): string {
   } catch {
     return new Date().toDateString();
   }
-}
-
-/** The returning streak as a string of beads: one per day, up to a week. */
-function StreakBeads({ streak, label }: { streak: number; label: string }) {
-  const { colors } = useTheme();
-  const filled = Math.min(streak, 7);
-  return (
-    <View
-      accessible
-      accessibilityLabel={label}
-      style={{
-        alignItems: "center",
-        flexDirection: "row",
-        gap: 10,
-        marginTop: 4,
-      }}
-    >
-      <View style={{ flexDirection: "row", gap: 4 }}>
-        {Array.from({ length: 7 }, (_, i) => (
-          <Svg key={i} width={9} height={9}>
-            <Path
-              d="M4.5 0 L9 4.5 L4.5 9 L0 4.5Z"
-              fill={i < filled ? colors.kola : colors.lineStrong}
-            />
-          </Svg>
-        ))}
-      </View>
-      <Text variant="soft" style={{ fontSize: 14.5, lineHeight: 20 }}>
-        {label}
-      </Text>
-    </View>
-  );
 }
 
 function ReadIconFlat({ color, size }: { color: string; size?: number }) {
