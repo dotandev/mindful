@@ -9,6 +9,28 @@
   margin: 0;
 }
 
+.home-streak {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 0;
+  font-size: 0.92rem;
+}
+.home-beads {
+  display: inline-flex;
+  gap: 4px;
+  flex: none;
+}
+.home-beads i {
+  width: 9px;
+  height: 9px;
+  background: var(--line-strong);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+.home-beads i.on {
+  background: var(--kola);
+}
+
 .home-lead {
   margin: 22px 0 18px;
   padding-top: 20px;

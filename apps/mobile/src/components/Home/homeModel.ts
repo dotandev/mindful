@@ -14,6 +14,11 @@ export function greeting(hour: number): string {
   return "Peace be upon you this evening";
 }
 
+/** Web shows the returning line from day 2 of a streak. */
+export function streakLine(streak: number): string | null {
+  return streak >= 2 ? `Day ${streak} of returning to the Qur’an` : null;
+}
+
 export interface VersePos {
   surah: number;
   ayah: number;
