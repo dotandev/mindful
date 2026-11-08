@@ -23,6 +23,28 @@ function notifySaved(): void {
   }
 }
 
+export type EntryAddedListener = (entry: JournalEntry) => void;
+const entryAddedListeners = new Set<EntryAddedListener>();
+
+/** Called after addEntry saves locally (not on sync writes). A listener that
+ *  throws never fails the save. Returns an unsubscribe. */
+export function onEntryAdded(listener: EntryAddedListener): () => void {
+  entryAddedListeners.add(listener);
+  return () => {
+    entryAddedListeners.delete(listener);
+  };
+}
+
+function notifyEntryAdded(entry: JournalEntry): void {
+  for (const listener of entryAddedListeners) {
+    try {
+      listener(entry);
+    } catch {
+      // A side effect (e.g. the circle count) must never undo a kept entry.
+    }
+  }
+}
+
 function readAll(): JournalEntry[] {
   try {
     const raw = localStorage.getItem(KEY);
@@ -71,6 +93,7 @@ export function addEntry(
   writeAll(all);
   markJournalDirty();
   notifySaved();
+  notifyEntryAdded(entry);
   return entry;
 }
 
