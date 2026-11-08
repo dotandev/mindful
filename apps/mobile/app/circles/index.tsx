@@ -145,8 +145,7 @@ export default function Circles() {
           <Card>
             <Text variant="h2">Start a circle</Text>
             <Text variant="soft">
-              For friends or a study group. Share the link; each of you journals
-              on your own.
+              Read a surah with friends. Keep your own journal.
             </Text>
             {created ? (
               <View style={{ gap: space.md }}>

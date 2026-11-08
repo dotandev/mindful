@@ -2,7 +2,7 @@ import { circlePath, normalizeName } from "@mindfulverse/core/circles";
 import type { CircleDraft } from "@mindfulverse/core/circles";
 
 export const PRIVACY_LINE =
-  "Your reflections stay private. A circle only shares which surah or verse you're reading together.";
+  "Your reflections stay private. Only the surah is shared.";
 
 const TRAILING_SLASHES = /\/+$/u;
 

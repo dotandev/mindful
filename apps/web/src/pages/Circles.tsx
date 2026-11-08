@@ -531,8 +531,7 @@ export default function Circles() {
     body = (
       <section aria-label="Start a circle" className="stack">
         <p className="soft circles-intro">
-          Sign in to start a circle and get a link to share. Anyone who opens
-          the link can join, with or without an account.
+          Sign in to start a circle. Anyone can join from your link.
         </p>
         <Link to="/account" className="btn">
           Sign in
@@ -546,9 +545,8 @@ export default function Circles() {
       <header>
         <h1>Circles</h1>
         <p className="soft circles-intro">
-          A circle is a group of friends reading the same surah together. Agree
-          on a surah or a verse, talk it over wherever you already do, and each
-          keep your own journal.
+          Read a surah with friends. Talk it over your way. Keep your own
+          journal.
         </p>
         <p className="circles-privacy">{PRIVACY_LINE}</p>
       </header>
