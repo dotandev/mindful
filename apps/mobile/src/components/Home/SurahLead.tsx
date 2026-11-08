@@ -6,7 +6,7 @@ import { router } from "expo-router";
 import type { Href } from "expo-router";
 import { Pressable, View } from "react-native";
 
-import { fonts, space } from "../../theme";
+import { fonts } from "../../theme";
 import { AdireCloth, Button, Text, useOnCloth } from "../../ui";
 import { FadeRise } from "../../ui/FadeRise";
 import { fittingVerse } from "../Circles/circleModel";
@@ -45,7 +45,7 @@ export function SurahLead({
 }) {
   return (
     <FadeRise reduce={reduce} style={{ marginTop: 6 }}>
-      <AdireCloth style={{ padding: space.lg, paddingTop: 20 }}>
+      <AdireCloth style={{ paddingHorizontal: 20, paddingVertical: 18 }}>
         <View style={{ alignItems: "flex-start", gap: 14 }}>
           <LeadBody lead={lead} surahs={surahs} surahNames={surahNames} />
         </View>
@@ -159,7 +159,7 @@ function LeadBody({
         {lead.surahs.map((n) => (
           <Button
             key={n}
-            kind="cloth"
+            kind="clothQuiet"
             title={starterLabel(n, surahs)}
             onPress={() => router.push(surahHref(n))}
           />
