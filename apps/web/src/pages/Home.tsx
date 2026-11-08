@@ -17,7 +17,6 @@ import { Link } from "react-router-dom";
 
 import {
   ChevronIcon,
-  DhikrIcon,
   DyeRule,
   ReadIcon,
   TadabburIcon,
@@ -99,12 +98,6 @@ const entries: Entry[] = [
     desc: "The Qur’an, with translation and commentary.",
     title: "Read",
     to: "/read",
-  },
-  {
-    Icon: DhikrIcon,
-    desc: "Remembrance, paced to your breath.",
-    title: "Dhikr & breath",
-    to: "/dhikr",
   },
   {
     Icon: CirclesIcon,
