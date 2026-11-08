@@ -1,7 +1,7 @@
 import { getEvents } from "@mindfulverse/core/analytics";
 import type { FollowUpAnswer } from "@mindfulverse/core/followUps";
 import { getEntries } from "@mindfulverse/core/journal";
-import { totalVisitDays } from "@mindfulverse/core/progress";
+import { currentStreak, totalVisitDays } from "@mindfulverse/core/progress";
 import { getReadView } from "@mindfulverse/core/readingPrefs";
 import { useAccount } from "@mindfulverse/core/sync/auth";
 import {
@@ -21,6 +21,7 @@ const FIRST_SEEN_KEY = "mindfulverse.firstSeen.v1";
 interface StatsSnapshot {
   eventCount: number;
   daysVisited: number;
+  streak: number;
   appOpenDays: number;
   sessionsStarted: number;
   surahTadabburStarted: number;
@@ -149,6 +150,7 @@ function computeStats(): StatsSnapshot {
   return {
     eventCount: events.length,
     daysVisited: totalVisitDays(),
+    streak: currentStreak(),
     appOpenDays: openDays.size,
     sessionsStarted,
     surahTadabburStarted,
@@ -191,7 +193,7 @@ function summaryText(s: StatsSnapshot): string {
   return [
     "MindfulVerse. My stats",
     `First seen: ${firstSeen}`,
-    `Days visited: ${s.daysVisited}`,
+    `Days visited: ${s.daysVisited} (streak ${s.streak})`,
     `Days opened: ${s.appOpenDays}`,
     `Sessions: ${s.sessionsStarted} started, ${s.sessionsCompleted} completed${
       s.completionPct === null ? "" : ` (${s.completionPct}%)`
@@ -313,7 +315,11 @@ export default function Stats() {
               gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
             }}
           >
-            <Metric label="Days visited" value={String(stats.daysVisited)} />
+            <Metric
+              label="Days visited"
+              value={String(stats.daysVisited)}
+              note={`current streak ${stats.streak} day${stats.streak === 1 ? "" : "s"}`}
+            />
             <Metric
               label="Days opened"
               value={String(stats.appOpenDays)}

@@ -1,5 +1,5 @@
 import { markProgressDirty } from "./syncFlags";
-// Local-only progress: visit days + tadabbur session completion/resume.
+// Local-only progress: visit streak + tadabbur session completion/resume.
 // v0 has no accounts — everything lives in localStorage, mirroring journal.ts.
 import type { LocalProgress } from "./types";
 
@@ -40,6 +40,31 @@ export function recordVisit(): void {
     localStorage.setItem(VISITS_KEY, JSON.stringify(visits.slice(-366)));
     markProgressDirty();
   }
+}
+
+/** Consecutive days ending today (or yesterday, so a morning visit keeps the chain). */
+export function currentStreak(): number {
+  const visits = new Set(readVisits());
+  if (visits.size === 0) {
+    return 0;
+  }
+  let streak = 0;
+  const cursor = new Date();
+  // allow the chain to be anchored at yesterday if today hasn't been recorded yet
+  if (!visits.has(today())) {
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  for (;;) {
+    const m = String(cursor.getMonth() + 1).padStart(2, "0");
+    const day = String(cursor.getDate()).padStart(2, "0");
+    const key = `${cursor.getFullYear()}-${m}-${day}`;
+    if (!visits.has(key)) {
+      break;
+    }
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
 }
 
 export function totalVisitDays(): number {
