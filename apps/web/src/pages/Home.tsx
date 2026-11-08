@@ -1,3 +1,9 @@
+import {
+  getJoinedCircle,
+  onJoinedCircleChange,
+  refreshJoinedCircle,
+} from "@mindfulverse/core/circles";
+import type { Circle } from "@mindfulverse/core/circles";
 import { getCircleSurah, STARTER_SURAHS } from "@mindfulverse/core/circleSurah";
 import { todayVerseKey } from "@mindfulverse/core/dailyVerse";
 import { loadAyahsByKeys, loadSurahs } from "@mindfulverse/core/data";
@@ -20,9 +26,17 @@ import {
   ReadIcon,
   TadabburIcon,
 } from "../components/Adire";
+import CircleCount from "../components/CircleCount";
 import FollowUpCard from "../components/FollowUpCard";
+import WeekRhythm from "../components/WeekRhythm";
 import { usePrefersReducedMotion } from "../lib/usePrefersReducedMotion";
-import { starterLabel, surahLabel } from "./home-lead";
+import {
+  chooseLead,
+  circleBeginAction,
+  circleFocus,
+  starterLabel,
+  surahLabel,
+} from "./home-lead";
 
 import "./home.css";
 
@@ -50,6 +64,33 @@ interface Entry {
   soon?: boolean;
 }
 
+/** Circles: three readers around one centre. */
+function CirclesIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      width={22}
+      height={22}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path
+        d="M12 10.4 13.6 12 12 13.6 10.4 12Z"
+        fill="currentColor"
+        stroke="none"
+      />
+      <circle cx="12" cy="4.6" r="2.2" />
+      <circle cx="5.6" cy="16.4" r="2.2" />
+      <circle cx="18.4" cy="16.4" r="2.2" />
+    </svg>
+  );
+}
+
 const entries: Entry[] = [
   {
     Icon: TadabburIcon,
@@ -69,6 +110,12 @@ const entries: Entry[] = [
     title: "Dhikr & breath",
     to: "/dhikr",
   },
+  {
+    Icon: CirclesIcon,
+    desc: "Read a surah together with friends.",
+    title: "Circles",
+    to: "/circles",
+  },
 ];
 
 const LEAD_LINE =
@@ -86,11 +133,19 @@ function whereYouAre(ayah: number, meta: SurahMeta | undefined): string {
 
 function SurahLead({
   surahs,
+  joined,
 }: {
   surahs: Map<number, SurahMeta>;
+  joined: Circle | null;
 }): JSX.Element {
   const current = latestSurahTadabbur();
-  if (current) {
+  const circle = getCircleSurah();
+  const lead = chooseLead({
+    circleSurah: circle !== null,
+    inProgress: current !== null,
+    joinedCircle: joined !== null,
+  });
+  if (lead === "continue" && current) {
     const meta = surahs.get(current.surah);
     const name = surahLabel(current.surah, meta);
     return (
@@ -117,8 +172,34 @@ function SurahLead({
       </section>
     );
   }
-  const circle = getCircleSurah();
-  if (circle) {
+  if (lead === "circle" && joined) {
+    const meta = surahs.get(joined.surah);
+    const name = surahLabel(joined.surah, meta);
+    const focus = circleFocus(joined, meta?.ayahCount);
+    const begin = circleBeginAction(focus, name);
+    const eyebrow = `${joined.name} is reading`;
+    return (
+      <section aria-label={eyebrow} className="cloth home-lead fade-rise">
+        <p className="cloth-eyebrow">{eyebrow}</p>
+        <h2 className="home-lead-title">{name}</h2>
+        <p className="cloth-soft home-lead-line">
+          {focus.verse === null ? LEAD_LINE : `Focus: verse ${focus.verse}`}
+        </p>
+        <div className="home-lead-actions">
+          <Link to={begin.to} className="btn cloth-btn">
+            {begin.label}
+          </Link>
+          <Link to="/sessions" className="home-lead-quiet">
+            Choose another surah
+          </Link>
+          <Link to="/circles" className="home-lead-quiet">
+            Your circle
+          </Link>
+        </div>
+      </section>
+    );
+  }
+  if (lead === "circle-surah" && circle) {
     const name = surahLabel(circle.surah, surahs.get(circle.surah));
     return (
       <section
@@ -171,6 +252,7 @@ export default function Home() {
   const [hero, setHero] = useState<Ayah | null>(null);
   const [surahs, setSurahs] = useState<Map<number, SurahMeta>>(new Map());
   const [mounted, setMounted] = useState(false);
+  const [joined, setJoined] = useState<Circle | null>(getJoinedCircle);
   const reduced = usePrefersReducedMotion();
   const surahNames = useMemo(
     () => new Map([...surahs.values()].map((s) => [s.number, s.name])),
@@ -179,6 +261,24 @@ export default function Home() {
 
   useEffect(() => {
     document.title = "MindfulVerse";
+  }, []);
+
+  useEffect(() => {
+    const off = onJoinedCircleChange(setJoined);
+    const refresh = () => {
+      void refreshJoinedCircle().then(setJoined);
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        refresh();
+      }
+    };
+    refresh();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      off();
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 
   useEffect(() => {
@@ -267,9 +367,19 @@ export default function Home() {
         </p>
       )}
 
-      <SurahLead surahs={surahs} />
+      <SurahLead surahs={surahs} joined={joined} />
+
+      {joined && (
+        <CircleCount
+          code={joined.code}
+          name={joined.name}
+          className="home-circle-count"
+        />
+      )}
 
       <FollowUpCard surahNames={surahNames} />
+
+      <WeekRhythm />
 
       <section aria-label="Today’s verse" className="card home-verse">
         <p className="eyebrow home-verse-eyebrow">Today’s verse</p>

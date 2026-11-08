@@ -1,6 +1,7 @@
 import "./setup"; // must stay first: wires the core to web platform APIs
 import { pingActiveDay } from "@mindfulverse/core/activeDays";
 import { trackAppOpen } from "@mindfulverse/core/analytics";
+import { wireCircleReflections } from "@mindfulverse/core/circles";
 import { recordVisit } from "@mindfulverse/core/progress";
 import { AccountProvider } from "@mindfulverse/core/sync/auth";
 import { initSync } from "@mindfulverse/core/sync/engine";
@@ -42,6 +43,7 @@ document.addEventListener("visibilitychange", () => {
 });
 inject(); // Vercel visit analytics — anonymous page views, no cookies
 initSync();
+wireCircleReflections();
 
 const rootElement = document.querySelector("#root");
 if (!rootElement) {

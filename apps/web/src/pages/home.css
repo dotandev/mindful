@@ -207,3 +207,6 @@ a.home-entry:active {
     transform: none;
   }
 }
+.home-circle-count {
+  margin: -6px 0 18px;
+}
