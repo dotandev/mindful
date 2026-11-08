@@ -121,6 +121,7 @@ function RootNavigator() {
         <Stack.Screen name="tadabbur/[surah]" options={{ title: "Tadabbur" }} />
         <Stack.Screen name="checkin" options={{ title: "Check-in" }} />
         <Stack.Screen name="circle/[surah]" options={{ headerShown: false }} />
+        <Stack.Screen name="circles/index" options={{ title: "Circles" }} />
       </Stack>
     </>
   );

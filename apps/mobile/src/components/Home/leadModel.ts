@@ -1,5 +1,6 @@
 // Pure logic for Home's lead card and "Or ponder a theme" (web:
 // apps/web/src/pages/Home.tsx). No React Native imports, so vitest runs it.
+import type { Circle } from "@mindfulverse/core/circles";
 import {
   parseSurahNumber,
   STARTER_SURAHS,
@@ -14,22 +15,41 @@ export const BEGIN_LINE =
   "Write why you’re reading, ponder it verse by verse with Ibn Kathir, and keep a page for it. A week later, we’ll ask how your action went.";
 
 export const CIRCLE_EYEBROW = "Your circle is reading";
+export const namedEyebrow = (name: string): string => `${name} is reading`;
+export const focusLine = (verse: number): string => `Focus: verse ${verse}`;
+
+/** "Go to verse 10" when the circle has a focus verse, else "Begin Al-Kahf". */
+export function namedAction(surahTitle: string, verse: number | null): string {
+  return verse === null ? `Begin ${surahTitle}` : `Go to verse ${verse}`;
+}
+
 export const STARTERS_HEADING = "Short surahs to begin with";
 
 /** What Home's lead card offers, most specific first. */
 export type Lead =
   | { kind: "continue"; surah: number; ayah: number }
+  | { kind: "named"; name: string; surah: number; verse: number | null }
   | { kind: "circle"; surah: number }
   | { kind: "starters"; surahs: readonly number[] };
 
-/** A surah tadabbur in progress beats the circle's surah, which beats the
- *  short starter surahs. A circle value that isn't a surah number is ignored. */
+/** A surah tadabbur in progress beats the joined circle, which beats an old
+ *  numeric circle link's surah, which beats the short starter surahs. A
+ *  circle value that isn't a surah number is ignored. */
 export function chooseLead(
   deeper: VersePos | null,
-  circleSurah: unknown
+  circleSurah: unknown,
+  joined: Pick<Circle, "name" | "surah" | "verse"> | null = null
 ): Lead {
   if (deeper) {
     return { ayah: deeper.ayah, kind: "continue", surah: deeper.surah };
+  }
+  if (joined) {
+    return {
+      kind: "named",
+      name: joined.name,
+      surah: joined.surah,
+      verse: joined.verse,
+    };
   }
   const circle = parseSurahNumber(circleSurah);
   if (circle !== null) {

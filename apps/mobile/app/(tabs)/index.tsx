@@ -1,7 +1,13 @@
+import {
+  getJoinedCircle,
+  onJoinedCircleChange,
+  refreshJoinedCircle,
+} from "@mindfulverse/core/circles";
+import type { Circle } from "@mindfulverse/core/circles";
 import { getCircleSurah } from "@mindfulverse/core/circleSurah";
 import { todayVerseKey } from "@mindfulverse/core/dailyVerse";
 import { loadAyahsByKeys, loadSurahs } from "@mindfulverse/core/data";
-import { checkedInToday } from "@mindfulverse/core/journal";
+import { checkedInToday, getEntries } from "@mindfulverse/core/journal";
 import {
   currentStreak,
   getLastRead,
@@ -18,6 +24,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Linking, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
+import { CirclesIcon } from "../../src/components/Circles/CirclesIcon";
+import { useCircleCountLine } from "../../src/components/Circles/useCircleCount";
 import { FollowUpCard } from "../../src/components/Home/FollowUpCard";
 import {
   HomeEntry,
@@ -32,6 +40,9 @@ import type { VersePos } from "../../src/components/Home/homeModel";
 import { chooseLead } from "../../src/components/Home/leadModel";
 import { SurahLead } from "../../src/components/Home/SurahLead";
 import { ThemeSection } from "../../src/components/Home/ThemeSection";
+import { rhythmView } from "../../src/components/Home/weekModel";
+import type { RhythmView } from "../../src/components/Home/weekModel";
+import { WeekRhythm } from "../../src/components/Home/WeekRhythm";
 import { space, useTheme } from "../../src/theme";
 import { ArabicText, Button, Card, DyeRule, Screen, Text } from "../../src/ui";
 import { useReducedMotion } from "../../src/ui/FadeRise";
@@ -44,6 +55,7 @@ interface Local {
   doneToday: boolean;
   deeper: VersePos | null;
   circleSurah: number | null;
+  rhythm: RhythmView | null;
   scale: number;
 }
 
@@ -57,6 +69,7 @@ function readLocal(): Local {
     doneToday: checkedInToday(),
     hour: new Date().getHours(),
     lastRead: getLastRead(),
+    rhythm: rhythmView(getEntries(), new Date()),
     scale: scaleFor(getSizeKey()),
     streak: currentStreak(),
   };
@@ -68,18 +81,25 @@ export default function Home() {
   const accountId = user?.id ?? null;
   const reduce = useReducedMotion();
   const [local, setLocal] = useState<Local>(readLocal);
+  const [joined, setJoined] = useState<Circle | null>(getJoinedCircle);
   const [verseKey, setVerseKey] = useState<string | null>(null);
   const [hero, setHero] = useState<Ayah | null>(null);
   const [heroError, setHeroError] = useState(false);
   const [surahs, setSurahs] = useState<Map<number, SurahMeta>>(new Map());
+  const circleCount = useCircleCountLine(joined);
   const surahNames = useMemo(
     () => new Map([...surahs].map(([n, s]) => [n, s.name])),
     [surahs]
   );
 
+  useEffect(() => onJoinedCircleChange(setJoined), []);
+
   useFocusEffect(
     useCallback(() => {
       setLocal(readLocal());
+      setJoined(getJoinedCircle());
+      // The owner may have moved the circle on to another surah or verse.
+      void refreshJoinedCircle();
       // The day can turn while the app sits in the background. Each person
       // has their own verse; wait for the account so it doesn't flip.
       if (!accountLoading) {
@@ -122,8 +142,16 @@ export default function Home() {
     };
   }, [verseKey]);
 
-  const { hour, streak, lastRead, doneToday, deeper, circleSurah, scale } =
-    local;
+  const {
+    hour,
+    streak,
+    lastRead,
+    doneToday,
+    deeper,
+    circleSurah,
+    rhythm,
+    scale,
+  } = local;
   const returning = streakLine(streak);
   const tadabburHref = deeper
     ? ({
@@ -144,11 +172,17 @@ export default function Home() {
       </View>
 
       <SurahLead
-        lead={chooseLead(deeper, circleSurah)}
+        lead={chooseLead(deeper, circleSurah, joined)}
         surahs={surahs}
         surahNames={surahNames}
         reduce={reduce}
       />
+      {circleCount ? (
+        <Text variant="soft" style={{ fontSize: 15.5, lineHeight: 22 }}>
+          {circleCount}
+        </Text>
+      ) : null}
+      {rhythm ? <WeekRhythm rhythm={rhythm} /> : null}
 
       <FollowUpCard surahNames={surahNames} reduce={reduce} />
 
@@ -201,6 +235,13 @@ export default function Home() {
           title="Tadabbur"
           desc="Ponder the Qur’an, surah by surah."
           href={tadabburHref}
+        />
+        <HomeEntryDivider />
+        <HomeEntry
+          Icon={CirclesIcon}
+          title="Circles"
+          desc="Read a surah together with friends."
+          href="/circles"
         />
         <HomeEntryDivider />
         <HomeEntry

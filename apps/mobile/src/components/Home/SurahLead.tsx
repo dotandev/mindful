@@ -1,6 +1,6 @@
 // Home's lead card (web: apps/web/src/pages/Home.tsx): the surah journal comes
 // first. Continue the surah in progress, begin the surah your circle is
-// reading, or begin with a short one.
+// reading (at its focus verse when it has one), or begin with a short one.
 import type { SurahMeta } from "@mindfulverse/core/types";
 import { router } from "expo-router";
 import type { Href } from "expo-router";
@@ -9,11 +9,15 @@ import { Pressable, View } from "react-native";
 import { fonts, space } from "../../theme";
 import { AdireCloth, Button, Text, useOnCloth } from "../../ui";
 import { FadeRise } from "../../ui/FadeRise";
+import { fittingVerse } from "../Circles/circleModel";
 import {
   BEGIN_LINE,
   BEGIN_TITLE,
   CIRCLE_EYEBROW,
   continueTitle,
+  focusLine,
+  namedAction,
+  namedEyebrow,
   STARTERS_HEADING,
   starterLabel,
   surahName,
@@ -81,21 +85,45 @@ function LeadBody({
       </>
     );
   }
+  if (lead.kind === "named") {
+    const name = surahName(lead.surah, surahs);
+    const verse = fittingVerse(lead.verse, surahs.get(lead.surah)?.ayahCount);
+    return (
+      <>
+        <View style={{ gap: 4 }}>
+          <Eyebrow>{namedEyebrow(lead.name)}</Eyebrow>
+          <Text variant="h2" style={{ color: cloth.strong }}>
+            {name}
+          </Text>
+          {verse === null ? null : (
+            <Text
+              style={{
+                color: cloth.strong,
+                fontFamily: fonts.readMedium,
+                fontSize: 16,
+                lineHeight: 22,
+              }}
+            >
+              {focusLine(verse)}
+            </Text>
+          )}
+        </View>
+        <BeginLine />
+        <Button
+          kind="cloth"
+          title={namedAction(name, verse)}
+          onPress={() => router.push(surahHref(lead.surah, verse ?? undefined))}
+        />
+        <QuietLink title="Choose another surah" href="/tadabbur" />
+      </>
+    );
+  }
   if (lead.kind === "circle") {
     const name = surahName(lead.surah, surahs);
     return (
       <>
         <View style={{ gap: 4 }}>
-          <Text
-            style={{
-              color: cloth.soft,
-              fontFamily: fonts.readMedium,
-              fontSize: 14.5,
-              lineHeight: 20,
-            }}
-          >
-            {CIRCLE_EYEBROW}
-          </Text>
+          <Eyebrow>{CIRCLE_EYEBROW}</Eyebrow>
           <Text variant="h2" style={{ color: cloth.strong }}>
             {name}
           </Text>
@@ -139,6 +167,22 @@ function LeadBody({
       </View>
       <QuietLink title="Choose another surah" href="/tadabbur" />
     </>
+  );
+}
+
+function Eyebrow({ children }: { children: string }) {
+  const cloth = useOnCloth();
+  return (
+    <Text
+      style={{
+        color: cloth.soft,
+        fontFamily: fonts.readMedium,
+        fontSize: 14.5,
+        lineHeight: 20,
+      }}
+    >
+      {children}
+    </Text>
   );
 }
 

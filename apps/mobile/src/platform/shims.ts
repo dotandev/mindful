@@ -15,3 +15,11 @@ const c = g.crypto;
 if (typeof c.randomUUID !== "function") {
   c.randomUUID = () => Crypto.randomUUID();
 }
+
+// Nor crypto.getRandomValues; circles.ts uses it for circle codes.
+const r = g.crypto as {
+  getRandomValues?: (array: Uint8Array) => Uint8Array;
+};
+if (typeof r.getRandomValues !== "function") {
+  r.getRandomValues = (array) => Crypto.getRandomValues(array);
+}
