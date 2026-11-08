@@ -83,6 +83,22 @@ function TadabburNavIcon({ active }: NavIconProps) {
   );
 }
 
+/** Circles: three readers around one centre. */
+function CirclesNavIcon({ active }: NavIconProps) {
+  return (
+    <IconBase>
+      <path
+        d="M12 10.4 13.6 12 12 13.6 10.4 12Z"
+        fill="currentColor"
+        stroke="none"
+      />
+      <circle cx="12" cy="4.6" r="2.2" {...tint(active)} />
+      <circle cx="5.6" cy="16.4" r="2.2" {...tint(active)} />
+      <circle cx="18.4" cy="16.4" r="2.2" {...tint(active)} />
+    </IconBase>
+  );
+}
+
 /** Read: an open mushaf. */
 function MushafIcon({ active }: NavIconProps) {
   return (
@@ -125,6 +141,7 @@ const tabs = [
   { Icon: HomeIcon, end: true, label: "Home", phone: true, to: "/" },
   { Icon: HeartIcon, label: "Check-in", phone: false, to: "/checkin" },
   { Icon: TadabburNavIcon, label: "Tadabbur", phone: false, to: "/sessions" },
+  { Icon: CirclesNavIcon, label: "Circles", phone: false, to: "/circles" },
   { Icon: MushafIcon, label: "Read", phone: true, to: "/read" },
   { Icon: PenIcon, label: "Journal", phone: true, to: "/journal" },
   { Icon: PersonIcon, label: "Account", phone: true, to: "/account" },
