@@ -1,0 +1,83 @@
+/* Circles: one plain column. Forms reuse the account fields. */
+.circles {
+  max-width: 560px;
+}
+.circles-intro {
+  margin: 8px 0 0;
+  line-height: 1.55;
+}
+.circles-privacy {
+  margin: 12px 0 0;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.circles-heading {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 28px 0 0;
+}
+.circle-form {
+  max-width: 420px;
+}
+.circle-verse-input {
+  max-width: 160px;
+}
+.circle-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.circle-share {
+  display: grid;
+  gap: 12px;
+}
+.circle-link {
+  font-size: 0.92rem;
+}
+.circle-note {
+  min-height: 1.4em;
+  margin: 0;
+  font-size: 0.9rem;
+}
+.circle-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.circle-item {
+  display: grid;
+  gap: 12px;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+.circle-item-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+.circle-item-line {
+  margin: 0;
+}
+.circle-joined {
+  display: grid;
+  gap: 10px;
+}
+.circle-joined .eyebrow {
+  margin: 0;
+}
+.circle-quiet {
+  min-height: 44px;
+  padding: 0 4px;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--indigo);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.circle-quiet-danger {
+  color: var(--kola);
+}

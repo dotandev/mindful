@@ -1,37 +1,39 @@
+import {
+  getJoinedCircle,
+  onJoinedCircleChange,
+  refreshJoinedCircle,
+} from "@mindfulverse/core/circles";
+import type { Circle } from "@mindfulverse/core/circles";
 import { getCircleSurah } from "@mindfulverse/core/circleSurah";
 import { todayVerseKey } from "@mindfulverse/core/dailyVerse";
 import { loadAyahsByKeys, loadSurahs } from "@mindfulverse/core/data";
-import { checkedInToday } from "@mindfulverse/core/journal";
-import {
-  currentStreak,
-  getLastRead,
-  latestSurahTadabbur,
-} from "@mindfulverse/core/progress";
+import { checkedInToday, getEntries } from "@mindfulverse/core/journal";
+import { getLastRead, latestSurahTadabbur } from "@mindfulverse/core/progress";
 import { getSizeKey, scaleFor } from "@mindfulverse/core/readingPrefs";
 import { useAccount } from "@mindfulverse/core/sync/auth";
 import type { Ayah, SurahMeta } from "@mindfulverse/core/types";
-// Home (web: apps/web/src/pages/Home.tsx): greeting, streak, the surah journal
+// Home (web: apps/web/src/pages/Home.tsx): greeting, the surah journal
 // first, a due follow-up, the verse of the day, a few themes, then the places
 // to go with more time.
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Linking, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
 
+import { CirclesIcon } from "../../src/components/Circles/CirclesIcon";
+import { useCircleCountLine } from "../../src/components/Circles/useCircleCount";
 import { FollowUpCard } from "../../src/components/Home/FollowUpCard";
 import {
   HomeEntry,
   HomeEntryDivider,
 } from "../../src/components/Home/HomeEntry";
-import {
-  greeting,
-  readDesc,
-  streakLine,
-} from "../../src/components/Home/homeModel";
+import { greeting, readDesc } from "../../src/components/Home/homeModel";
 import type { VersePos } from "../../src/components/Home/homeModel";
 import { chooseLead } from "../../src/components/Home/leadModel";
 import { SurahLead } from "../../src/components/Home/SurahLead";
 import { ThemeSection } from "../../src/components/Home/ThemeSection";
+import { rhythmView } from "../../src/components/Home/weekModel";
+import type { RhythmView } from "../../src/components/Home/weekModel";
+import { WeekRhythm } from "../../src/components/Home/WeekRhythm";
 import { space, useTheme } from "../../src/theme";
 import { ArabicText, Button, Card, DyeRule, Screen, Text } from "../../src/ui";
 import { useReducedMotion } from "../../src/ui/FadeRise";
@@ -39,11 +41,11 @@ import { ReadIcon, TadabburIcon } from "../../src/ui/icons";
 
 interface Local {
   hour: number;
-  streak: number;
   lastRead: VersePos | null;
   doneToday: boolean;
   deeper: VersePos | null;
   circleSurah: number | null;
+  rhythm: RhythmView | null;
   scale: number;
 }
 
@@ -57,8 +59,8 @@ function readLocal(): Local {
     doneToday: checkedInToday(),
     hour: new Date().getHours(),
     lastRead: getLastRead(),
+    rhythm: rhythmView(getEntries(), new Date()),
     scale: scaleFor(getSizeKey()),
-    streak: currentStreak(),
   };
 }
 
@@ -68,18 +70,25 @@ export default function Home() {
   const accountId = user?.id ?? null;
   const reduce = useReducedMotion();
   const [local, setLocal] = useState<Local>(readLocal);
+  const [joined, setJoined] = useState<Circle | null>(getJoinedCircle);
   const [verseKey, setVerseKey] = useState<string | null>(null);
   const [hero, setHero] = useState<Ayah | null>(null);
   const [heroError, setHeroError] = useState(false);
   const [surahs, setSurahs] = useState<Map<number, SurahMeta>>(new Map());
+  const circleCount = useCircleCountLine(joined);
   const surahNames = useMemo(
     () => new Map([...surahs].map(([n, s]) => [n, s.name])),
     [surahs]
   );
 
+  useEffect(() => onJoinedCircleChange(setJoined), []);
+
   useFocusEffect(
     useCallback(() => {
       setLocal(readLocal());
+      setJoined(getJoinedCircle());
+      // The owner may have moved the circle on to another surah or verse.
+      void refreshJoinedCircle();
       // The day can turn while the app sits in the background. Each person
       // has their own verse; wait for the account so it doesn't flip.
       if (!accountLoading) {
@@ -122,9 +131,8 @@ export default function Home() {
     };
   }, [verseKey]);
 
-  const { hour, streak, lastRead, doneToday, deeper, circleSurah, scale } =
+  const { hour, lastRead, doneToday, deeper, circleSurah, rhythm, scale } =
     local;
-  const returning = streakLine(streak);
   const tadabburHref = deeper
     ? ({
         params: { surah: String(deeper.surah), v: String(deeper.ayah) },
@@ -140,15 +148,20 @@ export default function Home() {
           {todayLabel()}
         </Text>
         <Text variant="h2">{greeting(hour)}</Text>
-        {returning ? <StreakBeads streak={streak} label={returning} /> : null}
       </View>
 
       <SurahLead
-        lead={chooseLead(deeper, circleSurah)}
+        lead={chooseLead(deeper, circleSurah, joined)}
         surahs={surahs}
         surahNames={surahNames}
         reduce={reduce}
       />
+      {circleCount ? (
+        <Text variant="soft" style={{ fontSize: 15.5, lineHeight: 22 }}>
+          {circleCount}
+        </Text>
+      ) : null}
+      {rhythm ? <WeekRhythm rhythm={rhythm} /> : null}
 
       <FollowUpCard surahNames={surahNames} reduce={reduce} />
 
@@ -204,6 +217,13 @@ export default function Home() {
         />
         <HomeEntryDivider />
         <HomeEntry
+          Icon={CirclesIcon}
+          title="Circles"
+          desc="Read a surah together with friends."
+          href="/circles"
+        />
+        <HomeEntryDivider />
+        <HomeEntry
           Icon={ReadIconFlat}
           title="Read"
           desc={readDesc(lastRead)}
@@ -252,38 +272,6 @@ function todayLabel(): string {
   } catch {
     return new Date().toDateString();
   }
-}
-
-/** The returning streak as a string of beads: one per day, up to a week. */
-function StreakBeads({ streak, label }: { streak: number; label: string }) {
-  const { colors } = useTheme();
-  const filled = Math.min(streak, 7);
-  return (
-    <View
-      accessible
-      accessibilityLabel={label}
-      style={{
-        alignItems: "center",
-        flexDirection: "row",
-        gap: 10,
-        marginTop: 4,
-      }}
-    >
-      <View style={{ flexDirection: "row", gap: 4 }}>
-        {Array.from({ length: 7 }, (_, i) => (
-          <Svg key={i} width={9} height={9}>
-            <Path
-              d="M4.5 0 L9 4.5 L4.5 9 L0 4.5Z"
-              fill={i < filled ? colors.kola : colors.lineStrong}
-            />
-          </Svg>
-        ))}
-      </View>
-      <Text variant="soft" style={{ fontSize: 14.5, lineHeight: 20 }}>
-        {label}
-      </Text>
-    </View>
-  );
 }
 
 function ReadIconFlat({ color, size }: { color: string; size?: number }) {

@@ -5,6 +5,9 @@ import {
   BEGIN_LINE,
   chooseLead,
   continueTitle,
+  focusLine,
+  namedAction,
+  namedEyebrow,
   starterLabel,
   surahName,
   themePicks,
@@ -77,6 +80,28 @@ describe(chooseLead, () => {
     expect(chooseLead(null, 94)).toStrictEqual({ kind: "circle", surah: 94 });
   });
 
+  const joined = { name: "Friday friends", surah: 18, verse: 10 };
+
+  it("continues a surah in progress before the joined circle", () => {
+    expect(chooseLead(deeper, 94, joined).kind).toBe("continue");
+  });
+
+  it("suggests the joined circle before an old numeric circle surah", () => {
+    expect(chooseLead(null, 94, joined)).toStrictEqual({
+      kind: "named",
+      name: "Friday friends",
+      surah: 18,
+      verse: 10,
+    });
+  });
+
+  it("falls back to the numeric circle surah without a joined circle", () => {
+    expect(chooseLead(null, 94, null)).toStrictEqual({
+      kind: "circle",
+      surah: 94,
+    });
+  });
+
   it("ignores a circle value that isn't a surah number", () => {
     for (const bad of [0, 115, 2.5, "x", null, undefined]) {
       expect(chooseLead(null, bad)).toStrictEqual({
@@ -84,6 +109,18 @@ describe(chooseLead, () => {
         surahs: [1, 103, 93, 94],
       });
     }
+  });
+});
+
+describe("named circle copy", () => {
+  it("names the circle and its focus", () => {
+    expect(namedEyebrow("Friday friends")).toBe("Friday friends is reading");
+    expect(focusLine(10)).toBe("Focus: verse 10");
+  });
+
+  it("goes to the focus verse when there is one", () => {
+    expect(namedAction("Al-Kahf", 10)).toBe("Go to verse 10");
+    expect(namedAction("Al-Kahf", null)).toBe("Begin Al-Kahf");
   });
 });
 

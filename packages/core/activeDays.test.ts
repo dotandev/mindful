@@ -9,6 +9,7 @@ vi.stubGlobal("localStorage", {
 
 import { getInstallId, localDay, recordActiveDay } from "./activeDays";
 import type { ActiveDayRow } from "./activeDays";
+import { joinCircle } from "./circles";
 
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
@@ -56,15 +57,29 @@ describe(recordActiveDay, () => {
   const evening = new Date(2026, 10, 7, 21, 0);
   const nextDay = new Date(2026, 10, 8, 7, 0);
 
-  it("sends one row with only install id, day and platform", async () => {
+  it("sends one row with only install id, day, platform and circle", async () => {
     const send = vi.fn(async (_row: ActiveDayRow) => null);
     await recordActiveDay("android", morning, send);
     expect(send).toHaveBeenCalledOnce();
     expect(send.mock.calls[0]?.[0]).toStrictEqual({
+      circle_code: null,
       day: "2026-11-07",
       install_id: getInstallId(),
       platform: "android",
     });
+  });
+
+  it("includes the joined circle's code", async () => {
+    joinCircle({
+      code: "abc234",
+      name: "Friday friends",
+      surah: 18,
+      updatedAt: 0,
+      verse: 10,
+    });
+    const send = vi.fn(async (_row: ActiveDayRow) => null);
+    await recordActiveDay("web", morning, send);
+    expect(send.mock.calls[0]?.[0].circle_code).toBe("abc234");
   });
 
   it("sends once per local day", async () => {
