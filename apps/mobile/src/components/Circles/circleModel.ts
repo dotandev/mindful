@@ -7,10 +7,10 @@ import type { SurahMeta } from "@mindfulverse/core/types";
 export const WEB_ORIGIN = "https://mindfulverse.vercel.app";
 
 export const PRIVACY_LINE =
-  "Your reflections stay private. A circle only shares which surah or verse you're reading together.";
+  "Your reflections stay private. Only the surah is shared.";
 export const SIGNED_OUT_LINES = [
-  "A circle is a few friends or a study group reading the same surah together. Start one and share the link; anyone can join without an account.",
-  "To start a circle, sign in on the Account tab so it stays yours to change.",
+  "Read a surah with friends. Anyone can join from your link.",
+  "Sign in on the Account tab to start one.",
 ] as const;
 
 const DIGITS = /^\d+$/u;

@@ -164,7 +164,7 @@ describe(resolveCircleLink, () => {
 describe("privacy copy", () => {
   it("keeps the agreed line", () => {
     expect(PRIVACY_LINE).toBe(
-      "Your reflections stay private. A circle only shares which surah or verse you're reading together."
+      "Your reflections stay private. Only the surah is shared."
     );
   });
 });
