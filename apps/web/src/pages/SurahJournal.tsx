@@ -13,6 +13,7 @@ import { Link, useParams } from "react-router-dom";
 import { buildJournalText, formatDate, saveFile } from "../lib/journalExport";
 import { surahJournalSections } from "../lib/surahJournalExport";
 
+import "./journal-empty.css";
 import "./surah-journal.css";
 
 const MAX_SURAH = 114;
@@ -194,13 +195,11 @@ function SurahJournalPage() {
       </header>
 
       {page.isEmpty ? (
-        <div className="card stack">
+        <div className="journal-empty">
           <p className="soft">{`Nothing written on ${name} yet.`}</p>
-          <div>
-            <Link to={`/tadabbur/${surahNumber}`} className="btn">
-              Begin pondering
-            </Link>
-          </div>
+          <Link to={`/tadabbur/${surahNumber}`} className="btn secondary">
+            Begin pondering
+          </Link>
         </div>
       ) : (
         <>

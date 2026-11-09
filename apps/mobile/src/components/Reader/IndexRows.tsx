@@ -26,7 +26,7 @@ export function verseHref(surah: number, ayah: number) {
  *  the Arabic name on the right. */
 export const SurahRow = memo(({ surah }: { surah: SurahMeta }) => {
   const { colors } = useTheme();
-  const ayahs = `${surah.ayahCount} ${surah.ayahCount === 1 ? "ayah" : "ayahs"}`;
+  const ayahs = `${surah.ayahCount} ${surah.ayahCount === 1 ? "verse" : "verses"}`;
   const place = revelationPlace(surah.number);
   const arabic = arabicSurahName(surah.number);
   return (

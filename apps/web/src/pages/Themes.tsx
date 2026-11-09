@@ -106,10 +106,7 @@ export default function Themes() {
     <div className="stack">
       <header>
         <h1>Verses by topic</h1>
-        <p className="soft">
-          An index of topics across the Qur’an. Each links to the passages that
-          speak to it.
-        </p>
+        <p className="soft">Find the passages on a topic.</p>
         <p className="muted" style={{ margin: 0 }}>
           {filtering
             ? `${count} ${filtered.length === 1 ? "topic matches" : "topics match"} your filter`

@@ -161,7 +161,7 @@ export default function Reader() {
                         <span className="row-title">{s.name}</span>
                         <span className="row-meta">
                           {place ? `${place} · ` : ""}
-                          {s.ayahCount} {s.ayahCount === 1 ? "ayah" : "ayahs"}
+                          {s.ayahCount} {s.ayahCount === 1 ? "verse" : "verses"}
                         </span>
                       </span>
                       {arabic && (

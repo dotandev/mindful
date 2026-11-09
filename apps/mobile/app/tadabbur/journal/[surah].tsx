@@ -179,10 +179,11 @@ function SurahJournalPage({ surah }: { surah: number | null }) {
         </View>
 
         {page.isEmpty ? (
-          <Card>
+          <View style={{ alignItems: "flex-start", gap: space.sm }}>
             <Text variant="soft">{`Nothing written on ${name} yet.`}</Text>
             <View style={{ alignItems: "flex-start" }}>
               <Button
+                kind="secondary"
                 title="Begin pondering"
                 onPress={() =>
                   router.push({
@@ -192,7 +193,7 @@ function SurahJournalPage({ surah }: { surah: number | null }) {
                 }
               />
             </View>
-          </Card>
+          </View>
         ) : (
           <>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
