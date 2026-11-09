@@ -29,10 +29,11 @@ export function rhythmView(
  *  fewer than two people kept a reflection. */
 export function circleCountText(
   circle: Pick<Circle, "name"> | null,
-  count: number | null
+  count: number | null,
+  named = true
 ): string | null {
   if (!circle || count === null) {
     return null;
   }
-  return circleCountLine(circle.name, count);
+  return circleCountLine(named ? circle.name : null, count);
 }

@@ -81,9 +81,7 @@ export function AuthForm({
         }
         if (needsVerification) {
           setPendingVerification(true);
-          setNotice(
-            "Check your email for a 6-digit code, then enter it below."
-          );
+          setNotice("Check your email for a 6-digit code.");
           return;
         }
         track({ method: "password", type: "account_signup" });
@@ -247,10 +245,7 @@ export function AuthForm({
         />
       </View>
       {googleOnWeb ? (
-        <Small>
-          Google sign-in is on the website only for now. In the app, use your
-          email and password.
-        </Small>
+        <Small>Google sign-in is on the website for now.</Small>
       ) : null}
     </View>
   );

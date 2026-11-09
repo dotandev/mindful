@@ -87,7 +87,9 @@ export function OwnedCircle({
   const [error, setError] = useState<string | null>(null);
   const isJoined = joinedCode === circle.code;
   // The joined circle's card at the top of the screen already shows its count.
-  const countLine = useCircleCountLine(isJoined ? null : circle);
+  const countLine = useCircleCountLine(isJoined ? null : circle, {
+    named: false,
+  });
 
   async function remove() {
     setBusy(true);
@@ -139,14 +141,14 @@ export function OwnedCircle({
       {mode === "confirm-delete" ? (
         <View style={{ gap: space.sm }}>
           <Text variant="soft" style={{ fontSize: 15.5, lineHeight: 22 }}>
-            Delete this circle? Its link will stop working and members will no
-            longer see it on Home. Their own reflections are not affected.
+            Delete this circle? Its link stops working. Members keep their
+            reflections.
           </Text>
           <View
             style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}
           >
             <Button
-              title="Delete circle"
+              title="Delete"
               busy={busy}
               onPress={() => void remove()}
               style={{
@@ -168,7 +170,7 @@ export function OwnedCircle({
           {isJoined ? null : (
             <Button
               kind="ghost"
-              title="Show on my Home"
+              title="Show on Home"
               onPress={() => joinCircle(circle)}
             />
           )}

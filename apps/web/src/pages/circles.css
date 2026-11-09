@@ -6,11 +6,6 @@
   margin: 8px 0 0;
   line-height: 1.55;
 }
-.circles-privacy {
-  margin: 12px 0 0;
-  font-size: 0.95rem;
-  color: var(--ink);
-}
 .circles-heading {
   font-size: 1.15rem;
   font-weight: 600;
@@ -33,12 +28,11 @@
   gap: 12px;
 }
 .circle-link {
-  font-size: 0.92rem;
-}
-.circle-note {
-  min-height: 1.4em;
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
+  color: var(--indigo);
+  overflow-wrap: anywhere;
+  user-select: all;
 }
 .circle-list {
   list-style: none;
@@ -47,8 +41,8 @@
 }
 .circle-item {
   display: grid;
-  gap: 12px;
-  padding: 18px 0;
+  gap: 10px;
+  padding: 16px 0;
   border-top: 1px solid var(--line);
 }
 .circle-item-name {

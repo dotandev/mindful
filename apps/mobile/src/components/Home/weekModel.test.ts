@@ -67,7 +67,7 @@ describe(circleCountText, () => {
 
   it("names the circle, not the people", () => {
     expect(circleCountText(circle, 2)).toBe(
-      "2 people in Friday group kept a reflection this week."
+      "2 in Friday group reflected this week."
     );
   });
 });

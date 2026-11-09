@@ -663,10 +663,13 @@ export async function fetchCircleWeekCount(
   }
 }
 
-/** Null below 2 so a lone member is never singled out. */
-export function circleCountLine(name: string, n: number): string | null {
+/** "3 in Friday friends reflected this week", or without the name where the
+ *  circle is already named above it. Null below 2 so a lone member is never
+ *  singled out. */
+export function circleCountLine(name: string | null, n: number): string | null {
   if (!Number.isFinite(n) || n < MIN_SHOWN_COUNT) {
     return null;
   }
-  return `${Math.floor(n)} people in ${name} kept a reflection this week.`;
+  const who = name === null ? "people" : `in ${name}`;
+  return `${Math.floor(n)} ${who} reflected this week.`;
 }

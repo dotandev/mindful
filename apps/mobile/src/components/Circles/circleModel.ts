@@ -8,10 +8,8 @@ export const WEB_ORIGIN = "https://mindfulverse.vercel.app";
 
 export const PRIVACY_LINE =
   "Your reflections stay private. Only the surah is shared.";
-export const SIGNED_OUT_LINES = [
-  "Read a surah with friends. Anyone can join from your link.",
-  "Sign in on the Account tab to start one.",
-] as const;
+export const SIGNED_OUT_LINE =
+  "Sign in to start one. Joining needs no account.";
 
 const DIGITS = /^\d+$/u;
 
@@ -42,9 +40,8 @@ export function inviteMessage(
   surahs: Map<number, SurahMeta>
 ): string {
   const name = surahLabel(circle.surah, surahs);
-  const focus =
-    circle.verse === null ? "" : `, starting at verse ${circle.verse}`;
-  return `Join “${circle.name}” on MindfulVerse. We’re reading ${name} together${focus}.\n${inviteUrl(circle.code)}`;
+  const focus = circle.verse === null ? "" : `, from verse ${circle.verse},`;
+  return `Read ${name}${focus} with “${circle.name}” on MindfulVerse.\n${inviteUrl(circle.code)}`;
 }
 
 export type VerseCheck =

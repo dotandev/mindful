@@ -157,11 +157,12 @@ function CircleForm({
 function ShareActions({
   circle,
   surahName,
+  showLink = false,
 }: {
   circle: Circle;
   surahName: string;
+  showLink?: boolean;
 }) {
-  const id = useId();
   const [copyNote, setCopyNote] = useState<string | null>(null);
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -173,7 +174,7 @@ function ShareActions({
     try {
       await navigator.clipboard.writeText(url);
     } catch {
-      note = "Couldn’t copy. Select the link above instead.";
+      note = "Couldn’t copy";
     }
     window.clearTimeout(timer.current);
     setCopyNote(note);
@@ -182,23 +183,15 @@ function ShareActions({
 
   return (
     <div className="circle-share">
-      <label className="field" htmlFor={`${id}-link`}>
-        <span className="field-label">Invite link</span>
-        <input
-          id={`${id}-link`}
-          className="field-input circle-link"
-          value={url}
-          readOnly
-          onFocus={(e) => e.currentTarget.select()}
-        />
-      </label>
+      {showLink && <p className="circle-link">{url}</p>}
       <div className="circle-actions">
         <button
           type="button"
           className="btn secondary"
+          aria-live="polite"
           onClick={() => void copy()}
         >
-          Copy link
+          {copyNote ?? "Copy link"}
         </button>
         <a
           className="btn secondary"
@@ -206,12 +199,9 @@ function ShareActions({
           target="_blank"
           rel="noopener noreferrer"
         >
-          Share on WhatsApp
+          WhatsApp
         </a>
       </div>
-      <p className="soft circle-note" aria-live="polite">
-        {copyNote ?? ""}
-      </p>
     </div>
   );
 }
@@ -277,16 +267,11 @@ function OwnedCircle({
       <p className="soft circle-item-line">
         {circleSummary(circle, surahName)}
       </p>
-      {joinedCode !== circle.code && (
-        <CircleCount code={circle.code} name={circle.name} />
-      )}
+      {joinedCode !== circle.code && <CircleCount code={circle.code} />}
       <ShareActions circle={circle} surahName={surahName} />
       {mode === "confirm-delete" ? (
         <div className="notice-wash stack">
-          <p>
-            Delete {circle.name}? People who joined will no longer see it on
-            their Home. Their own reflections are not affected.
-          </p>
+          <p>Delete {circle.name}? Members keep their reflections.</p>
           <div className="circle-actions">
             <button
               type="button"
@@ -294,7 +279,7 @@ function OwnedCircle({
               disabled={busy}
               onClick={() => void remove()}
             >
-              {busy ? "Deleting…" : "Delete circle"}
+              {busy ? "Deleting…" : "Delete"}
             </button>
             <button
               type="button"
@@ -321,7 +306,7 @@ function OwnedCircle({
               className="circle-quiet"
               onClick={() => joinCircle(circle)}
             >
-              Show on my Home
+              Show on Home
             </button>
           )}
           <button
@@ -352,17 +337,17 @@ function JoinedCircle({
   const surahName = nameOf(surahs, circle.surah);
   return (
     <section aria-labelledby="circles-joined" className="card circle-joined">
-      <p className="eyebrow">On this device</p>
+      <p className="eyebrow">Your circle</p>
       <h2 id="circles-joined" className="circle-item-name">
         {circle.name}
       </h2>
       <p className="soft circle-item-line">
         {circleSummary(circle, surahName)}
       </p>
-      <CircleCount code={circle.code} name={circle.name} />
+      <CircleCount code={circle.code} />
       <div className="circle-actions">
         <Link to="/" className="btn secondary">
-          Go to Home
+          Open on Home
         </Link>
         <button type="button" className="circle-quiet" onClick={leaveCircle}>
           Leave circle
@@ -424,6 +409,9 @@ function MyCircles({
     setCreated((c) => (c?.code === code ? null : c));
   }
 
+  // The circle just started is already shown, with its link, above.
+  const listed = (circles ?? []).filter((c) => c.code !== created?.code);
+
   return (
     <>
       <section aria-labelledby="circles-start" className="stack">
@@ -433,12 +421,13 @@ function MyCircles({
         {created ? (
           <div className="notice-wash stack" role="status">
             <p>
-              {created.name} is ready and on your Home. Share the link with your
-              friends. Anyone with it can join, no account needed.
+              <strong>{created.name}</strong> is ready. Anyone with the link can
+              join.
             </p>
             <ShareActions
               circle={created}
               surahName={nameOf(surahs, created.surah)}
+              showLink
             />
             <button
               type="button"
@@ -468,15 +457,11 @@ function MyCircles({
             {loadError}
           </p>
         )}
-        {!loadError && circles === null && (
-          <p className="soft">Loading your circles…</p>
-        )}
-        {circles?.length === 0 && (
-          <p className="soft">You haven’t started a circle yet.</p>
-        )}
-        {circles && circles.length > 0 && (
+        {!loadError && circles === null && <p className="soft">Loading…</p>}
+        {circles?.length === 0 && !created && <p className="soft">None yet.</p>}
+        {listed.length > 0 && (
           <ul className="circle-list">
-            {circles.map((c) => (
+            {listed.map((c) => (
               <OwnedCircle
                 key={c.code}
                 circle={c}
@@ -531,7 +516,7 @@ export default function Circles() {
     body = (
       <section aria-label="Start a circle" className="stack">
         <p className="soft circles-intro">
-          Sign in to start a circle. Anyone can join from your link.
+          Sign in to start one. Joining needs no account.
         </p>
         <Link to="/account" className="btn">
           Sign in
@@ -544,11 +529,7 @@ export default function Circles() {
     <div className="stack circles">
       <header>
         <h1>Circles</h1>
-        <p className="soft circles-intro">
-          Read a surah with friends. Talk it over your way. Keep your own
-          journal.
-        </p>
-        <p className="circles-privacy">{PRIVACY_LINE}</p>
+        <p className="soft circles-intro">{PRIVACY_LINE}</p>
       </header>
       {joined && <JoinedCircle circle={joined} surahs={surahs} />}
       {body}

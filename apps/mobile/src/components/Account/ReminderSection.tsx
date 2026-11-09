@@ -3,12 +3,17 @@ import * as Notifications from "expo-notifications";
 // Daily verse reminder: enable at a chosen time, change the time, turn off.
 // Ported from web's Account.tsx over src/push.ts (same results). Native
 // differences: no "install to Home Screen" / unsupported-browser branches;
-// instead any pushSupport() other than "ok" ("no-project", "not-configured":
-// this build can't register for push yet) shows calm copy, and a
-// permission the OS will no longer prompt for (only Settings can fix it).
+// instead a build without push (pushSupport() other than "ok") schedules the
+// reminder on the phone itself (localReminder.ts), and a permission the OS
+// will no longer prompt for can only be fixed in Settings.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Linking, View } from "react-native";
 
+import {
+  disableLocalReminder,
+  enableLocalReminder,
+  getLocalReminder,
+} from "../../localReminder";
 import {
   disableReminder,
   enableReminder,
@@ -24,6 +29,30 @@ import { TimeStepper } from "./TimeStepper";
 
 const NOT_ALLOWED = "Notifications were not allowed."; // push.ts's message for a refused prompt
 
+interface ReminderApi {
+  get: () => Promise<{ time: string } | null>;
+  enable: (
+    time: string
+  ) => Promise<{ error: string | null; welcomed?: boolean }>;
+  update: (time: string) => Promise<{ error: string | null }>;
+  disable: () => Promise<{ error: string | null }>;
+}
+
+// Push from the server when this build has it; otherwise the phone's own
+// daily schedule, so the reminder works either way.
+const PUSH: ReminderApi = {
+  disable: disableReminder,
+  enable: enableReminder,
+  get: getReminder,
+  update: updateReminderTime,
+};
+const LOCAL: ReminderApi = {
+  disable: disableLocalReminder,
+  enable: enableLocalReminder,
+  get: async () => getLocalReminder(),
+  update: enableLocalReminder,
+};
+
 async function permissionBlocked(): Promise<boolean> {
   try {
     return notificationsBlocked(await Notifications.getPermissionsAsync());
@@ -33,7 +62,7 @@ async function permissionBlocked(): Promise<boolean> {
 }
 
 export function ReminderSection() {
-  const support = pushSupport();
+  const api = pushSupport() === "ok" ? PUSH : LOCAL;
   const [reminderOn, setReminderOn] = useState(false);
   const [reminderTime, setReminderTime] = useState(DEFAULT_REMINDER_TIME);
   // The time last saved to the subscription; a "Save" appears only when the
@@ -51,11 +80,9 @@ export function ReminderSection() {
   }, []);
 
   useEffect(() => {
-    if (support !== "ok") {
-      return;
-    }
     recheckPermission();
-    getReminder()
+    api
+      .get()
       .then((r) => {
         if (r && mounted.current) {
           setReminderOn(true);
@@ -73,13 +100,13 @@ export function ReminderSection() {
       }
     });
     return () => sub.remove();
-  }, [support, recheckPermission]);
+  }, [api, recheckPermission]);
 
   async function turnOn() {
     setBusy(true);
     setError(null);
     try {
-      const { error: failure, welcomed } = await enableReminder(reminderTime);
+      const { error: failure, welcomed } = await api.enable(reminderTime);
       if (failure) {
         if (await permissionBlocked()) {
           setBlocked(true);
@@ -87,7 +114,7 @@ export function ReminderSection() {
         // Prompt dismissed or refused once: the OS can still ask again.
         {
           setError(
-            "Notifications weren't allowed. Tap Turn on reminder to try again, and choose Allow."
+            "Notifications weren't allowed. Try again and choose Allow."
           );
         } else {
           setError(failure);
@@ -97,13 +124,9 @@ export function ReminderSection() {
       track({ enabled: true, type: "reminder_set" });
       setReminderOn(true);
       setSavedTime(reminderTime);
-      setNotice(
-        welcomed
-          ? "Today’s verse was just sent here, so you can see how it looks."
-          : null
-      );
+      setNotice(welcomed ? "Sent today’s verse so you can see it." : null);
     } catch {
-      setError("Couldn't set the reminder. Please try again.");
+      setError("Couldn't set the reminder. Try again.");
     } finally {
       if (mounted.current) {
         setBusy(false);
@@ -115,16 +138,16 @@ export function ReminderSection() {
     setBusy(true);
     setError(null);
     try {
-      const { error: offError } = await disableReminder();
+      const { error: offError } = await api.disable();
       if (offError) {
-        setError("Couldn't turn off the reminder. Please try again.");
+        setError("Couldn't turn it off. Try again.");
         return;
       }
       track({ enabled: false, type: "reminder_set" });
       setReminderOn(false);
       setNotice(null);
     } catch {
-      setError("Couldn't turn off the reminder. Please try again.");
+      setError("Couldn't turn it off. Try again.");
     } finally {
       if (mounted.current) {
         setBusy(false);
@@ -142,14 +165,14 @@ export function ReminderSection() {
     setBusy(true);
     setError(null);
     try {
-      const { error: failure } = await updateReminderTime(reminderTime);
+      const { error: failure } = await api.update(reminderTime);
       if (failure) {
         return setError(failure);
       }
       setSavedTime(reminderTime);
-      setNotice("New time saved.");
+      setNotice("Saved.");
     } catch {
-      setError("Couldn't update the reminder time. Please try again.");
+      setError("Couldn't save the time. Try again.");
     } finally {
       if (mounted.current) {
         setBusy(false);
@@ -157,36 +180,13 @@ export function ReminderSection() {
     }
   }
 
-  const intro = (
-    <Small>
-      Get today’s verse as a notification at a time you choose. Tap it to open
-      your check-in.
-    </Small>
-  );
-
-  if (support !== "ok") {
-    return (
-      <Section title="Daily verse reminder">
-        {intro}
-        <Small>
-          Reminders aren’t available in this version of the app yet. They’ll
-          arrive in an update. Until then, your journal and progress back up as
-          usual.
-        </Small>
-      </Section>
-    );
-  }
-
   const dirty = reminderOn && reminderTime !== savedTime;
   return (
     <Section title="Daily verse reminder" aside={reminderOn ? "On" : undefined}>
-      {reminderOn ? null : intro}
-
       {blocked && !reminderOn ? (
         <View style={{ alignItems: "flex-start", gap: space.sm }}>
           <Small>
-            Notifications are turned off for MindfulVerse on this phone. To get
-            the reminder, allow notifications in Settings, then come back here.
+            Notifications are off for MindfulVerse. Allow them in Settings.
           </Small>
           <Button
             title="Open settings"
@@ -207,14 +207,11 @@ export function ReminderSection() {
           />
           <View style={{ flexDirection: "row" }}>
             <Button
-              title={busy ? "Turning on…" : "Turn on reminder"}
+              title={busy ? "Turning on…" : "Turn on"}
               busy={busy}
               onPress={() => void turnOn()}
             />
           </View>
-          <Small>
-            Your phone will ask to allow notifications. Choose Allow.
-          </Small>
         </>
       ) : null}
 
@@ -240,12 +237,12 @@ export function ReminderSection() {
             {dirty ? (
               <>
                 <Button
-                  title="Save new time"
+                  title="Save"
                   busy={busy}
                   onPress={() => void saveTime()}
                 />
                 <LinkButton
-                  title="Keep old time"
+                  title="Cancel"
                   disabled={busy}
                   onPress={() => setReminderTime(savedTime)}
                 />
@@ -259,7 +256,6 @@ export function ReminderSection() {
               />
             )}
           </View>
-          <Small>Set per device: this phone keeps its own reminder time.</Small>
         </>
       ) : null}
 

@@ -50,13 +50,13 @@ describe(inviteUrl, () => {
 describe(inviteMessage, () => {
   it("names the circle, surah and focus verse, link last", () => {
     expect(inviteMessage(circle, surahs)).toBe(
-      "Join “Friday friends” on MindfulVerse. We’re reading Al-Kahf together, starting at verse 10.\nhttps://mindfulverse.vercel.app/circle/abc234"
+      "Read Al-Kahf, from verse 10, with “Friday friends” on MindfulVerse.\nhttps://mindfulverse.vercel.app/circle/abc234"
     );
   });
 
   it("leaves out the verse when there is none", () => {
     expect(inviteMessage({ ...circle, verse: null }, surahs)).toBe(
-      "Join “Friday friends” on MindfulVerse. We’re reading Al-Kahf together.\nhttps://mindfulverse.vercel.app/circle/abc234"
+      "Read Al-Kahf with “Friday friends” on MindfulVerse.\nhttps://mindfulverse.vercel.app/circle/abc234"
     );
   });
 });
