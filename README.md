@@ -98,3 +98,7 @@ The merge story, in three sentences: everything is written to `localStorage` fir
 - The translation renders the divine name as "God". It is shown word for word, as the license requires.
 - Ibn Kathir wrote commentary on passages, so some verses share a note with a neighboring verse.
 - Recitation audio and more languages are planned for later. MindfulVerse is free, with no paid plan. See `ROADMAP.md`.
+
+## Licence
+
+The code is under the [MIT License](LICENSE). The Qur'anic text, translation, commentary and fonts keep their own licences (see [LICENSE](LICENSE) and "Acknowledgments" above). Want to help? See [CONTRIBUTING.md](CONTRIBUTING.md).
