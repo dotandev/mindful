@@ -139,30 +139,31 @@ export function IntentionField({
           paddingTop: space.sm + 4,
         }}
       />
-      <View
-        style={{ alignItems: "center", flexDirection: "row", gap: space.md }}
-      >
-        <Button
-          kind="secondary"
-          title="Save"
-          disabled={draft.trim() === ""}
-          onPress={save}
-        />
-        {editing ? (
+      {draft.trim() !== "" || editing ? (
+        <View
+          style={{ alignItems: "center", flexDirection: "row", gap: space.md }}
+        >
           <Button
-            kind="ghost"
-            title="Cancel"
-            onPress={() => {
-              setEditing(false);
-              setFailed(false);
-            }}
+            kind="secondary"
+            title="Save"
+            disabled={draft.trim() === ""}
+            onPress={save}
           />
-        ) : null}
-      </View>
+          {editing ? (
+            <Button
+              kind="ghost"
+              title="Cancel"
+              onPress={() => {
+                setEditing(false);
+                setFailed(false);
+              }}
+            />
+          ) : null}
+        </View>
+      ) : null}
       {failed ? (
         <Text variant="soft" accessibilityLiveRegion="assertive">
-          That couldn’t be kept on this device. Your words are still here. Try
-          again.
+          Couldn’t save it. Your words are still here. Try again.
         </Text>
       ) : null}
     </View>

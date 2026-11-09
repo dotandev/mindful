@@ -519,7 +519,8 @@ p.eyebrow + h1 {
 
 /* --- Account: one quiet card, plain boxed inputs, nothing else --- */
 /* The sign-in form sits on the page itself: no card around it. */
-.auth-card {
+.auth-card,
+.account-page {
   max-width: 420px;
 }
 .field {
@@ -534,7 +535,7 @@ p.eyebrow + h1 {
 }
 .field-input {
   width: 100%;
-  padding: 11px 12px;
+  padding: 9px 12px;
   border: 1px solid var(--line-strong);
   border-radius: 3px;
   background: var(--cotton);
@@ -606,31 +607,37 @@ p.eyebrow + h1 {
   border-top: 1px solid var(--line);
   padding-top: 18px;
 }
+/* Light / Night as one quiet segmented control. */
 .appearance-choices {
-  display: flex;
-  gap: 8px;
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--cotton-raised);
 }
 .appearance-choice {
-  min-height: 44px;
-  padding: 0 20px;
+  min-height: 38px;
+  min-width: 84px;
+  padding: 0 16px;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   cursor: pointer;
-  border-radius: var(--radius);
-  border: 1px solid var(--line-strong);
-  background: var(--cotton-raised);
+  border: none;
+  border-radius: 4px;
+  background: none;
   color: var(--ink-soft);
   transition:
     transform 140ms var(--ease-out),
-    background-color 140ms ease;
+    background-color 140ms ease,
+    color 140ms ease;
 }
 .appearance-choice:active {
   transform: scale(0.97);
 }
 .appearance-choice.on {
-  background: var(--indigo);
-  border-color: var(--indigo);
-  color: var(--cotton-raised);
+  background: var(--indigo-wash);
+  color: var(--indigo);
   font-weight: 500;
 }
 .notice-wash {

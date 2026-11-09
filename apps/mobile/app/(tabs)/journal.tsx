@@ -29,42 +29,24 @@ import {
   toSections,
 } from "../../src/components/Journal/journalText";
 import { space, useTheme } from "../../src/theme";
-import { BrandMark, Button, LinkPressable, Screen, Text } from "../../src/ui";
+import { Button, LinkPressable, Screen, Text } from "../../src/ui";
 
-/** Empty state: quiet and minimal — one line of intent, one way to begin. */
+/** Empty state: two quiet lines and one way to begin. */
 function EmptyJournal() {
   return (
-    <View
-      style={{
-        alignItems: "center",
-        gap: 6,
-        paddingHorizontal: 20,
-        paddingVertical: space.xxl,
-      }}
-    >
-      <ClothSwatch />
-      <Text
-        style={{ fontSize: 19, marginTop: space.lg, textAlign: "center" }}
-        variant="body"
-      >
+    <View style={{ alignItems: "flex-start", gap: 4 }}>
+      <Text variant="body" style={{ fontSize: 18 }}>
         Nothing here yet.
       </Text>
-      <Text variant="soft" style={{ textAlign: "center" }}>
-        When a verse stops you, write it down.
-      </Text>
+      <Text variant="soft">When a verse stops you, write it down.</Text>
       <Button
-        title="Begin with today’s verse"
+        kind="secondary"
+        title="Reflect on today’s verse"
         style={{ marginTop: 14 }}
         onPress={() => router.push("/checkin")}
       />
     </View>
   );
-}
-
-/** A diamond of indigo cloth with the reed pen at its centre. */
-/** The MindfulVerse mark above the invitation to begin. */
-function ClothSwatch() {
-  return <BrandMark size={88} />;
 }
 
 interface Section {
