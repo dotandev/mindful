@@ -20,14 +20,8 @@ describe("home lead labels", () => {
     expect(starterLabel(103, undefined)).toBe("Surah 103");
   });
 
-  it("shows the verse count on a starter surah", () => {
-    expect(starterLabel(103, asr)).toBe("Al-'Asr · 3 verses");
-  });
-
-  it("uses the singular for a one-verse count", () => {
-    expect(starterLabel(5, { ayahCount: 1, name: "X", number: 5 })).toBe(
-      "X · 1 verse"
-    );
+  it("shows only the name on a starter surah", () => {
+    expect(starterLabel(103, asr)).toBe("Al-'Asr");
   });
 });
 

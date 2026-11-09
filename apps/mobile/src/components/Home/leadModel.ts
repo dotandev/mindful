@@ -65,17 +65,12 @@ export function surahName(
   return surahs.get(surah)?.name ?? `Surah ${surah}`;
 }
 
-/** "Al-'Asr · 3 verses"; just the name until the surah list has loaded. */
+/** A starter surah's button text: just its name, "Al-'Asr". */
 export function starterLabel(
   surah: number,
   surahs: Map<number, SurahMeta>
 ): string {
-  const meta = surahs.get(surah);
-  if (!meta) {
-    return surahName(surah, surahs);
-  }
-  const verses = meta.ayahCount === 1 ? "1 verse" : `${meta.ayahCount} verses`;
-  return `${meta.name} · ${verses}`;
+  return surahName(surah, surahs);
 }
 
 export const THEME_PICKS = 3;
