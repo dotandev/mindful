@@ -127,9 +127,7 @@ export default function Sessions() {
   return (
     <Screen edges="bottom">
       <Stack.Screen options={{ title: "By theme" }} />
-      <Text variant="soft">
-        Short guided reflections. A few verses gathered around one theme.
-      </Text>
+      <Text variant="soft">A few verses on one theme.</Text>
 
       {status.kind === "loading" ? (
         <View
@@ -160,9 +158,7 @@ export default function Sessions() {
       ) : null}
 
       {status.kind === "ready" && rows.length === 0 ? (
-        <Text variant="muted">
-          There are no sessions here yet. More are on the way.
-        </Text>
+        <Text variant="muted">No sessions yet.</Text>
       ) : null}
 
       {rows.length > 0 ? (

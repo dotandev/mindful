@@ -140,7 +140,7 @@ export function FinalScreen({
                 accessibilityLiveRegion="polite"
                 accessibilityRole="text"
               >
-                Kept in your journal. Return to it whenever you like.
+                Kept in your journal.
               </Text>
               <Button
                 kind="secondary"

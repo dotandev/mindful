@@ -355,10 +355,7 @@ function TadabburPage() {
     return page(
       <Card>
         <Text variant="h2">That surah isn’t here</Text>
-        <Text variant="muted">
-          Surahs run from 1 to 114. We couldn’t find the one this link points
-          to.
-        </Text>
+        <Text variant="muted">That surah doesn’t exist.</Text>
         <View style={{ alignItems: "flex-start" }}>
           <Button kind="secondary" title="Go back" onPress={leave} />
         </View>

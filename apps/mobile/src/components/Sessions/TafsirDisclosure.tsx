@@ -153,9 +153,8 @@ export function TafsirDisclosure({
             : null}
           {status.kind === "ready" && status.entries.length > 0 ? (
             <Text variant="muted" style={{ fontSize: 14, lineHeight: 21 }}>
-              Verse quotations inside the commentary follow its classical
-              English edition, which differs from the ClearQuran translation
-              shown above.
+              Verses quoted in the commentary use a different English
+              translation.
             </Text>
           ) : null}
         </View>

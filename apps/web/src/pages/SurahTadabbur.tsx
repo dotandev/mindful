@@ -659,10 +659,7 @@ function SurahTadabburPage() {
       <div>
         <div className="card stack">
           <h2>That surah isn’t here</h2>
-          <p className="muted">
-            Surahs run from 1 to 114. We couldn’t find the one this link points
-            to.
-          </p>
+          <p className="muted">That surah doesn’t exist.</p>
           <div>
             <Link to="/sessions" className="btn secondary">
               Back to tadabbur
@@ -686,10 +683,7 @@ function SurahTadabburPage() {
       <div>
         <div className="card stack">
           <h2>We couldn’t open this surah</h2>
-          <p className="muted">
-            Something interrupted the connection. Check your network and try
-            again in a moment.
-          </p>
+          <p className="muted">Check your connection and try again.</p>
           <div>
             <Link to="/sessions" className="btn secondary">
               Back to tadabbur

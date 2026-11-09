@@ -328,9 +328,7 @@ export default function CheckIn() {
         ) : (
           <>
             <h1 id="ci-heart-title">How is your heart today?</h1>
-            <p className="soft ci-lede">
-              Tap a word if one fits. There&rsquo;s no wrong answer.
-            </p>
+            <p className="soft ci-lede">Tap a word if one fits.</p>
           </>
         )}
       </header>
@@ -345,10 +343,7 @@ export default function CheckIn() {
           </h2>
         )}
         {emotionsError ? (
-          <p className="muted">
-            The reminders are still being gathered. Come back in a little while
-            and they will be here.
-          </p>
+          <p className="muted">Not ready yet. Try again shortly.</p>
         ) : emotions.length === 0 ? (
           <p className="muted">Gathering a few words for you&hellip;</p>
         ) : (
@@ -390,8 +385,7 @@ export default function CheckIn() {
             </h2>
             {dailyError ? (
               <p className="cloth-soft ci-note">
-                Today&rsquo;s verse is still being gathered. Come back in a
-                little while and it will be waiting for you.
+                Today’s verse isn’t ready yet. Try again shortly.
               </p>
             ) : dailyAyah ? (
               <div style={revealStyle(0, dailyMounted, reduced)}>
@@ -453,10 +447,7 @@ export default function CheckIn() {
                 {selected.framing}
               </h2>
               {emotionAyahsError ? (
-                <p className="muted">
-                  These verses are still being gathered. Come back in a little
-                  while and they will be here for you.
-                </p>
+                <p className="muted">Not ready yet. Try again shortly.</p>
               ) : emotionLoading ? (
                 <p className="muted">Gathering a few verses&hellip;</p>
               ) : (
@@ -505,7 +496,7 @@ export default function CheckIn() {
               {VERSE_PROMPT}
             </label>
             <p className="muted ci-hint" id="checkin-journal-hint">
-              Only if you&rsquo;d like. A line is plenty.
+              A line is plenty.
             </p>
             <textarea
               id="checkin-journal"

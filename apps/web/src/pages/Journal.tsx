@@ -45,8 +45,8 @@ function EmptyJournal() {
   return (
     <div className="empty-quiet">
       <ClothSwatch />
-      <p className="journal-empty-lead">Nothing here yet, and that’s fine.</p>
-      <p className="soft">When a verse stops you, write what it said to you.</p>
+      <p className="journal-empty-lead">Nothing here yet.</p>
+      <p className="soft">When a verse stops you, write it down.</p>
       <Link to="/checkin" className="btn" style={{ marginTop: 14 }}>
         Begin with today’s verse
       </Link>
@@ -288,8 +288,8 @@ export default function Journal() {
     } catch {
       setExportError(
         kind === "pdf"
-          ? "Couldn’t make the PDF. Check your connection and try again, or use plain text."
-          : "Couldn’t save the file. Please try again."
+          ? "Couldn’t make the PDF. Try plain text."
+          : "Couldn’t save the file. Try again."
       );
     } finally {
       setExporting(null);
