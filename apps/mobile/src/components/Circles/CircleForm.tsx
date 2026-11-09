@@ -53,7 +53,7 @@ export function CircleForm({
       return;
     }
     if (surah === null) {
-      setError("Choose the surah you’ll read together.");
+      setError("Choose a surah.");
       return;
     }
     if (!verseCheck.ok) {
@@ -127,7 +127,6 @@ export function CircleForm({
 
       <Field
         label="Focus verse (optional)"
-        hint="Leave empty to read the whole surah"
         value={verse}
         onChangeText={setVerse}
         placeholder={meta ? `1 to ${meta.ayahCount}` : "e.g. 10"}

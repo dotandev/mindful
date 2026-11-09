@@ -534,10 +534,11 @@ describe(circleCountLine, () => {
 
   it("names the circle and the count", () => {
     expect(circleCountLine("Friday friends", 2)).toBe(
-      "2 people in Friday friends kept a reflection this week."
+      "2 in Friday friends reflected this week."
     );
     expect(circleCountLine("Friday friends", 12)).toBe(
-      "12 people in Friday friends kept a reflection this week."
+      "12 in Friday friends reflected this week."
     );
+    expect(circleCountLine(null, 3)).toBe("3 people reflected this week.");
   });
 });

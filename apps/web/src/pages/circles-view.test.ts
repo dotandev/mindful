@@ -32,12 +32,10 @@ describe("circle share link", () => {
         "Al-Kahf",
         url
       )
-    ).toBe(
-      `Join “Friday friends” on MindfulVerse. We’re reading Al-Kahf together.\n${url}`
-    );
+    ).toBe(`Read Al-Kahf with “Friday friends” on MindfulVerse.\n${url}`);
     expect(
       circleShareMessage({ name: "Friday friends", verse: 10 }, "Al-Kahf", url)
-    ).toContain("together, starting at verse 10.");
+    ).toContain("Read Al-Kahf, from verse 10, with");
   });
 
   it("encodes the WhatsApp message", () => {
@@ -45,10 +43,8 @@ describe("circle share link", () => {
   });
 
   it("summarises the surah and focus", () => {
-    expect(circleSummary({ verse: null }, "Al-Kahf")).toBe("Reading Al-Kahf");
-    expect(circleSummary({ verse: 10 }, "Al-Kahf")).toBe(
-      "Reading Al-Kahf · Focus: verse 10"
-    );
+    expect(circleSummary({ verse: null }, "Al-Kahf")).toBe("Al-Kahf");
+    expect(circleSummary({ verse: 10 }, "Al-Kahf")).toBe("Al-Kahf · verse 10");
   });
 });
 

@@ -19,8 +19,7 @@ function confirmFresh(): Promise<boolean> {
   return new Promise((resolve) =>
     Alert.alert(
       "Start fresh?",
-      "This removes the journal entries and progress stored on this device. " +
-        "Anything already backed up to the other account stays safe there.",
+      "This clears this device. The other account’s backup stays safe.",
       [
         { onPress: () => resolve(false), style: "cancel", text: "Cancel" },
         {
@@ -55,8 +54,8 @@ export function SyncSection({
       await resolveOwnerMismatch(choice);
       setNotice(
         choice === "merge"
-          ? "This device's entries have been merged into your account."
-          : "This device was reset and now shows only this account's backup."
+          ? "Merged into your account."
+          : "This device now shows this account’s backup."
       );
     } catch {
       // resolveOwnerMismatch's own sync swallows errors; this covers the
@@ -78,21 +77,20 @@ export function SyncSection({
       {status === "switched-account" ? (
         <Notice>
           <Text variant="soft">
-            The journal entries and progress saved on this device were written
-            while a different account was signed in. Nothing is being backed up
-            until you choose what should happen to them.
+            This device has entries from another account. Nothing syncs until
+            you choose.
           </Text>
           <View
             style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}
           >
             <Button
-              title="Merge into this account"
+              title="Merge them"
               disabled={busy}
               busy={busy}
               onPress={() => void resolveSwitch("merge")}
             />
             <Button
-              title="Start fresh on this device"
+              title="Start fresh"
               kind="secondary"
               disabled={busy}
               onPress={() => void resolveSwitch("fresh")}

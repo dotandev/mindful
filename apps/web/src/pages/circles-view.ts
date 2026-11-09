@@ -17,23 +17,22 @@ export function circleShareMessage(
   surahName: string,
   url: string
 ): string {
-  const focus =
-    circle.verse === null ? "" : `, starting at verse ${circle.verse}`;
-  return `Join “${circle.name}” on MindfulVerse. We’re reading ${surahName} together${focus}.\n${url}`;
+  const focus = circle.verse === null ? "" : `, from verse ${circle.verse},`;
+  return `Read ${surahName}${focus} with “${circle.name}” on MindfulVerse.\n${url}`;
 }
 
 export function whatsappUrl(message: string): string {
   return `https://wa.me/?text=${encodeURIComponent(message)}`;
 }
 
-/** "Reading Al-Kahf · Focus: verse 10". */
+/** "Al-Kahf · verse 10". */
 export function circleSummary(
   circle: { verse: number | null },
   surahName: string
 ): string {
   return circle.verse === null
-    ? `Reading ${surahName}`
-    : `Reading ${surahName} · Focus: verse ${circle.verse}`;
+    ? surahName
+    : `${surahName} · verse ${circle.verse}`;
 }
 
 export interface CircleFormValues {

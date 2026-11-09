@@ -21,7 +21,7 @@ import { CircleForm } from "../../src/components/Circles/CircleForm";
 import {
   circleSummary,
   PRIVACY_LINE,
-  SIGNED_OUT_LINES,
+  SIGNED_OUT_LINE,
 } from "../../src/components/Circles/circleModel";
 import {
   CircleLinkBlock,
@@ -49,7 +49,7 @@ export default function Circles() {
   const [created, setCreated] = useState<Circle | null>(null);
   const [formKey, setFormKey] = useState(0);
   const userId = user?.id ?? null;
-  const joinedCount = useCircleCountLine(joined);
+  const joinedCount = useCircleCountLine(joined, { named: false });
 
   useEffect(() => onJoinedCircleChange(setJoined), []);
 
@@ -126,14 +126,10 @@ export default function Circles() {
       {!accountLoading && !userId ? (
         <Card>
           <Text variant="h2">Start a circle</Text>
-          {SIGNED_OUT_LINES.map((line) => (
-            <Text key={line} variant="soft">
-              {line}
-            </Text>
-          ))}
+          <Text variant="soft">{SIGNED_OUT_LINE}</Text>
           <View style={{ alignItems: "flex-start" }}>
             <Button
-              title="Go to Account"
+              title="Sign in"
               onPress={() => router.navigate("/account")}
             />
           </View>
@@ -144,13 +140,10 @@ export default function Circles() {
         <>
           <Card>
             <Text variant="h2">Start a circle</Text>
-            <Text variant="soft">
-              Read a surah with friends. Keep your own journal.
-            </Text>
             {created ? (
               <View style={{ gap: space.md }}>
                 <Text style={{ fontFamily: fonts.readSemiBold }}>
-                  {`“${created.name}” is ready. Share this link with your circle.`}
+                  {`“${created.name}” is ready. Anyone with the link can join.`}
                 </Text>
                 <CircleLinkBlock circle={created} surahs={surahs} />
                 <View style={{ alignItems: "flex-start" }}>
@@ -188,6 +181,7 @@ export default function Circles() {
               surahs={surahs}
               surahList={surahList}
               joinedCode={joined?.code ?? null}
+              createdCode={created?.code ?? null}
               onRetry={() => void loadMine()}
               onChanged={(c) =>
                 replaceMine((cs) => [c, ...cs.filter((x) => x.code !== c.code)])
@@ -211,6 +205,7 @@ function MineList({
   surahs,
   surahList,
   joinedCode,
+  createdCode,
   onRetry,
   onChanged,
   onDeleted,
@@ -219,6 +214,7 @@ function MineList({
   surahs: Map<number, SurahMeta>;
   surahList: SurahMeta[];
   joinedCode: string | null;
+  createdCode: string | null;
   onRetry: () => void;
   onChanged: (circle: Circle) => void;
   onDeleted: (code: string) => void;
@@ -235,12 +231,16 @@ function MineList({
       </View>
     );
   }
-  if (mine.circles.length === 0) {
-    return <Text variant="muted">Circles you start will appear here.</Text>;
+  const listed = mine.circles.filter((c) => c.code !== createdCode);
+  if (listed.length === 0) {
+    if (createdCode) {
+      return null;
+    }
+    return <Text variant="muted">None yet.</Text>;
   }
   return (
     <>
-      {mine.circles.map((c) => (
+      {listed.map((c) => (
         <OwnedCircle
           key={c.code}
           circle={c}

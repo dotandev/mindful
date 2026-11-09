@@ -4,18 +4,19 @@ import { useCircleWeekCount } from "../lib/useCircleWeekCount";
 
 import "./week.css";
 
-/** "<N> people in <name> kept a reflection this week." Nothing below two. */
+/** "<N> in <name> reflected this week", or "<N> people…" with no name.
+ *  Nothing below two. */
 export default function CircleCount({
   code,
   name,
   className,
 }: {
   code: string;
-  name: string;
+  name?: string;
   className?: string;
 }) {
   const count = useCircleWeekCount(code);
-  const line = count === null ? null : circleCountLine(name, count);
+  const line = count === null ? null : circleCountLine(name ?? null, count);
   if (line === null) {
     return null;
   }
