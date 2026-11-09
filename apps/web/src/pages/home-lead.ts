@@ -5,17 +5,12 @@ export function surahLabel(surah: number, meta: SurahMeta | undefined): string {
   return meta?.name ?? `Surah ${surah}`;
 }
 
-/** A starter surah's button text: "Al-'Asr · 3 verses". */
+/** A starter surah's button text: just its name, "Al-'Asr". */
 export function starterLabel(
   surah: number,
   meta: SurahMeta | undefined
 ): string {
-  const name = surahLabel(surah, meta);
-  if (!meta) {
-    return name;
-  }
-  const verses = meta.ayahCount === 1 ? "verse" : "verses";
-  return `${name} · ${meta.ayahCount} ${verses}`;
+  return surahLabel(surah, meta);
 }
 
 export type LeadKind = "continue" | "circle" | "circle-surah" | "starters";

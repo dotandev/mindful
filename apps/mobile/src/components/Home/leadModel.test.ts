@@ -130,9 +130,9 @@ describe(starterLabel, () => {
     [999, { ayahCount: 1, name: "One", number: 999 }],
   ]);
 
-  it("shows the name and verse count", () => {
-    expect(starterLabel(103, surahs)).toBe("Al-'Asr · 3 verses");
-    expect(starterLabel(999, surahs)).toBe("One · 1 verse");
+  it("shows only the name", () => {
+    expect(starterLabel(103, surahs)).toBe("Al-'Asr");
+    expect(starterLabel(999, surahs)).toBe("One");
   });
 
   it("falls back to the number before the list loads", () => {

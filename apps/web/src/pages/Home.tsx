@@ -111,8 +111,7 @@ const entries: Entry[] = [
   },
 ];
 
-const LEAD_LINE =
-  "Write why you’re reading, ponder it verse by verse with Ibn Kathir, and keep a page for it. A week later, we’ll ask how your action went.";
+const LEAD_LINE = "Ponder it verse by verse, with Ibn Kathir.";
 
 function whereYouAre(ayah: number, meta: SurahMeta | undefined): string {
   if (!meta) {
@@ -220,10 +219,7 @@ function SurahLead({
     >
       <h2 className="home-lead-title">Begin with a surah</h2>
       <p className="cloth-soft home-lead-line">{LEAD_LINE}</p>
-      <h3 id="home-starters" className="home-lead-subhead">
-        Short surahs to begin with
-      </h3>
-      <ul aria-labelledby="home-starters" className="home-lead-suggestions">
+      <ul aria-label="Short surahs" className="home-lead-suggestions">
         {STARTER_SURAHS.map((n) => (
           <li key={n}>
             <Link to={`/tadabbur/${n}`} className="btn cloth-quiet">

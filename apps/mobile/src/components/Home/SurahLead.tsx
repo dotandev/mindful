@@ -18,7 +18,6 @@ import {
   focusLine,
   namedAction,
   namedEyebrow,
-  STARTERS_HEADING,
   starterLabel,
   surahName,
 } from "./leadModel";
@@ -144,18 +143,10 @@ function LeadBody({
         {BEGIN_TITLE}
       </Text>
       <BeginLine />
-      <Text
-        accessibilityRole="header"
-        style={{
-          color: cloth.strong,
-          fontFamily: fonts.readSemiBold,
-          fontSize: 15.5,
-          lineHeight: 22,
-        }}
+      <View
+        accessibilityLabel="Short surahs"
+        style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}
       >
-        {STARTERS_HEADING}
-      </Text>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
         {lead.surahs.map((n) => (
           <Button
             key={n}

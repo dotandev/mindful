@@ -11,8 +11,7 @@ import type { SurahMeta, TadabburSession } from "@mindfulverse/core/types";
 import type { VersePos } from "./homeModel";
 
 export const BEGIN_TITLE = "Begin with a surah";
-export const BEGIN_LINE =
-  "Write why you’re reading, ponder it verse by verse with Ibn Kathir, and keep a page for it. A week later, we’ll ask how your action went.";
+export const BEGIN_LINE = "Ponder it verse by verse, with Ibn Kathir.";
 
 export const CIRCLE_EYEBROW = "Your circle is reading";
 export const namedEyebrow = (name: string): string => `${name} is reading`;
@@ -22,8 +21,6 @@ export const focusLine = (verse: number): string => `Focus: verse ${verse}`;
 export function namedAction(surahTitle: string, verse: number | null): string {
   return verse === null ? `Begin ${surahTitle}` : `Go to verse ${verse}`;
 }
-
-export const STARTERS_HEADING = "Short surahs to begin with";
 
 /** What Home's lead card offers, most specific first. */
 export type Lead =
@@ -65,17 +62,12 @@ export function surahName(
   return surahs.get(surah)?.name ?? `Surah ${surah}`;
 }
 
-/** "Al-'Asr · 3 verses"; just the name until the surah list has loaded. */
+/** A starter surah's button text: just its name, "Al-'Asr". */
 export function starterLabel(
   surah: number,
   surahs: Map<number, SurahMeta>
 ): string {
-  const meta = surahs.get(surah);
-  if (!meta) {
-    return surahName(surah, surahs);
-  }
-  const verses = meta.ayahCount === 1 ? "1 verse" : `${meta.ayahCount} verses`;
-  return `${meta.name} · ${verses}`;
+  return surahName(surah, surahs);
 }
 
 export const THEME_PICKS = 3;
