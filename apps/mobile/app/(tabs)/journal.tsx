@@ -47,10 +47,10 @@ function EmptyJournal() {
         style={{ fontSize: 19, marginTop: space.lg, textAlign: "center" }}
         variant="body"
       >
-        Nothing here yet, and that’s fine.
+        Nothing here yet.
       </Text>
       <Text variant="soft" style={{ textAlign: "center" }}>
-        When a verse stops you, write what it said to you.
+        When a verse stops you, write it down.
       </Text>
       <Button
         title="Begin with today’s verse"

@@ -62,12 +62,7 @@ export function SurahPicker({
           paddingBottom: space.lg,
           paddingHorizontal: space.lg,
         }}
-        ListEmptyComponent={
-          <Text variant="muted">
-            No surah matches that. Try a different name or a number from 1 to
-            114.
-          </Text>
-        }
+        ListEmptyComponent={<Text variant="muted">No surah matches that.</Text>}
         renderItem={({ item }) => {
           const chosen = item.number === selected;
           return (

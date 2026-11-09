@@ -189,10 +189,7 @@ export default function SessionPlayer() {
     return page(
       <Card>
         <Text variant="h2">This session isn’t here</Text>
-        <Text variant="muted">
-          We couldn’t find the session you were looking for. It may have been
-          moved or renamed.
-        </Text>
+        <Text variant="muted">This session couldn’t be found.</Text>
         <View style={{ alignItems: "flex-start" }}>
           <Button kind="secondary" title="Back to sessions" onPress={leave} />
         </View>

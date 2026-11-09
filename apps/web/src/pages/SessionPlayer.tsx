@@ -125,10 +125,7 @@ export default function SessionPlayer() {
       <div>
         <div className="card stack">
           <h2>We couldn’t open this session</h2>
-          <p className="muted">
-            Something interrupted the connection. Check your network and try
-            again in a moment.
-          </p>
+          <p className="muted">Check your connection and try again.</p>
           <Link to="/sessions" className="btn secondary">
             Back to sessions
           </Link>
@@ -142,10 +139,7 @@ export default function SessionPlayer() {
       <div>
         <div className="card stack">
           <h2>This session isn’t here</h2>
-          <p className="muted">
-            We couldn’t find the session you were looking for. It may have been
-            moved or renamed.
-          </p>
+          <p className="muted">This session couldn’t be found.</p>
           <Link to="/sessions" className="btn secondary">
             Back to sessions
           </Link>
@@ -365,10 +359,7 @@ function StepView({ step, reduce }: { step: SessionStep; reduce: boolean }) {
       )}
       {status.kind === "error" && (
         <div className="card">
-          <p className="muted">
-            We couldn’t load the verses for this step. Try stepping back and
-            forward again.
-          </p>
+          <p className="muted">Couldn’t load these verses. Try again.</p>
         </div>
       )}
       {status.kind === "ready" &&
@@ -555,9 +546,8 @@ function TafsirDisclosure({ verseKeys }: { verseKeys: string[] }) {
             })}
           {status.kind === "ready" && status.entries.length > 0 && (
             <p className="muted" style={{ fontSize: "0.8rem" }}>
-              Verse quotations inside the commentary follow its classical
-              English edition, which differs from the ClearQuran translation
-              shown above.
+              Verses quoted in the commentary use a different English
+              translation.
             </p>
           )}
         </div>
@@ -636,7 +626,7 @@ function FinalScreen({
           {saved ? (
             <div className="stack">
               <p className="soft" style={{ margin: 0 }}>
-                Kept in your journal. Return to it whenever you like.
+                Kept in your journal.
               </p>
               <div>
                 <Link to="/journal" className="btn secondary">

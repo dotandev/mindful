@@ -105,10 +105,7 @@ export function StepView({
       ) : null}
       {status.kind === "error" ? (
         <Card>
-          <Text variant="muted">
-            We couldn’t load the verses for this step. Try stepping back and
-            forward again.
-          </Text>
+          <Text variant="muted">Couldn’t load these verses. Try again.</Text>
         </Card>
       ) : null}
       {status.kind === "ready"

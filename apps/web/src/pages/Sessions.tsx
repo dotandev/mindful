@@ -56,7 +56,7 @@ function SurahPicker({ surahs }: { surahs: SurahMeta[] }) {
       />
       {visible.length === 0 ? (
         <p className="muted" style={{ margin: 0 }}>
-          No surah matches that. Try a different name or a number from 1 to 114.
+          No surah matches that.
         </p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
@@ -147,13 +147,13 @@ export default function Sessions() {
     <div className="stack">
       <header>
         <h1>Ponder the Qur’an</h1>
-        <p className="soft">Slow down and sit with a few verses at a time.</p>
+        <p className="soft">A few verses at a time.</p>
       </header>
 
       <section className="stack">
         <h2 style={{ fontWeight: 500, margin: 0 }}>By surah</h2>
         <p className="soft" style={{ margin: 0 }}>
-          Learn its background, then move through it verse by verse.
+          Its background, then verse by verse.
         </p>
 
         {latest !== null && latest !== undefined && (
@@ -184,7 +184,7 @@ export default function Sessions() {
       <section className="stack">
         <h2 style={{ fontWeight: 500, margin: 0 }}>By theme</h2>
         <p className="soft" style={{ margin: 0 }}>
-          Short guided reflections. A few verses gathered around one theme.
+          A few verses on one theme.
         </p>
 
         {status.kind === "loading" && (
@@ -199,8 +199,7 @@ export default function Sessions() {
               We couldn’t reach the sessions
             </h3>
             <p className="muted" style={{ margin: 0 }}>
-              Something interrupted the connection. Take a breath, check your
-              network, and try again in a moment.
+              Check your connection and try again.
             </p>
           </div>
         )}
@@ -208,7 +207,7 @@ export default function Sessions() {
         {status.kind === "ready" &&
           (status.sessions.length === 0 ? (
             <p className="muted" style={{ margin: 0 }}>
-              There are no sessions here yet. More are on the way.
+              No sessions yet.
             </p>
           ) : (
             <ul

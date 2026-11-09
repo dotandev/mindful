@@ -101,9 +101,7 @@ export default function TadabburPicker() {
 
   const header = (
     <View style={{ gap: space.md, paddingBottom: space.md }}>
-      <Text variant="soft">
-        Learn its background, then move through it verse by verse.
-      </Text>
+      <Text variant="soft">Its background, then verse by verse.</Text>
       {status === "ready" ? (
         <TextInput
           value={query}
@@ -159,11 +157,7 @@ export default function TadabburPicker() {
       </Card>
     );
   } else {
-    empty = (
-      <Text variant="muted">
-        No surah matches that. Try a different name or a number from 1 to 114.
-      </Text>
-    );
+    empty = <Text variant="muted">No surah matches that.</Text>;
   }
 
   return (

@@ -207,7 +207,7 @@ export default function Home() {
         ) : (
           <Text variant="soft">
             {heroError
-              ? "Today’s verse is still being gathered. Come back in a little while and it will be waiting for you."
+              ? "Today’s verse isn’t ready yet. Try again shortly."
               : "Opening today’s verse…"}
           </Text>
         )}

@@ -1,21 +1,22 @@
 # MindfulVerse
 
-A quiet app for reflecting on the Qur'an. Read verses with translation and commentary, sit with a short guided reflection, count your dhikr, and keep a private journal.
+A quiet app for pondering the Qur'an. Sit with one surah verse by verse with Ibn Kathir's commentary, keep a private journal for it, and get asked a week later whether you did what you wrote. Read it with friends in a circle, each in your own words.
 
-It works in the browser, needs no sign up, and works offline. This is an early version. It is free.
+It works in the browser and on Android, needs no sign up, and works offline. It is free, with no ads.
 
 Live at [mindfulverse.vercel.app](https://mindfulverse.vercel.app)
 
 ## Features
 
-- **Daily check-in.** A verse for today, a gentle mood picker, and a place to journal.
-- **Tadabbur sessions.** 20 short guided reflections. Each one has a theme, a few verses, and a prompt.
-- **Dhikr and breath.** A breathing circle paced to remembrance, with tap counting.
-- **Read.** All 114 surahs with Arabic, English translation, and Ibn Kathir's commentary.
-- **Search and topics.** Search the translation, or find verses by topic and jump into the reader.
-- **Journal.** Your reflections, saved on your device, with the verse they were written about.
-- **Accounts & sync.** Optional sign-in (email or Google) backs up your journal and progress across devices.
-- **Daily reminder.** A push notification with the verse of the day, at a time you choose.
+- **Surah journal.** Begin with a surah: its background, then verse by verse with Ibn Kathir, and a page that keeps everything you wrote on it.
+- **A week later.** Write what you will do; seven days on, Home asks how it went.
+- **Circles.** Name a circle, pick a surah, share the link. Anyone can join without an account; reflections stay private, and the circle only sees an anonymous weekly count.
+- **Tadabbur sessions.** Short guided reflections: a few verses on one theme.
+- **Daily verse.** A verse for today and a place to write about it, with an optional daily reminder.
+- **Read and search.** All 114 surahs with Arabic, English translation and commentary; search the translation or browse by theme.
+- **Your rhythm.** Days of returning, and how many days this week you kept a reflection. Private, on your device.
+- **Accounts & sync.** Optional sign-in backs up your journal across devices.
+- **For developers.** A free daily-verse API for your own site, at `/developers`.
 
 All Qur'an text, translation, and commentary are shown exactly as they are. The app never rewrites or generates religious content.
 

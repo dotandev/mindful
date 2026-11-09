@@ -175,7 +175,9 @@ export default function Circles() {
           </Card>
 
           <View style={{ gap: space.md }}>
-            <Text variant="h2">Your circles</Text>
+            {showMineHeading(mine, created) ? (
+              <Text variant="h2">Your circles</Text>
+            ) : null}
             <MineList
               mine={mine}
               surahs={surahs}
@@ -197,6 +199,15 @@ export default function Circles() {
         </>
       ) : null}
     </Screen>
+  );
+}
+
+/** Hidden while the only circle is the one just started, shown above. */
+function showMineHeading(mine: MineState, created: Circle | null): boolean {
+  return !(
+    created &&
+    mine.status === "ready" &&
+    mine.circles.every((c) => c.code === created.code)
   );
 }
 
