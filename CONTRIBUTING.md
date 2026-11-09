@@ -65,6 +65,10 @@ npm run typecheck -w @mindfulverse/mobile        # if you touched apps/mobile
 - Never use real people's journals, emails or circles in tests, fixtures or screenshots. Invent test data.
 - The Qur'an data in `apps/web/public/data` is generated from source datasets that aren't in the repo. If something in it looks wrong, open an issue rather than editing the JSON by hand.
 
+## Licence
+
+By contributing, you agree that your code is released under the [MIT License](LICENSE). The Qur'anic text, translation, commentary and fonts are not covered by it and keep their own licences, listed at the end of the [LICENSE](LICENSE) file.
+
 ## Reporting a problem or an idea
 
 Open an issue on GitHub with what you expected, what happened, and the device or browser you used. For content concerns (a prompt, a pairing or a session intro that reads wrongly), please say which screen and quote the line, and it will be reviewed with a teacher.
