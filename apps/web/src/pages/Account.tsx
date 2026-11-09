@@ -346,7 +346,7 @@ export default function Account() {
 
   if (loading) {
     return (
-      <div className="stack">
+      <div className="stack account-page">
         <header>
           <h1>Your account</h1>
         </header>
@@ -360,7 +360,7 @@ export default function Account() {
   }
 
   return (
-    <div className="stack">
+    <div className="stack account-page">
       <header>
         <h1>
           {user
@@ -682,7 +682,11 @@ export default function Account() {
                 </button>
                 <p
                   className="soft"
-                  style={{ fontSize: ".95rem", margin: 0, textAlign: "center" }}
+                  style={{
+                    fontSize: ".95rem",
+                    margin: "4px 0 0",
+                    textAlign: "center",
+                  }}
                 >
                   {mode === "signin" ? (
                     <>
@@ -737,7 +741,7 @@ export default function Account() {
 
       <Appearance />
 
-      <p className="soft" style={{ fontSize: ".9rem", margin: "8px 0 0" }}>
+      <p className="soft" style={{ fontSize: ".9rem", margin: "12px 0 0" }}>
         We anonymously count days the app is opened. Your writing stays on this
         device unless you sync.
       </p>

@@ -15,8 +15,8 @@ Live at [mindfulverse.vercel.app](https://mindfulverse.vercel.app)
 - **Daily verse.** A verse for today and a place to write about it, with an optional daily reminder.
 - **Read and search.** All 114 surahs with Arabic, English translation and commentary; search the translation or browse by theme.
 - **Your rhythm.** Days of returning, and how many days this week you kept a reflection. Private, on your device.
-- **Accounts & sync.** Optional sign-in backs up your journal across devices.
-- **For developers.** A free daily-verse API for your own site, at `/developers`.
+- **Accounts and sync.** Optional sign in backs up your journal across devices.
+- **For developers.** A free daily verse API for your own site, at `/developers`.
 
 All Qur'an text, translation, and commentary are shown exactly as they are. The app never rewrites or generates religious content.
 
@@ -32,73 +32,80 @@ All Qur'an text, translation, and commentary are shown exactly as they are. The 
 
 ## Run it
 
-The repo is an npm workspaces monorepo. Run everything from the root:
+The repo holds the web app, the Android app and the code they share. Run everything from the root folder:
 
 ```bash
 npm install
-npm run build:data   # writes apps/web/public/data
-npm run dev          # web app dev server
+npm run dev          # starts the web app on your computer
 ```
+
+The Qur'an data the app needs is already in `apps/web/public/data`.
 
 | Command | What it does |
 | --- | --- |
-| `npm test` | The whole vitest suite: `packages/core`, `apps/web`, and `functions/` |
-| `npm run build` | Typechecks `packages/core` (no DOM), then builds the web app to `apps/web/dist` |
-| `npm run preview` | Serves the production build |
-| `npm run typecheck` | Typechecks `packages/core` only |
-| `npm run test:e2e` | Playwright smoke test in `apps/web/e2e` (skips without `E2E_EMAIL`/`E2E_PASSWORD`) |
+| `npm test` | Runs all the tests |
+| `npm run build` | Checks the shared code for type errors, then builds the web app into `apps/web/dist` |
+| `npm run preview` | Serves the built web app |
+| `npm run typecheck` | Checks the shared code for type errors |
+| `npm run test:e2e` | Runs the browser test in `apps/web/e2e`. It is skipped unless `E2E_EMAIL` and `E2E_PASSWORD` are set |
 
-`.env` / `.env.local` stay at the repo root; the web app reads them from there.
+Keep `.env` and `.env.local` in the root folder. The web app reads them from there.
+
+For the Android app, see [`apps/mobile/README.md`](apps/mobile/README.md).
 
 ## How it is built
 
-React, TypeScript, and Vite, with a service worker for offline use. All Qur'an data is bundled and the journal lives in your browser first; the only server component is an optional [InsForge](https://insforge.dev) backend for account sync and reminders (see "Accounts & sync" below).
+The web app uses React, TypeScript and Vite. A service worker lets it work offline. All the Qur'an data ships with the app, and your journal is saved in your browser first. The only server is an optional [InsForge](https://insforge.dev) backend, used for accounts, sync and reminders.
 
 ```text
-packages/core/        shared logic, no DOM: data loaders, journal, progress,
-                      analytics, divisions, sync engine + merge, InsForge
-                      client, account context (@mindfulverse/core)
-apps/web/             the Vite PWA: pages, components, service worker, and the
-                      web side of the core's platform seams (src/setup.ts)
-apps/web/public/data/ generated Qur'an, tafsir, themes, sessions, emotions
-functions/            InsForge edge functions (daily reminder)
-migrations/           InsForge SQL migrations
-scripts/              build-data.mjs, which turns raw datasets into app data
-raw-data/             source datasets, not committed
+packages/core/        code shared by web and Android: data, journal,
+                      progress, circles, sync and accounts
+apps/web/             the web app: pages, components and the service worker
+apps/mobile/          the Android app, built with Expo
+apps/web/public/data/ the Qur'an, commentary, themes and sessions as JSON
+functions/            InsForge server functions (reminders, daily verse API)
+migrations/           InsForge database changes
+scripts/              build-data.mjs, which turns the source datasets into app data
 ```
 
-The core never touches browser APIs directly. A host app wires it up once at startup — `configureInsforge`, `configureData`, `configureSyncTriggers`, and `configureAnalytics` — and provides `localStorage` and `crypto.randomUUID`. See `docs/superpowers/plans/2026-10-06-rn-phase1-extraction.md`.
+The shared code never calls browser or phone features directly. Each app sets it up once when it starts, by calling `configureInsforge`, `configureData`, `configureSyncTriggers` and `configureAnalytics`.
 
-To change the data, update the files in `raw-data/` and run `npm run build:data` again.
+The source datasets for `npm run build:data` are not in the repo. If some Qur'an data looks wrong, please open an issue.
 
 ## Acknowledgments
 
 The Qur'anic datasets come from the [Quranic Universal Library](https://qul.tarteel.ai) by [Tarteel](https://tarteel.ai). This app would not exist without their work.
 
-The English translation is [ClearQuran](https://www.clearquran.com) by Talal Itani, used under the CC BY-NC-ND 4.0 license. The Arabic typeface is the KFGQPC Uthmanic Hafs script from the King Fahd Glorious Qur'an Printing Complex in Madinah.
+The English translation is [ClearQuran](https://www.clearquran.com) by Talal Itani, used under the CC BY-NC-ND 4.0 licence. The Arabic typeface is the KFGQPC Uthmanic Hafs script from the King Fahd Glorious Qur'an Printing Complex in Madinah.
 
-## Accounts & sync (v1)
+## Accounts and sync
 
-Signing in is optional — the whole app works signed-out, offline, on-device. An account only backs up your journal and progress so they follow you to another device. Auth, storage, and Postgres are provided by [InsForge](https://insforge.dev); there is no other server.
+You don't need to sign in. The whole app works signed out, offline, on your device. An account only backs up your journal and progress, so they follow you to another device. [InsForge](https://insforge.dev) provides sign in and the database. There is no other server.
 
-| Env var | Used for |
+| Setting | Used for |
 | --- | --- |
-| `VITE_INSFORGE_URL` | The InsForge project's base API URL |
-| `VITE_INSFORGE_ANON_KEY` | Public anon key for unauthenticated/auth requests |
-| `VITE_VAPID_PUBLIC_KEY` | Public key for the daily verse reminder (Web Push) |
+| `VITE_INSFORGE_URL` | The address of the InsForge project |
+| `VITE_INSFORGE_ANON_KEY` | The public key the app uses to talk to InsForge |
+| `VITE_VAPID_PUBLIC_KEY` | The public key for the daily verse reminder in the browser |
 
-Set these in `.env` (or `.env.local`) for local development — see `.env.example`. On Vercel, add all three under Project → Settings → Environment Variables for both **Production** and **Preview**, then redeploy; they are `VITE_*` so Vite inlines them at build time, not at runtime.
+For local work, put these in `.env` or `.env.local`. Copy `.env.example` to start. On Vercel, add all three under Project, Settings, Environment Variables, for both Production and Preview, then redeploy. Vite builds them into the app, so a change needs a new deploy.
 
-Backend setup — SQL migrations live in `migrations/`, and the reminder/push edge functions live in `functions/`; both are applied to the InsForge project directly (see the InsForge CLI), not run from this repo.
+Database changes are in `migrations/` and server functions are in `functions/`. You apply both to the InsForge project with the InsForge CLI. Nothing in this repo runs them for you.
 
-The merge story, in three sentences: everything is written to `localStorage` first, so the app never blocks on the network; signing in, reconnecting, or returning to the tab triggers a sync that pulls the account's remote journal and progress and merges them with what's on this device — journal entries by union-by-id with soft-delete tombstones, progress by per-key max / earliest-completion / latest-read / set-union — then pushes back only the resulting diff. Every merge is deliberately commutative and idempotent — running it twice, or on two devices at once, converges to the same state rather than duplicating or clobbering entries.
+How sync works:
+
+- Everything is saved on the device first, so the app never waits for the network.
+- When you sign in, come back online or return to the app, it fetches your saved journal and progress from your account.
+- It joins them with what is on this device. Entries are matched by their id, and a deleted entry stays deleted. For progress, it keeps the furthest point you reached.
+- It then sends back only what changed.
+- Running sync twice, or on two devices at once, gives the same result. Nothing is duplicated or lost.
 
 ## Good to know
 
-- The translation renders the divine name as "God". It is shown word for word, as the license requires.
-- Ibn Kathir wrote commentary on passages, so some verses share a note with a neighboring verse.
+- The translation writes the divine name as "God". It is shown word for word, as its licence requires.
+- Ibn Kathir wrote his commentary on passages, so some verses share a note with the verse next to them.
 - Recitation audio and more languages are planned for later. MindfulVerse is free, with no paid plan. See `ROADMAP.md`.
 
 ## Licence
 
-The code is under the [MIT License](LICENSE). The Qur'anic text, translation, commentary and fonts keep their own licences (see [LICENSE](LICENSE) and "Acknowledgments" above). Want to help? See [CONTRIBUTING.md](CONTRIBUTING.md).
+The code is under the [MIT License](LICENSE). The Qur'anic text, translation, commentary and fonts keep their own licences. See [LICENSE](LICENSE) and the Acknowledgments above. Want to help? See [CONTRIBUTING.md](CONTRIBUTING.md).

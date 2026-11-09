@@ -1,6 +1,16 @@
-/* Empty journal: the MindfulVerse mark above the invitation to begin. */
-.journal-swatch {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 24px;
+/* Empty journal: aligned with the page heading, one quiet way to begin. */
+.journal-empty {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  max-width: 44ch;
+}
+.journal-empty p {
+  margin: 0;
+}
+.journal-empty-lead {
+  font-weight: 500;
+}
+.journal-empty .btn {
+  margin-top: 14px;
 }
