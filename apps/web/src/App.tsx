@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import AppShell from "./components/AppShell";
 import Account from "./pages/Account";
 import CheckIn from "./pages/CheckIn";
+import CircleInvite from "./pages/CircleInvite";
+import Circles from "./pages/Circles";
 import Developers from "./pages/Developers";
 import Dhikr from "./pages/Dhikr";
 import Home from "./pages/Home";
@@ -37,6 +39,8 @@ export default function App() {
         <Route path="/sessions/:id" element={<SessionPlayer />} />
         <Route path="/tadabbur/:surah/journal" element={<SurahJournal />} />
         <Route path="/tadabbur/:surah" element={<SurahTadabbur />} />
+        <Route path="/circle/:link" element={<CircleInvite />} />
+        <Route path="/circles" element={<Circles />} />
         <Route path="/checkin" element={<CheckIn />} />
         <Route path="/journal" element={<Journal />} />
         <Route path="/stats" element={<Stats />} />

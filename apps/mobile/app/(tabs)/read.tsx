@@ -17,6 +17,7 @@ import {
   verseHref,
 } from "../../src/components/Reader/IndexRows";
 import { Segmented } from "../../src/components/Reader/Segmented";
+import { SearchIcon } from "../../src/components/Search/SearchIcon";
 import { fonts, radius, space, useTheme } from "../../src/theme";
 import {
   AdireCloth,
@@ -109,9 +110,35 @@ export default function Read() {
 
   const header = (
     <View style={{ gap: space.md, paddingBottom: space.md }}>
-      <View>
-        <Text variant="h1">The Qur’an</Text>
-        <Text variant="muted">Browse by surah or by juz.</Text>
+      <View
+        style={{
+          alignItems: "flex-start",
+          flexDirection: "row",
+          gap: space.sm,
+        }}
+      >
+        <View style={{ flex: 1 }}>
+          <Text variant="h1">The Qur’an</Text>
+          <Text variant="muted">Browse by surah or by juz.</Text>
+        </View>
+        <LinkPressable
+          href="/search"
+          accessibilityRole="button"
+          accessibilityLabel="Search"
+          accessibilityHint="Search the translation for a word"
+          hitSlop={4}
+          style={({ pressed }) => ({
+            alignItems: "center",
+            backgroundColor: pressed ? colors.indigoWash : "transparent",
+            borderRadius: radius.md,
+            height: 44,
+            justifyContent: "center",
+            marginRight: -space.sm,
+            width: 44,
+          })}
+        >
+          <SearchIcon color={colors.indigo} />
+        </LinkPressable>
       </View>
 
       {lastRead ? (

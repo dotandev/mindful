@@ -14,7 +14,7 @@ export function Card({ style, ...rest }: ViewProps) {
           backgroundColor: colors.shea,
           borderRadius: radius.md,
           gap: space.md,
-          padding: space.lg,
+          padding: 18,
         },
         style,
       ]}

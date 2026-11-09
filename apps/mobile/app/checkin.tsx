@@ -257,7 +257,7 @@ export default function CheckIn() {
               variant="soft"
               style={{ fontSize: 17, lineHeight: 25, marginTop: space.sm }}
             >
-              Tap a word if one fits. There’s no wrong answer.
+              Tap a word if one fits.
             </Text>
           )}
         </View>
@@ -287,10 +287,7 @@ export default function CheckIn() {
           ) : null}
 
           {emotionsError ? (
-            <Text variant="muted">
-              The reminders are still being gathered. Come back in a little
-              while and they will be here.
-            </Text>
+            <Text variant="muted">Not ready yet. Try again shortly.</Text>
           ) : emotions.length === 0 ? (
             <Text variant="muted">Gathering a few words for you…</Text>
           ) : (
@@ -373,11 +370,10 @@ export default function CheckIn() {
           <Reveal reduce={reduce} style={{ gap: space.lg }}>
             {/* Verse of the day: the anchor, laid on the dyed cloth, as Home's
                 hero is. */}
-            <AdireCloth style={{ padding: space.lg, paddingTop: 20 }}>
+            <AdireCloth style={{ paddingHorizontal: 20, paddingVertical: 18 }}>
               {dailyError ? (
                 <Text style={{ color: cloth.soft, marginTop: 10 }}>
-                  Today’s verse is still being gathered. Come back in a little
-                  while and it will be waiting for you.
+                  Today’s verse isn’t ready yet. Try again shortly.
                 </Text>
               ) : dailyAyah ? (
                 <AyahView
@@ -434,10 +430,7 @@ export default function CheckIn() {
                   {selected.framing}
                 </Text>
                 {emotionAyahsError ? (
-                  <Text variant="muted">
-                    These verses are still being gathered. Come back in a little
-                    while and they will be here for you.
-                  </Text>
+                  <Text variant="muted">Not ready yet. Try again shortly.</Text>
                 ) : emotionLoading ? (
                   <Text variant="muted">Gathering a few verses…</Text>
                 ) : (
@@ -490,7 +483,7 @@ export default function CheckIn() {
                   {VERSE_PROMPT}
                 </Text>
                 <Text variant="muted" style={{ fontSize: 15, lineHeight: 21 }}>
-                  Only if you’d like. A line is plenty.
+                  A line is plenty.
                 </Text>
               </View>
               <TextInput

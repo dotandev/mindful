@@ -4,7 +4,6 @@ import type { SyncTriggers } from "@mindfulverse/core/sync/engine";
 import NetInfo from "@react-native-community/netinfo";
 import type { NetInfoState } from "@react-native-community/netinfo";
 import { AppState } from "react-native";
-import type { AppStateStatus } from "react-native";
 
 const reachable = (s: NetInfoState) =>
   s.isConnected !== false && s.isInternetReachable !== false;
@@ -20,7 +19,7 @@ NetInfo.addEventListener((s) => {
 export const nativeSyncTriggers: SyncTriggers = {
   isOnline: () => online,
   onForeground(cb) {
-    let prev: AppStateStatus = AppState.currentState;
+    let prev = AppState.currentState;
     const sub = AppState.addEventListener("change", (next) => {
       if (next === "active" && prev !== "active") {
         cb();

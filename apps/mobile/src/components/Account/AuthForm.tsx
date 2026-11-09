@@ -5,7 +5,7 @@ import { insforge } from "@mindfulverse/core/sync/insforge";
 // errors and analytics). OAuth is web-only for now (PKCE needs crypto.subtle,
 // absent on Hermes), so no provider buttons here.
 import { useEffect, useRef, useState } from "react";
-import type { TextInput } from "react-native";
+import type { TextInputInstance } from "react-native";
 import { Platform, View } from "react-native";
 
 import { signIn, signUp, verifyEmail } from "../../session";
@@ -40,7 +40,7 @@ export function AuthForm({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [googleOnWeb, setGoogleOnWeb] = useState(false);
-  const passwordRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInputInstance>(null);
   const mounted = useRef(true);
   useEffect(() => () => void (mounted.current = false), []);
 
@@ -81,9 +81,7 @@ export function AuthForm({
         }
         if (needsVerification) {
           setPendingVerification(true);
-          setNotice(
-            "Check your email for a 6-digit code, then enter it below."
-          );
+          setNotice("Check your email for a 6-digit code.");
           return;
         }
         track({ method: "password", type: "account_signup" });
@@ -247,10 +245,7 @@ export function AuthForm({
         />
       </View>
       {googleOnWeb ? (
-        <Small>
-          Google sign-in is on the website only for now. In the app, use your
-          email and password.
-        </Small>
+        <Small>Google sign-in is on the website for now.</Small>
       ) : null}
     </View>
   );

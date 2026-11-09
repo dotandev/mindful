@@ -1,3 +1,10 @@
+import {
+  getJoinedCircle,
+  onJoinedCircleChange,
+  refreshJoinedCircle,
+} from "@mindfulverse/core/circles";
+import type { Circle } from "@mindfulverse/core/circles";
+import { getCircleSurah, STARTER_SURAHS } from "@mindfulverse/core/circleSurah";
 import { todayVerseKey } from "@mindfulverse/core/dailyVerse";
 import { loadAyahsByKeys, loadSurahs } from "@mindfulverse/core/data";
 import { checkedInToday } from "@mindfulverse/core/journal";
@@ -8,19 +15,27 @@ import {
 } from "@mindfulverse/core/progress";
 import { useAccount } from "@mindfulverse/core/sync/auth";
 import { TRANSLATION_SOURCE_URL } from "@mindfulverse/core/translation";
-import type { Ayah } from "@mindfulverse/core/types";
-import { useEffect, useState } from "react";
+import type { Ayah, SurahMeta } from "@mindfulverse/core/types";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import {
   ChevronIcon,
-  DhikrIcon,
   DyeRule,
   ReadIcon,
   TadabburIcon,
 } from "../components/Adire";
+import CircleCount from "../components/CircleCount";
 import FollowUpCard from "../components/FollowUpCard";
+import WeekRhythm from "../components/WeekRhythm";
 import { usePrefersReducedMotion } from "../lib/usePrefersReducedMotion";
+import {
+  chooseLead,
+  circleBeginAction,
+  circleFocus,
+  starterLabel,
+  surahLabel,
+} from "./home-lead";
 
 import "./home.css";
 
@@ -37,7 +52,7 @@ function greeting(hour: number): string {
   return "Peace be upon you this evening";
 }
 
-// The daily check-in is the habit and leads from the verse above; these are
+// The surah journal leads; these are
 // the places to go when there is more time, or a need.
 // An entry with `soon` renders inert, with a "Soon" pill instead of a chevron.
 interface Entry {
@@ -46,6 +61,33 @@ interface Entry {
   desc: string;
   Icon: () => JSX.Element;
   soon?: boolean;
+}
+
+/** Circles: three readers around one centre. */
+function CirclesIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      width={22}
+      height={22}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path
+        d="M12 10.4 13.6 12 12 13.6 10.4 12Z"
+        fill="currentColor"
+        stroke="none"
+      />
+      <circle cx="12" cy="4.6" r="2.2" />
+      <circle cx="5.6" cy="16.4" r="2.2" />
+      <circle cx="18.4" cy="16.4" r="2.2" />
+    </svg>
+  );
 }
 
 const entries: Entry[] = [
@@ -62,24 +104,184 @@ const entries: Entry[] = [
     to: "/read",
   },
   {
-    Icon: DhikrIcon,
-    desc: "Remembrance, paced to your breath.",
-    title: "Dhikr & breath",
-    to: "/dhikr",
+    Icon: CirclesIcon,
+    desc: "Read a surah together with friends.",
+    title: "Circles",
+    to: "/circles",
   },
 ];
+
+const LEAD_LINE = "Ponder it verse by verse, with Ibn Kathir.";
+
+function whereYouAre(ayah: number, meta: SurahMeta | undefined): string {
+  if (!meta) {
+    return `You’ve pondered up to verse ${ayah}.`;
+  }
+  if (ayah >= meta.ayahCount) {
+    return `You’ve pondered all ${meta.ayahCount} verses.`;
+  }
+  return `Verse ${ayah} of ${meta.ayahCount}`;
+}
+
+function SurahLead({
+  surahs,
+  joined,
+}: {
+  surahs: Map<number, SurahMeta>;
+  joined: Circle | null;
+}): JSX.Element {
+  const current = latestSurahTadabbur();
+  const circle = getCircleSurah();
+  const lead = chooseLead({
+    circleSurah: circle !== null,
+    inProgress: current !== null,
+    joinedCircle: joined !== null,
+  });
+  if (lead === "continue" && current) {
+    const meta = surahs.get(current.surah);
+    const name = surahLabel(current.surah, meta);
+    return (
+      <section aria-label="Your surah" className="cloth home-lead fade-rise">
+        <p className="cloth-eyebrow">Your surah</p>
+        <h2 className="home-lead-title">Continue {name}</h2>
+        <p className="cloth-soft home-lead-line">
+          {whereYouAre(current.ayah, meta)}
+        </p>
+        <div className="home-lead-actions">
+          <Link
+            to={`/tadabbur/${current.surah}?v=${current.ayah}`}
+            className="btn cloth-btn"
+          >
+            Resume
+          </Link>
+          <Link
+            to={`/tadabbur/${current.surah}/journal`}
+            className="home-lead-quiet"
+          >
+            Your page for {name}
+          </Link>
+        </div>
+      </section>
+    );
+  }
+  if (lead === "circle" && joined) {
+    const meta = surahs.get(joined.surah);
+    const name = surahLabel(joined.surah, meta);
+    const focus = circleFocus(joined, meta?.ayahCount);
+    const begin = circleBeginAction(focus, name);
+    const eyebrow = `${joined.name} is reading`;
+    return (
+      <section aria-label={eyebrow} className="cloth home-lead fade-rise">
+        <p className="cloth-eyebrow">{eyebrow}</p>
+        <h2 className="home-lead-title">{name}</h2>
+        <p className="cloth-soft home-lead-line">
+          {focus.verse === null ? LEAD_LINE : `Focus: verse ${focus.verse}`}
+        </p>
+        <div className="home-lead-actions">
+          <Link to={begin.to} className="btn cloth-btn">
+            {begin.label}
+          </Link>
+          <Link to="/sessions" className="home-lead-quiet">
+            Choose another surah
+          </Link>
+          <Link to="/circles" className="home-lead-quiet">
+            Your circle
+          </Link>
+        </div>
+      </section>
+    );
+  }
+  if (lead === "circle-surah" && circle) {
+    const name = surahLabel(circle.surah, surahs.get(circle.surah));
+    return (
+      <section
+        aria-label="Your circle is reading"
+        className="cloth home-lead fade-rise"
+      >
+        <p className="cloth-eyebrow">Your circle is reading</p>
+        <h2 className="home-lead-title">{name}</h2>
+        <p className="cloth-soft home-lead-line">{LEAD_LINE}</p>
+        <div className="home-lead-actions">
+          <Link to={`/tadabbur/${circle.surah}`} className="btn cloth-btn">
+            Begin {name}
+          </Link>
+          <Link to="/sessions" className="home-lead-quiet">
+            Choose another surah
+          </Link>
+        </div>
+      </section>
+    );
+  }
+  return (
+    <section
+      aria-label="Begin with a surah"
+      className="cloth home-lead fade-rise"
+    >
+      <h2 className="home-lead-title">Begin with a surah</h2>
+      <p className="cloth-soft home-lead-line">{LEAD_LINE}</p>
+      <ul aria-label="Short surahs" className="home-lead-suggestions">
+        {STARTER_SURAHS.map((n) => (
+          <li key={n}>
+            <Link to={`/tadabbur/${n}`} className="btn cloth-quiet">
+              {starterLabel(n, surahs.get(n))}
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <Link to="/sessions" className="home-lead-quiet">
+        Choose another surah
+      </Link>
+    </section>
+  );
+}
 
 export default function Home() {
   const { user, loading: accountLoading } = useAccount();
   const accountId = user?.id ?? null;
   const [hero, setHero] = useState<Ayah | null>(null);
-  const [surahName, setSurahName] = useState<string>("");
-  const [surahNames, setSurahNames] = useState<Map<number, string>>(new Map());
+  const [surahs, setSurahs] = useState<Map<number, SurahMeta>>(new Map());
   const [mounted, setMounted] = useState(false);
+  const [joined, setJoined] = useState<Circle | null>(getJoinedCircle);
   const reduced = usePrefersReducedMotion();
+  const surahNames = useMemo(
+    () => new Map([...surahs.values()].map((s) => [s.number, s.name])),
+    [surahs]
+  );
 
   useEffect(() => {
     document.title = "MindfulVerse";
+  }, []);
+
+  useEffect(() => {
+    const off = onJoinedCircleChange(setJoined);
+    const refresh = () => {
+      void refreshJoinedCircle().then(setJoined);
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        refresh();
+      }
+    };
+    refresh();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      off();
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    loadSurahs()
+      .then((list) => {
+        if (active) {
+          setSurahs(new Map(list.map((s) => [s.number, s])));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -91,20 +293,9 @@ export default function Home() {
     }
     todayVerseKey(accountId)
       .then((key) => loadAyahsByKeys([key]))
-      .then(async (a) => {
-        if (!active) {
-          return;
-        }
-        const ayah = a[0] ?? null;
-        setHero(ayah);
-        // oxlint-disable-next-line promise/no-nesting -- fallback for this one load only
-        const surahs = await loadSurahs().catch(() => []);
-        if (!active) {
-          return;
-        }
-        setSurahNames(new Map(surahs.map((s) => [s.number, s.name])));
-        if (ayah) {
-          setSurahName(surahs.find((s) => s.number === ayah.surah)?.name ?? "");
+      .then((a) => {
+        if (active) {
+          setHero(a[0] ?? null);
         }
       })
       .catch(() => {});
@@ -131,7 +322,7 @@ export default function Home() {
   const streak = currentStreak();
   const lastRead = getLastRead();
   const doneToday = checkedInToday();
-  const deeper = latestSurahTadabbur();
+  const surahName = hero ? (surahs.get(hero.surah)?.name ?? "") : "";
   const navEntries: Entry[] = lastRead
     ? entries.map((e) =>
         e.to === "/read"
@@ -165,60 +356,51 @@ export default function Home() {
         </p>
       )}
 
-      <section
-        aria-label="Today’s verse"
-        className="cloth home-verse fade-rise"
-      >
+      <SurahLead surahs={surahs} joined={joined} />
+
+      {joined && (
+        <CircleCount
+          code={joined.code}
+          name={joined.name}
+          className="home-circle-count"
+        />
+      )}
+
+      <FollowUpCard surahNames={surahNames} />
+
+      <WeekRhythm />
+
+      <section aria-label="Today’s verse" className="card home-verse">
+        <p className="eyebrow home-verse-eyebrow">Today’s verse</p>
         {hero ? (
           <>
-            <p
-              className="arabic"
-              lang="ar"
-              dir="rtl"
-              style={{ fontSize: "calc(2rem * var(--read-scale,1))" }}
-            >
+            <p className="arabic" lang="ar" dir="rtl">
               {hero.arabic}
             </p>
             <p className="translation home-verse-translation">
               {hero.translation}
             </p>
-            <p className="cloth-soft home-verse-ref">
+            <p className="muted home-verse-ref">
               {surahName ? `${surahName} ` : ""}
               {hero.surah}:{hero.ayah}
             </p>
           </>
         ) : (
-          <p className="cloth-soft">Opening today’s verse…</p>
+          <p className="muted">Opening today’s verse…</p>
         )}
 
         <div className="home-today">
           {doneToday ? (
-            <>
-              <p className="cloth-soft" style={{ margin: 0 }}>
-                Today’s reflection is saved.
-              </p>
-              <Link
-                to={
-                  deeper
-                    ? `/tadabbur/${deeper.surah}?v=${deeper.ayah}`
-                    : "/sessions"
-                }
-                className="btn cloth-btn"
-              >
-                {deeper
-                  ? `Continue ${surahNames.get(deeper.surah) ?? `Surah ${deeper.surah}`}`
-                  : "Begin tadabbur"}
-              </Link>
-            </>
+            <p className="soft" style={{ margin: 0 }}>
+              Today’s reflection is saved.
+            </p>
           ) : (
-            <Link to="/checkin" className="btn cloth-btn">
+            <Link to="/checkin" className="btn secondary">
               Reflect on today’s verse
             </Link>
           )}
         </div>
       </section>
-
-      <FollowUpCard surahNames={surahNames} />
 
       <nav aria-label="Sections" className="home-entries" style={reveal(260)}>
         {navEntries.map((e) => {

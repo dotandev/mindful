@@ -12,12 +12,18 @@ import {
   recordSessionComplete,
   recordSessionStep,
 } from "@mindfulverse/core/progress";
+import {
+  clearSessionDraft,
+  readSessionDraft,
+  writeSessionDraft,
+} from "@mindfulverse/core/sessionDraft";
+import { formatSessionBody } from "@mindfulverse/core/tadabburBody";
 import type {
   Ayah,
   SessionStep,
   TadabburSession,
 } from "@mindfulverse/core/types";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -119,10 +125,7 @@ export default function SessionPlayer() {
       <div>
         <div className="card stack">
           <h2>We couldn’t open this session</h2>
-          <p className="muted">
-            Something interrupted the connection. Check your network and try
-            again in a moment.
-          </p>
+          <p className="muted">Check your connection and try again.</p>
           <Link to="/sessions" className="btn secondary">
             Back to sessions
           </Link>
@@ -136,10 +139,7 @@ export default function SessionPlayer() {
       <div>
         <div className="card stack">
           <h2>This session isn’t here</h2>
-          <p className="muted">
-            We couldn’t find the session you were looking for. It may have been
-            moved or renamed.
-          </p>
+          <p className="muted">This session couldn’t be found.</p>
           <Link to="/sessions" className="btn secondary">
             Back to sessions
           </Link>
@@ -359,10 +359,7 @@ function StepView({ step, reduce }: { step: SessionStep; reduce: boolean }) {
       )}
       {status.kind === "error" && (
         <div className="card">
-          <p className="muted">
-            We couldn’t load the verses for this step. Try stepping back and
-            forward again.
-          </p>
+          <p className="muted">Couldn’t load these verses. Try again.</p>
         </div>
       )}
       {status.kind === "ready" &&
@@ -549,9 +546,8 @@ function TafsirDisclosure({ verseKeys }: { verseKeys: string[] }) {
             })}
           {status.kind === "ready" && status.entries.length > 0 && (
             <p className="muted" style={{ fontSize: "0.8rem" }}>
-              Verse quotations inside the commentary follow its classical
-              English edition, which differs from the ClearQuran translation
-              shown above.
+              Verses quoted in the commentary use a different English
+              translation.
             </p>
           )}
         </div>
@@ -560,7 +556,18 @@ function TafsirDisclosure({ verseKeys }: { verseKeys: string[] }) {
   );
 }
 
-// Final screen: journal entry + willingness-to-pay intent probe
+// Final screen: journal entry
+
+const textareaStyle: CSSProperties = {
+  background: "var(--surface)",
+  border: "1px solid var(--line)",
+  borderRadius: "var(--radius)",
+  color: "var(--ink)",
+  font: "inherit",
+  padding: 12,
+  resize: "vertical",
+  width: "100%",
+};
 
 function FinalScreen({
   session,
@@ -569,9 +576,11 @@ function FinalScreen({
   session: TadabburSession;
   reduce: boolean;
 }) {
-  const [body, setBody] = useState("");
+  const [draft] = useState(() => readSessionDraft(session.id));
+  const [body, setBody] = useState(draft.body);
+  const [action, setAction] = useState(draft.action);
   const [saved, setSaved] = useState(false);
-  const [payTapped, setPayTapped] = useState(false);
+  const actionId = useId();
   const mounted = useMounted("final");
 
   // Fire session_complete exactly once when the final screen mounts, and
@@ -591,20 +600,13 @@ function FinalScreen({
       return;
     }
     addEntry({
-      body: body.trim(),
+      body: formatSessionBody(body, action),
       context: { kind: "session", ref: session.id },
       prompt: session.journalPrompt,
     });
+    clearSessionDraft(session.id);
     track({ context: "session", type: "journal_save" });
     setSaved(true);
-  }
-
-  function tapPay() {
-    if (payTapped) {
-      return;
-    }
-    track({ type: "intent_pay_tap", where: "session_end" });
-    setPayTapped(true);
   }
 
   return (
@@ -624,7 +626,7 @@ function FinalScreen({
           {saved ? (
             <div className="stack">
               <p className="soft" style={{ margin: 0 }}>
-                Kept in your journal. Return to it whenever you like.
+                Kept in your journal.
               </p>
               <div>
                 <Link to="/journal" className="btn secondary">
@@ -635,21 +637,40 @@ function FinalScreen({
           ) : (
             <div className="stack">
               <textarea
+                aria-label={session.journalPrompt}
                 value={body}
-                onChange={(e) => setBody(e.target.value)}
+                onChange={(e) => {
+                  setBody(e.target.value);
+                  writeSessionDraft(session.id, {
+                    action,
+                    body: e.target.value,
+                  });
+                }}
                 placeholder="Write what stayed with you…"
                 rows={6}
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--line)",
-                  borderRadius: "var(--radius)",
-                  color: "var(--ink)",
-                  font: "inherit",
-                  padding: 12,
-                  resize: "vertical",
-                  width: "100%",
-                }}
+                style={textareaStyle}
               />
+              <label htmlFor={actionId} style={{ display: "block" }}>
+                <span
+                  className="soft"
+                  style={{ display: "block", marginBottom: 6 }}
+                >
+                  What will you do? (optional)
+                </span>
+                <textarea
+                  id={actionId}
+                  value={action}
+                  onChange={(e) => {
+                    setAction(e.target.value);
+                    writeSessionDraft(session.id, {
+                      action: e.target.value,
+                      body,
+                    });
+                  }}
+                  rows={2}
+                  style={textareaStyle}
+                />
+              </label>
               <div>
                 <button
                   type="button"
@@ -665,46 +686,9 @@ function FinalScreen({
         </div>
       </FadeRise>
 
-      {/* A quiet, one-time willingness-to-pay probe — an invitation, not a nag. */}
-      <FadeRise show={mounted} reduce={reduce} delay={reduce ? 0 : 120}>
-        <div
-          className="card stack"
-          style={{
-            background: "var(--surface-2)",
-            borderColor: "var(--line-strong)",
-          }}
-        >
-          {payTapped ? (
-            <p className="soft" style={{ margin: 0 }}>
-              Thanks, noted. Your reflections stay here for you, free, either
-              way.
-            </p>
-          ) : (
-            <div className="stack">
-              <p className="eyebrow" style={{ margin: 0 }}>
-                A small question
-              </p>
-              <p className="soft" style={{ margin: 0 }}>
-                There are more guided sessions we’d love to open up. If they
-                cost around $3 a month, would that be worth it to you?
-              </p>
-              <div>
-                <button
-                  type="button"
-                  className="btn secondary"
-                  onClick={tapPay}
-                >
-                  Yes, I’d pay for that
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </FadeRise>
-
       {/* Feedback lands best right after an experience, while the opinion
           is fresh. The subject tells us this one came from a session end. */}
-      <FadeRise show={mounted} reduce={reduce} delay={reduce ? 0 : 180}>
+      <FadeRise show={mounted} reduce={reduce} delay={reduce ? 0 : 120}>
         <FeedbackLink
           subject="Feedback on a MindfulVerse session"
           label="How was this session? Tell me over email"

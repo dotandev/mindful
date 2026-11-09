@@ -1,5 +1,7 @@
 import "./setup"; // must stay first: wires the core to web platform APIs
+import { pingActiveDay } from "@mindfulverse/core/activeDays";
 import { trackAppOpen } from "@mindfulverse/core/analytics";
+import { wireCircleReflections } from "@mindfulverse/core/circles";
 import { recordVisit } from "@mindfulverse/core/progress";
 import { AccountProvider } from "@mindfulverse/core/sync/auth";
 import { initSync } from "@mindfulverse/core/sync/engine";
@@ -29,16 +31,19 @@ if ("serviceWorker" in navigator) {
 
 applyTheme(getTheme()); // index.html sets data-theme; this also syncs the status-bar colour
 trackAppOpen();
+pingActiveDay("web");
 recordVisit();
 // An installed PWA can sit suspended for days and resume without reloading —
 // count each return to the foreground as a visit (recordVisit is idempotent).
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     recordVisit();
+    pingActiveDay("web");
   }
 });
 inject(); // Vercel visit analytics — anonymous page views, no cookies
 initSync();
+wireCircleReflections();
 
 const rootElement = document.querySelector("#root");
 if (!rootElement) {

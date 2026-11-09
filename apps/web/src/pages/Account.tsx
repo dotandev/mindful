@@ -135,7 +135,7 @@ export default function Account() {
           // Prompt dismissed without choosing — not blocked, so it can be asked again.
           {
             setReminderError(
-              "Notifications weren't allowed. Tap Turn on reminder to try again, and choose Allow."
+              "Notifications weren't allowed. Try again and choose Allow."
             );
           } else {
             setReminderError(failure);
@@ -146,9 +146,7 @@ export default function Account() {
         setReminderOn(true);
         savedTime.current = reminderTime;
         setReminderNotice(
-          welcomed
-            ? "Today’s verse was just sent here, so you can see how it looks."
-            : null
+          welcomed ? "Sent today’s verse so you can see it." : null
         );
       } else {
         await disableReminder();
@@ -157,7 +155,7 @@ export default function Account() {
         setReminderNotice(null);
       }
     } catch {
-      setReminderError("Couldn't set the reminder. Please try again.");
+      setReminderError("Couldn't set the reminder. Try again.");
     } finally {
       setReminderBusy(false);
     }
@@ -180,9 +178,9 @@ export default function Account() {
         return;
       }
       savedTime.current = time;
-      setReminderNotice("New time saved.");
+      setReminderNotice("Saved.");
     } catch {
-      setReminderError("Couldn't update the reminder time. Please try again.");
+      setReminderError("Couldn't save the time. Try again.");
     } finally {
       setReminderBusy(false);
     }
@@ -191,7 +189,7 @@ export default function Account() {
   // Only promise a backup once the first sync actually landed.
   function signedInNotice(): string {
     return getSyncStatus() === "synced"
-      ? "Signed in. Your journal is now backed up to your account."
+      ? "Signed in. Your journal is backed up."
       : "Signed in.";
   }
 
@@ -211,9 +209,7 @@ export default function Account() {
         }
         if (data?.requireEmailVerification) {
           setPendingVerification(true);
-          setNotice(
-            "Check your email for a 6-digit code, then enter it below."
-          );
+          setNotice("Check your email for a 6-digit code.");
           return;
         }
         track({ method: "password", type: "account_signup" });
@@ -277,8 +273,7 @@ export default function Account() {
     if (choice === "fresh") {
       // oxlint-disable-next-line no-alert -- native confirm is the intended destructive-action prompt
       const sure = window.confirm(
-        "Start fresh? This removes the journal entries and progress stored on this device. " +
-          "Anything already backed up to the other account stays safe there."
+        "Start fresh? This clears this device. The other account’s backup stays safe."
       );
       if (!sure) {
         return;
@@ -289,8 +284,8 @@ export default function Account() {
       await resolveOwnerMismatch(choice);
       setNotice(
         choice === "merge"
-          ? "This device's entries have been merged into your account."
-          : "This device was reset and now shows only this account's backup."
+          ? "Merged into your account."
+          : "This device now shows this account’s backup."
       );
     } finally {
       setBusy(false);
@@ -308,9 +303,7 @@ export default function Account() {
     await insforge.auth.signOut();
     track({ type: "account_signout" });
     await refresh();
-    setNotice(
-      "Signed out. Your entries stay on this device but are no longer backed up."
-    );
+    setNotice("Signed out. Your entries stay on this device.");
   }
 
   async function deleteMyData() {
@@ -319,7 +312,7 @@ export default function Account() {
     }
     // oxlint-disable-next-line no-alert -- native confirm is the intended destructive-action prompt
     const sure = window.confirm(
-      "Delete all synced data from your account? Entries on this device are kept."
+      "Delete your synced data? This device keeps its entries."
     );
     if (!sure) {
       return;
@@ -353,7 +346,7 @@ export default function Account() {
 
   if (loading) {
     return (
-      <div className="stack">
+      <div className="stack account-page">
         <header>
           <h1>Your account</h1>
         </header>
@@ -367,7 +360,7 @@ export default function Account() {
   }
 
   return (
-    <div className="stack">
+    <div className="stack account-page">
       <header>
         <h1>
           {user
@@ -406,9 +399,8 @@ export default function Account() {
           {status === "switched-account" && (
             <div className="notice-wash stack">
               <p className="soft" style={{ margin: 0 }}>
-                The journal entries and progress saved on this device were
-                written while a different account was signed in. Nothing is
-                being backed up until you choose what should happen to them.
+                This device has entries from another account. Nothing syncs
+                until you choose.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 <button
@@ -417,7 +409,7 @@ export default function Account() {
                   disabled={busy}
                   onClick={() => void resolveSwitch("merge")}
                 >
-                  Merge into this account
+                  Merge them
                 </button>
                 <button
                   type="button"
@@ -425,7 +417,7 @@ export default function Account() {
                   disabled={busy}
                   onClick={() => void resolveSwitch("fresh")}
                 >
-                  Start fresh on this device
+                  Start fresh
                 </button>
               </div>
             </div>
@@ -457,12 +449,6 @@ export default function Account() {
                 Daily verse reminder
                 {reminderOn && <span className="soft"> · On</span>}
               </div>
-              {!reminderOn && (
-                <p className="soft" style={{ margin: "4px 0 0" }}>
-                  Get today&rsquo;s verse as a notification on this phone or
-                  computer, at a time you choose. Tap it to open your check-in.
-                </p>
-              )}
             </div>
             {pushSupport() === "needs-install" && (
               <ol className="soft" style={{ margin: 0, paddingLeft: 20 }}>
@@ -472,105 +458,88 @@ export default function Account() {
                 <li>
                   Choose <strong>Add to Home Screen</strong>.
                 </li>
-                <li>
-                  Open MindfulVerse from your Home Screen and come back here to
-                  turn on the reminder.
-                </li>
+                <li>Open it from your Home Screen and turn it on here.</li>
               </ol>
             )}
             {pushSupport() === "unsupported" && (
               <p className="soft" style={{ margin: 0 }}>
-                This browser can&rsquo;t show notifications. Try Chrome, Edge,
-                Firefox or Safari, on a computer or phone.
+                This browser can&rsquo;t show notifications.
               </p>
             )}
             {pushSupport() === "ok" && reminderBlocked && !reminderOn && (
               <p className="soft" style={{ margin: 0 }}>
-                Notifications are blocked for MindfulVerse in this browser. To
-                turn them on, open your browser&rsquo;s site settings (the icon
-                left of the address bar), allow Notifications, then reload this
-                page.
+                Notifications are blocked. Allow them in site settings, then
+                reload.
               </p>
             )}
             {pushSupport() === "ok" && !reminderBlocked && !reminderOn && (
-              <>
-                <div
-                  style={{
-                    alignItems: "center",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 12,
-                  }}
+              <div
+                style={{
+                  alignItems: "center",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 12,
+                }}
+              >
+                <label
+                  htmlFor="reminder-time"
+                  style={{ alignItems: "center", display: "flex", gap: 8 }}
                 >
-                  <label
-                    htmlFor="reminder-time"
-                    style={{ alignItems: "center", display: "flex", gap: 8 }}
-                  >
-                    <span>Remind me at</span>
-                    <input
-                      id="reminder-time"
-                      type="time"
-                      step={900}
-                      className="field-input"
-                      value={reminderTime}
-                      onChange={(e) => setReminderTime(e.target.value)}
-                      style={{ width: "auto" }}
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={reminderBusy || !reminderTime}
-                    onClick={() => void toggleReminder(true)}
-                  >
-                    {reminderBusy ? "Turning on…" : "Turn on reminder"}
-                  </button>
-                </div>
-                <p className="soft" style={{ fontSize: ".9rem", margin: 0 }}>
-                  Your browser will ask to allow notifications. Choose Allow.
-                </p>
-              </>
+                  <span>Remind me at</span>
+                  <input
+                    id="reminder-time"
+                    type="time"
+                    step={900}
+                    className="field-input"
+                    value={reminderTime}
+                    onChange={(e) => setReminderTime(e.target.value)}
+                    style={{ width: "auto" }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={reminderBusy || !reminderTime}
+                  onClick={() => void toggleReminder(true)}
+                >
+                  {reminderBusy ? "Turning on…" : "Turn on"}
+                </button>
+              </div>
             )}
             {pushSupport() === "ok" && reminderOn && (
-              <>
-                <div
-                  style={{
-                    alignItems: "center",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 12,
-                  }}
+              <div
+                style={{
+                  alignItems: "center",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 12,
+                }}
+              >
+                <label
+                  htmlFor="reminder-time"
+                  style={{ alignItems: "center", display: "flex", gap: 8 }}
                 >
-                  <label
-                    htmlFor="reminder-time"
-                    style={{ alignItems: "center", display: "flex", gap: 8 }}
-                  >
-                    <span>Every day at</span>
-                    <input
-                      id="reminder-time"
-                      type="time"
-                      step={900}
-                      className="field-input"
-                      value={reminderTime}
-                      onChange={(e) => setReminderTime(e.target.value)}
-                      onBlur={(e) => void commitReminderTime(e.target.value)}
-                      style={{ width: "auto" }}
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    className="link-btn"
-                    disabled={reminderBusy}
-                    onClick={() => void toggleReminder(false)}
-                  >
-                    Turn off
-                  </button>
-                </div>
-                <p className="soft" style={{ fontSize: ".9rem", margin: 0 }}>
-                  Set per device. On a computer, it arrives while your browser
-                  is open.
-                </p>
-              </>
+                  <span>Every day at</span>
+                  <input
+                    id="reminder-time"
+                    type="time"
+                    step={900}
+                    className="field-input"
+                    value={reminderTime}
+                    onChange={(e) => setReminderTime(e.target.value)}
+                    onBlur={(e) => void commitReminderTime(e.target.value)}
+                    style={{ width: "auto" }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="link-btn"
+                  disabled={reminderBusy}
+                  onClick={() => void toggleReminder(false)}
+                >
+                  Turn off
+                </button>
+              </div>
             )}
             {reminderNotice && (
               <p className="soft" style={{ margin: 0 }}>
@@ -584,21 +553,18 @@ export default function Account() {
             )}
           </div>
 
-          <div className="auth-section">
-            <FeedbackLink subject="About my MindfulVerse account" />
-          </div>
-
-          <div className="auth-section">
+          <div
+            className="auth-section"
+            style={{
+              alignItems: "center",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
             <button type="button" className="btn ghost" onClick={signOut}>
               Sign out
             </button>
-          </div>
-
-          <div className="auth-section">
-            <p className="soft" style={{ fontSize: ".9rem", marginTop: 0 }}>
-              Deleting removes your journal and progress from your account.
-              Entries already on this device are kept.
-            </p>
             <button
               type="button"
               className="btn ghost"
@@ -609,6 +575,8 @@ export default function Account() {
               Delete my data
             </button>
           </div>
+
+          <FeedbackLink subject="About my MindfulVerse account" />
         </div>
       ) : (
         <div className="auth-card stack">
@@ -714,7 +682,11 @@ export default function Account() {
                 </button>
                 <p
                   className="soft"
-                  style={{ fontSize: ".95rem", margin: 0, textAlign: "center" }}
+                  style={{
+                    fontSize: ".95rem",
+                    margin: "4px 0 0",
+                    textAlign: "center",
+                  }}
                 >
                   {mode === "signin" ? (
                     <>
@@ -768,6 +740,11 @@ export default function Account() {
       )}
 
       <Appearance />
+
+      <p className="soft" style={{ fontSize: ".9rem", margin: "12px 0 0" }}>
+        We anonymously count days the app is opened. Your writing stays on this
+        device unless you sync.
+      </p>
     </div>
   );
 }

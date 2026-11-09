@@ -72,25 +72,27 @@ export default function IntentionField({
         onChange={(e) => setDraft(e.target.value)}
         className="tad-input"
       />
-      <div className="intention-actions">
-        <button
-          type="button"
-          className="btn secondary"
-          disabled={draft.trim() === ""}
-          onClick={save}
-        >
-          Save
-        </button>
-        {editing && (
+      {(draft.trim() !== "" || editing) && (
+        <div className="intention-actions">
           <button
             type="button"
-            className="commentary-open intention-change"
-            onClick={() => setEditing(false)}
+            className="btn secondary"
+            disabled={draft.trim() === ""}
+            onClick={save}
           >
-            Cancel
+            Save
           </button>
-        )}
-      </div>
+          {editing && (
+            <button
+              type="button"
+              className="commentary-open intention-change"
+              onClick={() => setEditing(false)}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

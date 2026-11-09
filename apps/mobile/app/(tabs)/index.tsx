@@ -1,6 +1,13 @@
+import {
+  getJoinedCircle,
+  onJoinedCircleChange,
+  refreshJoinedCircle,
+} from "@mindfulverse/core/circles";
+import type { Circle } from "@mindfulverse/core/circles";
+import { getCircleSurah } from "@mindfulverse/core/circleSurah";
 import { todayVerseKey } from "@mindfulverse/core/dailyVerse";
 import { loadAyahsByKeys, loadSurahs } from "@mindfulverse/core/data";
-import { checkedInToday } from "@mindfulverse/core/journal";
+import { checkedInToday, getEntries } from "@mindfulverse/core/journal";
 import {
   currentStreak,
   getLastRead,
@@ -8,37 +15,37 @@ import {
 } from "@mindfulverse/core/progress";
 import { getSizeKey, scaleFor } from "@mindfulverse/core/readingPrefs";
 import { useAccount } from "@mindfulverse/core/sync/auth";
-import type { Ayah } from "@mindfulverse/core/types";
-// Home (web: apps/web/src/pages/Home.tsx): greeting, streak, the verse of the
-// day, the check-in / go-deeper action, and the places to go with more time.
+import type { Ayah, SurahMeta } from "@mindfulverse/core/types";
+// Home (web: apps/web/src/pages/Home.tsx): greeting, streak, the surah journal
+// first, a due follow-up, the verse of the day, a few themes, then the places
+// to go with more time.
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Linking, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
+import { CirclesIcon } from "../../src/components/Circles/CirclesIcon";
+import { useCircleCountLine } from "../../src/components/Circles/useCircleCount";
+import { FollowUpCard } from "../../src/components/Home/FollowUpCard";
 import {
   HomeEntry,
   HomeEntryDivider,
 } from "../../src/components/Home/HomeEntry";
 import {
-  deeperLabel,
   greeting,
   readDesc,
   streakLine,
-  tadabburTarget,
 } from "../../src/components/Home/homeModel";
 import type { VersePos } from "../../src/components/Home/homeModel";
+import { chooseLead } from "../../src/components/Home/leadModel";
+import { SurahLead } from "../../src/components/Home/SurahLead";
+import { ThemeSection } from "../../src/components/Home/ThemeSection";
+import { rhythmView } from "../../src/components/Home/weekModel";
+import type { RhythmView } from "../../src/components/Home/weekModel";
+import { WeekRhythm } from "../../src/components/Home/WeekRhythm";
 import { space, useTheme } from "../../src/theme";
-import {
-  AdireCloth,
-  ArabicText,
-  Button,
-  DyeRule,
-  Screen,
-  Text,
-  useOnCloth,
-} from "../../src/ui";
-import { FadeRise, useReducedMotion } from "../../src/ui/FadeRise";
+import { ArabicText, Button, Card, DyeRule, Screen, Text } from "../../src/ui";
+import { useReducedMotion } from "../../src/ui/FadeRise";
 import { ReadIcon, TadabburIcon } from "../../src/ui/icons";
 
 interface Local {
@@ -47,17 +54,22 @@ interface Local {
   lastRead: VersePos | null;
   doneToday: boolean;
   deeper: VersePos | null;
+  circleSurah: number | null;
+  rhythm: RhythmView | null;
   scale: number;
 }
 
 // Nothing in core is reactive: read it all again whenever Home regains focus
-// (back from the check-in, the reader, a tadabbur, or a sync).
+// (back from the check-in, the reader, a tadabbur, a sync, or a circle link
+// opened while Home sat underneath).
 function readLocal(): Local {
   return {
+    circleSurah: getCircleSurah()?.surah ?? null,
     deeper: latestSurahTadabbur(),
     doneToday: checkedInToday(),
     hour: new Date().getHours(),
     lastRead: getLastRead(),
+    rhythm: rhythmView(getEntries(), new Date()),
     scale: scaleFor(getSizeKey()),
     streak: currentStreak(),
   };
@@ -65,19 +77,29 @@ function readLocal(): Local {
 
 export default function Home() {
   const { colors } = useTheme();
-  const cloth = useOnCloth();
   const { user, loading: accountLoading } = useAccount();
   const accountId = user?.id ?? null;
   const reduce = useReducedMotion();
   const [local, setLocal] = useState<Local>(readLocal);
+  const [joined, setJoined] = useState<Circle | null>(getJoinedCircle);
   const [verseKey, setVerseKey] = useState<string | null>(null);
   const [hero, setHero] = useState<Ayah | null>(null);
   const [heroError, setHeroError] = useState(false);
-  const [surahNames, setSurahNames] = useState<Map<number, string>>(new Map());
+  const [surahs, setSurahs] = useState<Map<number, SurahMeta>>(new Map());
+  const circleCount = useCircleCountLine(joined);
+  const surahNames = useMemo(
+    () => new Map([...surahs].map(([n, s]) => [n, s.name])),
+    [surahs]
+  );
+
+  useEffect(() => onJoinedCircleChange(setJoined), []);
 
   useFocusEffect(
     useCallback(() => {
       setLocal(readLocal());
+      setJoined(getJoinedCircle());
+      // The owner may have moved the circle on to another surah or verse.
+      void refreshJoinedCircle();
       // The day can turn while the app sits in the background. Each person
       // has their own verse; wait for the account so it doesn't flip.
       if (!accountLoading) {
@@ -90,8 +112,7 @@ export default function Home() {
     let alive = true;
     loadSurahs()
       .then(
-        (list) =>
-          alive && setSurahNames(new Map(list.map((s) => [s.number, s.name])))
+        (list) => alive && setSurahs(new Map(list.map((s) => [s.number, s])))
       )
       .catch(() => {});
     return () => {
@@ -121,13 +142,23 @@ export default function Home() {
     };
   }, [verseKey]);
 
-  const { hour, streak, lastRead, doneToday, deeper, scale } = local;
+  const {
+    hour,
+    streak,
+    lastRead,
+    doneToday,
+    deeper,
+    circleSurah,
+    rhythm,
+    scale,
+  } = local;
   const returning = streakLine(streak);
-  const tadabbur = tadabburTarget(deeper);
-  const tadabburHref = {
-    params: { surah: String(tadabbur.surah), v: String(tadabbur.ayah) },
-    pathname: "/tadabbur/[surah]",
-  } as const;
+  const tadabburHref = deeper
+    ? ({
+        params: { surah: String(deeper.surah), v: String(deeper.ayah) },
+        pathname: "/tadabbur/[surah]",
+      } as const)
+    : "/tadabbur";
   const surahName = hero ? surahNames.get(hero.surah) : undefined;
 
   return (
@@ -140,74 +171,63 @@ export default function Home() {
         {returning ? <StreakBeads streak={streak} label={returning} /> : null}
       </View>
 
-      <FadeRise reduce={reduce} style={{ marginTop: 6 }}>
-        <AdireCloth style={{ padding: space.lg, paddingTop: 20 }}>
-          <View accessibilityLabel="Today’s verse">
-            {hero ? (
-              <View>
-                <ArabicText scale={scale} style={{ color: cloth.strong }}>
-                  {hero.arabic}
-                </ArabicText>
-                <Text
-                  variant="translation"
-                  style={{
-                    color: cloth.strong,
-                    fontSize: 20.4,
-                    lineHeight: 31,
-                    marginTop: 6,
-                  }}
-                >
-                  {hero.translation}
-                </Text>
-                <Text
-                  style={{
-                    color: cloth.soft,
-                    fontSize: 14.5,
-                    lineHeight: 20,
-                    marginTop: 10,
-                  }}
-                >
-                  {surahName ? `${surahName} ` : ""}
-                  {hero.surah}:{hero.ayah}
-                </Text>
-              </View>
-            ) : (
-              <Text style={{ color: cloth.soft, marginTop: 10 }}>
-                {heroError
-                  ? "Today’s verse is still being gathered. Come back in a little while and it will be waiting for you."
-                  : "Opening today’s verse…"}
-              </Text>
-            )}
+      <SurahLead
+        lead={chooseLead(deeper, circleSurah, joined)}
+        surahs={surahs}
+        surahNames={surahNames}
+        reduce={reduce}
+      />
+      {circleCount ? (
+        <Text variant="soft" style={{ fontSize: 15.5, lineHeight: 22 }}>
+          {circleCount}
+        </Text>
+      ) : null}
+      {rhythm ? <WeekRhythm rhythm={rhythm} /> : null}
 
-            <View style={{ alignItems: "flex-start", gap: 10, marginTop: 22 }}>
-              {doneToday ? (
-                <>
-                  <Text
-                    style={{
-                      color: cloth.soft,
-                      fontSize: 15.5,
-                      lineHeight: 22,
-                    }}
-                  >
-                    Today’s reflection is saved.
-                  </Text>
-                  <Button
-                    kind="cloth"
-                    title={deeperLabel(deeper, surahNames)}
-                    onPress={() => router.push(tadabburHref)}
-                  />
-                </>
-              ) : (
-                <Button
-                  kind="cloth"
-                  title="Reflect on today’s verse"
-                  onPress={() => router.push("/checkin")}
-                />
-              )}
-            </View>
+      <FollowUpCard surahNames={surahNames} reduce={reduce} />
+
+      <Card accessibilityLabel="Today’s verse" style={{ marginTop: space.sm }}>
+        {hero ? (
+          <View>
+            <ArabicText scale={scale}>{hero.arabic}</ArabicText>
+            <Text
+              variant="translation"
+              style={{ fontSize: 19, lineHeight: 29, marginTop: 6 }}
+            >
+              {hero.translation}
+            </Text>
+            <Text
+              variant="muted"
+              style={{ fontSize: 14.5, lineHeight: 20, marginTop: 10 }}
+            >
+              {surahName ? `${surahName} ` : ""}
+              {hero.surah}:{hero.ayah}
+            </Text>
           </View>
-        </AdireCloth>
-      </FadeRise>
+        ) : (
+          <Text variant="soft">
+            {heroError
+              ? "Today’s verse isn’t ready yet. Try again shortly."
+              : "Opening today’s verse…"}
+          </Text>
+        )}
+
+        <View style={{ alignItems: "flex-start" }}>
+          {doneToday ? (
+            <Text variant="soft" style={{ fontSize: 15.5, lineHeight: 22 }}>
+              Today’s reflection is saved.
+            </Text>
+          ) : (
+            <Button
+              kind="secondary"
+              title="Reflect on today’s verse"
+              onPress={() => router.push("/checkin")}
+            />
+          )}
+        </View>
+      </Card>
+
+      <ThemeSection />
 
       <View accessibilityLabel="Sections" style={{ marginTop: space.sm }}>
         <HomeEntry
@@ -215,6 +235,13 @@ export default function Home() {
           title="Tadabbur"
           desc="Ponder the Qur’an, surah by surah."
           href={tadabburHref}
+        />
+        <HomeEntryDivider />
+        <HomeEntry
+          Icon={CirclesIcon}
+          title="Circles"
+          desc="Read a surah together with friends."
+          href="/circles"
         />
         <HomeEntryDivider />
         <HomeEntry

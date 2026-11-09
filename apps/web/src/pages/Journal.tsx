@@ -18,7 +18,6 @@ import type { Ayah, JournalEntry } from "@mindfulverse/core/types";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { BrandMark } from "../components/Adire";
 import {
   buildJournalText,
   formatDate,
@@ -31,24 +30,14 @@ import "./journal-empty.css";
 
 const VERSE_KEY_RE = /^\d{1,3}:\d{1,3}$/u;
 
-/** A diamond of indigo cloth with the reed pen at its centre. */
-function ClothSwatch() {
-  return (
-    <div className="journal-swatch" aria-hidden="true">
-      <BrandMark size={88} />
-    </div>
-  );
-}
-
-/** Empty state: quiet and minimal — one line of intent, one way to begin. */
+/** Empty state: two quiet lines under the heading and one way to begin. */
 function EmptyJournal() {
   return (
-    <div className="empty-quiet">
-      <ClothSwatch />
-      <p className="journal-empty-lead">Nothing here yet, and that’s fine.</p>
-      <p className="soft">When a verse stops you, write what it said to you.</p>
-      <Link to="/checkin" className="btn" style={{ marginTop: 14 }}>
-        Begin with today’s verse
+    <div className="journal-empty">
+      <p className="journal-empty-lead">Nothing here yet.</p>
+      <p className="soft">When a verse stops you, write it down.</p>
+      <Link to="/checkin" className="btn secondary">
+        Reflect on today’s verse
       </Link>
     </div>
   );
@@ -288,8 +277,8 @@ export default function Journal() {
     } catch {
       setExportError(
         kind === "pdf"
-          ? "Couldn’t make the PDF. Check your connection and try again, or use plain text."
-          : "Couldn’t save the file. Please try again."
+          ? "Couldn’t make the PDF. Try plain text."
+          : "Couldn’t save the file. Try again."
       );
     } finally {
       setExporting(null);

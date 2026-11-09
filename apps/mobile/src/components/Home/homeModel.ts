@@ -24,22 +24,6 @@ export interface VersePos {
   ayah: number;
 }
 
-/** Where tadabbur continues. Web falls back to /sessions (the surah picker),
- *  which is deferred on native, so a first tadabbur begins at Al-Fatihah. */
-export function tadabburTarget(deeper: VersePos | null): VersePos {
-  return deeper ?? { ayah: 1, surah: 1 };
-}
-
-/** The tadabbur button label once today's check-in is saved. */
-export function deeperLabel(
-  deeper: VersePos | null,
-  surahNames: Map<number, string>
-): string {
-  return deeper
-    ? `Continue ${surahNames.get(deeper.surah) ?? `Surah ${deeper.surah}`}`
-    : "Begin tadabbur";
-}
-
 /** The Read entry's description: continue where the reader stopped. */
 export function readDesc(lastRead: VersePos | null): string {
   return lastRead

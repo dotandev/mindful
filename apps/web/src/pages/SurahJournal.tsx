@@ -13,6 +13,7 @@ import { Link, useParams } from "react-router-dom";
 import { buildJournalText, formatDate, saveFile } from "../lib/journalExport";
 import { surahJournalSections } from "../lib/surahJournalExport";
 
+import "./journal-empty.css";
 import "./surah-journal.css";
 
 const MAX_SURAH = 114;
@@ -139,10 +140,7 @@ function SurahJournalPage() {
     return (
       <div className="card stack">
         <h2>That surah isn’t here</h2>
-        <p className="muted">
-          Surahs run from 1 to 114. We couldn’t find the one this link points
-          to.
-        </p>
+        <p className="muted">That surah doesn’t exist.</p>
         <div>
           <Link to="/journal" className="btn secondary">
             Back to your reflections
@@ -178,8 +176,8 @@ function SurahJournalPage() {
     } catch {
       setExportError(
         kind === "pdf"
-          ? "Couldn’t make the PDF. Check your connection and try again, or use plain text."
-          : "Couldn’t save the file. Please try again."
+          ? "Couldn’t make the PDF. Try plain text."
+          : "Couldn’t save the file. Try again."
       );
     } finally {
       setExporting(null);
@@ -197,13 +195,11 @@ function SurahJournalPage() {
       </header>
 
       {page.isEmpty ? (
-        <div className="card stack">
+        <div className="journal-empty">
           <p className="soft">{`Nothing written on ${name} yet.`}</p>
-          <div>
-            <Link to={`/tadabbur/${surahNumber}`} className="btn">
-              Begin pondering
-            </Link>
-          </div>
+          <Link to={`/tadabbur/${surahNumber}`} className="btn secondary">
+            Begin pondering
+          </Link>
         </div>
       ) : (
         <>

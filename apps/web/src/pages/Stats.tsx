@@ -10,11 +10,14 @@ import {
   statusLabel,
 } from "@mindfulverse/core/sync/engine";
 import type { SyncStatus } from "@mindfulverse/core/sync/engine";
-// /stats — private, on-device dashboard for the v0 retention experiment.
+// /stats: private, on-device numbers for the v0 retention experiment.
 // No backend: everything is derived from localStorage. The "Copy my stats"
 // button lets testers email their numbers to the founder.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+
+import "./journal-empty.css";
+import "./stats.css";
 
 const FIRST_SEEN_KEY = "mindfulverse.firstSeen.v1";
 
@@ -30,7 +33,6 @@ interface StatsSnapshot {
   checkinViews: number;
   topEmotions: [string, number][];
   journalCount: number;
-  payTaps: number;
   versesShared: number;
   dhikrCompleted: number;
   readViewSwitches: number;
@@ -70,7 +72,6 @@ function computeStats(): StatsSnapshot {
   let surahTadabburStarted = 0;
   let sessionsCompleted = 0;
   let checkinViews = 0;
-  let payTaps = 0;
   let versesShared = 0;
   let dhikrCompleted = 0;
   let readViewSwitches = 0;
@@ -107,10 +108,6 @@ function computeStats(): StatsSnapshot {
         if (e.emotion) {
           emotions.set(e.emotion, (emotions.get(e.emotion) ?? 0) + 1);
         }
-        break;
-      }
-      case "intent_pay_tap": {
-        payTaps++;
         break;
       }
       case "share_verse": {
@@ -168,7 +165,6 @@ function computeStats(): StatsSnapshot {
     checkinViews,
     topEmotions,
     journalCount: getEntries().length,
-    payTaps,
     versesShared,
     dhikrCompleted,
     readViewSwitches,
@@ -207,7 +203,6 @@ function summaryText(s: StatsSnapshot): string {
     }`,
     `Check-ins: ${s.checkinViews} · emotions: ${emotions}`,
     `Journal entries: ${s.journalCount}`,
-    `Pay-intent taps: ${s.payTaps}`,
     `Verses shared: ${s.versesShared}`,
     `Dhikr completed: ${s.dhikrCompleted}`,
     `Follow-ups: ${s.followUpsAnswered} of ${s.followUpsShown} answered (${followUpNote(s)})`,
@@ -216,38 +211,7 @@ function summaryText(s: StatsSnapshot): string {
   ].join("\n");
 }
 
-function Metric({
-  label,
-  value,
-  note,
-}: {
-  label: string;
-  value: string;
-  note?: string;
-}) {
-  return (
-    <div className="card">
-      <p className="eyebrow">{label}</p>
-      <div
-        style={{
-          color: "var(--indigo-deep)",
-          fontSize: "1.9rem",
-          fontWeight: 600,
-          lineHeight: 1.2,
-        }}
-      >
-        {value}
-      </div>
-      {note && (
-        <div className="soft" style={{ fontSize: ".9rem", marginTop: 4 }}>
-          {note}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AccountRow() {
+function AccountLine() {
   const { user, loading } = useAccount();
   const [status, setStatus] = useState<SyncStatus>(getSyncStatus());
 
@@ -256,28 +220,37 @@ function AccountRow() {
   if (loading) {
     return null;
   }
-
+  if (!user) {
+    return (
+      <p className="soft stats-account">
+        Not signed in. <Link to="/account">Sign in to back up</Link>
+      </p>
+    );
+  }
+  const label = statusLabel(status);
   return (
-    <div className="card">
-      <p className="eyebrow">Account</p>
-      {user ? (
-        <>
-          <div style={{ fontSize: "1.1rem", fontWeight: 600, marginTop: 4 }}>
-            {user.email}
-          </div>
-          {statusLabel(status) !== "" && (
-            <div className="soft" style={{ fontSize: ".9rem", marginTop: 4 }}>
-              {statusLabel(status)}
-            </div>
-          )}
-        </>
-      ) : (
-        <Link to="/account" style={{ display: "block", marginTop: 4 }}>
-          Not signed in. Journal is device-only
-        </Link>
-      )}
-    </div>
+    <p className="soft stats-account">
+      {user.email}
+      {label === "" ? "" : ` · ${label}`}
+    </p>
   );
+}
+
+const plural = (n: number, one: string, many: string): string =>
+  `${n} ${n === 1 ? one : many}`;
+
+/** The rows shown, in order. Everything else stays in the copied summary. */
+function rows(s: StatsSnapshot): [string, string][] {
+  return [
+    ["Days returning", plural(s.streak, "day", "days")],
+    ["Days opened", String(s.appOpenDays)],
+    ["Journal entries", String(s.journalCount)],
+    ["Surahs begun", String(s.surahTadabburStarted)],
+    ["Sessions completed", `${s.sessionsCompleted} of ${s.sessionsStarted}`],
+    ["Follow-ups answered", `${s.followUpsAnswered} of ${s.followUpsShown}`],
+    ["Check-ins", String(s.checkinViews)],
+    ["Verses shared", String(s.versesShared)],
+  ];
 }
 
 export default function Stats() {
@@ -303,121 +276,34 @@ export default function Stats() {
   const hasData = stats.eventCount > 0;
 
   return (
-    <div className="stack">
+    <div className="stack stats-page">
       <header>
         <h1>Your numbers</h1>
-        <p className="muted" style={{ marginTop: 0 }}>
-          These numbers are private and stay on this device unless you copy and
-          send them.
-        </p>
+        <p className="soft">Private, on this device.</p>
       </header>
 
-      <AccountRow />
+      <AccountLine />
 
       {hasData ? (
         <>
-          <div
-            style={{
-              display: "grid",
-              gap: 16,
-              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-            }}
-          >
-            <Metric
-              label="Days visited"
-              value={String(stats.daysVisited)}
-              note={`current streak ${stats.streak} day${stats.streak === 1 ? "" : "s"}`}
-            />
-            <Metric
-              label="Days opened"
-              value={String(stats.appOpenDays)}
-              note="distinct days with an app open"
-            />
-            <Metric
-              label="Sessions"
-              value={`${stats.sessionsCompleted} / ${stats.sessionsStarted}`}
-              note={
-                stats.completionPct === null
-                  ? "none started yet"
-                  : `${stats.completionPct}% of started sessions completed`
-              }
-            />
-            <Metric
-              label="Check-ins viewed"
-              value={String(stats.checkinViews)}
-              note={
-                stats.topEmotions.length > 0
-                  ? stats.topEmotions
-                      .map(([name, n]) => `${name} ×${n}`)
-                      .join(" · ")
-                  : "no emotions chosen yet"
-              }
-            />
-            <Metric
-              label="Journal entries"
-              value={String(stats.journalCount)}
-            />
-            <Metric label="Pay-intent taps" value={String(stats.payTaps)} />
-            <Metric label="Verses shared" value={String(stats.versesShared)} />
-            <Metric
-              label="Dhikr completed"
-              value={String(stats.dhikrCompleted)}
-            />
-            <Metric
-              label="Follow-ups"
-              value={`${stats.followUpsAnswered} of ${stats.followUpsShown}`}
-              note={followUpNote(stats)}
-            />
-            <Metric
-              label="Surah tadabbur begun"
-              value={String(stats.surahTadabburStarted)}
-            />
-            <Metric
-              label="Reading view"
-              value={stats.readView}
-              note={`switched ${stats.readViewSwitches} time${stats.readViewSwitches === 1 ? "" : "s"}`}
-            />
-            <Metric
-              label="First seen"
-              value={
-                stats.firstSeen === null
-                  ? "—"
-                  : new Date(stats.firstSeen).toLocaleDateString()
-              }
-              note={
-                stats.daysSinceFirstSeen === null
-                  ? "not recorded yet"
-                  : `${stats.daysSinceFirstSeen} day${stats.daysSinceFirstSeen === 1 ? "" : "s"} ago`
-              }
-            />
-          </div>
-
-          <div className="card stack">
-            <p className="soft" style={{ margin: 0 }}>
-              Testing MindfulVerse? Copy your numbers and email them over.
-            </p>
-            <button
-              type="button"
-              className="btn"
-              style={{ alignSelf: "flex-start" }}
-              onClick={copyStats}
-            >
-              {copied ? "Copied" : "Copy my stats"}
+          <dl className="stats-list">
+            {rows(stats).map(([label, value]) => (
+              <div key={label} className="stats-row">
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <div>
+            <button type="button" className="btn secondary" onClick={copyStats}>
+              {copied ? "Copied" : "Copy my numbers"}
             </button>
           </div>
         </>
       ) : (
-        <div className="card stack">
-          <p style={{ fontSize: "1.1rem", margin: 0 }}>Nothing to count yet.</p>
-          <p className="soft" style={{ margin: 0 }}>
-            Spend a little time with the app. A check-in, a session, a verse.
-            and your numbers will gather here.
-          </p>
-          <Link
-            to="/"
-            className="btn"
-            style={{ alignSelf: "flex-start", marginTop: 4 }}
-          >
+        <div className="journal-empty">
+          <p className="soft">Nothing to count yet.</p>
+          <Link to="/" className="btn secondary">
             Start today
           </Link>
         </div>

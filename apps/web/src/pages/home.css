@@ -1,4 +1,4 @@
-/* Home: date + greeting, returning beads, today's verse on cloth, the section list. */
+/* Home: date + greeting, returning beads, the surah lead on cloth, today's verse, the section list. */
 .home-date {
   margin: 8px 0 2px;
   font-size: 0.92rem;
@@ -31,25 +31,61 @@
   background: var(--kola);
 }
 
-.home-verse {
+.home-lead {
   margin: 22px 0 18px;
   padding-top: 20px;
 }
-.home-verse .cloth-eyebrow {
-  margin-bottom: 6px;
+.home-lead-title {
+  font-size: 1.35rem;
+  font-weight: 500;
+  margin: 0;
+}
+.home-lead-line {
+  margin: 8px 0 0;
+  line-height: 1.55;
+}
+.home-lead-actions,
+.home-lead-suggestions {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+}
+.home-lead-suggestions {
+  gap: 10px;
+  margin-bottom: 0;
+  padding: 0;
+  list-style: none;
+}
+.home-lead-quiet {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.95rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.home-lead-suggestions + .home-lead-quiet {
+  margin-top: 6px;
+}
+
+.home-verse {
+  margin: 18px 0;
 }
 .home-verse .arabic {
-  margin: 6px 0 0;
+  margin: 0;
+  font-size: calc(1.6rem * var(--read-scale, 1));
 }
 /* Narrow phones: a little smaller, so the sections below show sooner. */
 @media (max-width: 480px) {
   .home-verse .arabic {
-    font-size: calc(1.6rem * var(--read-scale, 1));
+    font-size: calc(1.4rem * var(--read-scale, 1));
     line-height: 2.1;
   }
 }
 .home-verse-translation {
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   line-height: 1.6;
   margin: 8px 0 0;
 }
@@ -58,7 +94,7 @@
   font-size: 0.92rem;
 }
 .home-today {
-  margin-top: 22px;
+  margin-top: 18px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -162,4 +198,7 @@ a.home-entry:active {
   a.home-entry:hover .home-entry-chevron {
     transform: none;
   }
+}
+.home-circle-count {
+  margin: -6px 0 18px;
 }

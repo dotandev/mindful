@@ -3,10 +3,13 @@
 // Order inside this file matters too: imports evaluate top to bottom.
 import "./platform/shims"; // localStorage (MMKV) + crypto.randomUUID: before any core module
 import "react-native-url-polyfill/auto"; // @insforge/sdk uses URL + searchParams.append
+import { pingActiveDay } from "@mindfulverse/core/activeDays";
 import { configureAnalytics } from "@mindfulverse/core/analytics";
+import { wireCircleReflections } from "@mindfulverse/core/circles";
 import { configureData } from "@mindfulverse/core/data";
 import { configureSyncTriggers } from "@mindfulverse/core/sync/engine";
 import { configureInsforge } from "@mindfulverse/core/sync/insforge";
+import { AppState, Platform } from "react-native";
 
 import { INSFORGE_ANON_KEY, INSFORGE_URL } from "./env";
 import { readBundledJson } from "./platform/data";
@@ -22,7 +25,18 @@ configureInsforge({
   // OAuth callback detection reads window.location, which RN lacks.
   auth: { detectOAuthCallback: false },
 });
+wireCircleReflections();
 configureData(readBundledJson);
+if (Platform.OS === "ios" || Platform.OS === "android") {
+  const platform = Platform.OS;
+  pingActiveDay(platform);
+  // A backgrounded app resumes on a new day without relaunching; count that too.
+  AppState.addEventListener("change", (state) => {
+    if (state === "active") {
+      pingActiveDay(platform);
+    }
+  });
+}
 configureAnalytics({
   onTrack: __DEV__ ? (e) => console.debug("[track]", e) : undefined,
 });

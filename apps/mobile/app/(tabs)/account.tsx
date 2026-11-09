@@ -32,7 +32,7 @@ import {
   unregisterPush,
 } from "../../src/push";
 import { signOut as endSession } from "../../src/session";
-import { fonts } from "../../src/theme";
+import { fonts, space } from "../../src/theme";
 import { Button, Card, Screen, Text } from "../../src/ui";
 
 function confirm(
@@ -115,15 +115,13 @@ export default function Account() {
       /* AccountProvider keeps its last state; the next refresh corrects it */
     }
     setBusy(false);
-    setNotice(
-      "Signed out. Your entries stay on this device but are no longer backed up."
-    );
+    setNotice("Signed out. Your entries stay on this device.");
   }
 
   async function deleteMyData(userId: string) {
     const sure = await confirm(
       "Delete synced data?",
-      "Delete all synced data from your account? Entries on this device are kept.",
+      "This device keeps its entries.",
       "Delete"
     );
     if (!sure) {
@@ -200,7 +198,14 @@ export default function Account() {
             <ReminderSection />
 
             <Section>
-              <View style={{ alignItems: "flex-start" }}>
+              <View
+                style={{
+                  alignItems: "center",
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: space.md,
+                }}
+              >
                 <Button
                   title="Sign out"
                   kind="secondary"
@@ -208,15 +213,6 @@ export default function Account() {
                   busy={busy}
                   onPress={() => void signOut()}
                 />
-              </View>
-            </Section>
-
-            <Section>
-              <Small>
-                Deleting removes your journal and progress from your account.
-                Entries already on this device are kept.
-              </Small>
-              <View style={{ alignItems: "flex-start" }}>
                 <LinkButton
                   title="Delete my data"
                   danger
@@ -241,6 +237,11 @@ export default function Account() {
             user ? "About my MindfulVerse account" : "Feedback on MindfulVerse"
           }
         />
+
+        <Small>
+          We anonymously count days the app is opened. Your writing stays on
+          this device unless you sync.
+        </Small>
       </Screen>
     </KeyboardAvoidingView>
   );

@@ -21,7 +21,7 @@ async function signIn(page: Page) {
     .getByRole("button", { exact: true, name: "Sign in" })
     .last()
     .click();
-  await expect(page.getByText(/backed up to your account/iu)).toBeVisible({
+  await expect(page.getByText(/your journal is backed up/iu)).toBeVisible({
     timeout: 15_000,
   });
 }

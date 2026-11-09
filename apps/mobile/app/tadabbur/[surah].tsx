@@ -16,6 +16,7 @@ import {
   loadSurahTafsir,
   loadTafsirIndex,
 } from "@mindfulverse/core/data";
+import { getEntries } from "@mindfulverse/core/journal";
 import {
   getSurahTadabbur,
   recordSurahTadabbur,
@@ -33,6 +34,7 @@ import {
   useFocusEffect,
   useLocalSearchParams,
 } from "expo-router";
+import type { Href } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -43,12 +45,25 @@ import {
   ScrollView,
   View,
 } from "react-native";
-import type { TextInput } from "react-native";
+import type {
+  HostInstance,
+  ScrollViewInstance,
+  TextInputInstance,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ActionLink } from "../../src/components/Reader/ActionLink";
 import { TitlePlate } from "../../src/components/Reader/TitlePlate";
 import { InfoText } from "../../src/components/Tadabbur/InfoText";
+import {
+  currentIntention,
+  hasSurahPage,
+  surahPageHref,
+} from "../../src/components/Tadabbur/intention";
+import {
+  IntentionField,
+  IntentionQuote,
+} from "../../src/components/Tadabbur/IntentionField";
 import {
   coveringFromIndex,
   deepLinkPhase,
@@ -113,6 +128,8 @@ function TadabburPage() {
   const started = useRef(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [arabicScale, setArabicScale] = useState(() => scaleFor(getSizeKey()));
+  const [, setPageTick] = useState(0);
+  const bumpPage = useCallback(() => setPageTick((t) => t + 1), []);
 
   // Drafts live in a ref (the inputs own their state; see ReflectionArea), so
   // typing never re-renders the verse. Every change is also persisted per
@@ -139,11 +156,13 @@ function TadabburPage() {
     [validSurah, n, phase]
   );
 
-  // The reader's A/A/A size may change while this screen is underneath.
+  // The reader's A/A/A size and the journal may change while this screen is
+  // underneath.
   useFocusEffect(
     useCallback(() => {
       setArabicScale(scaleFor(getSizeKey()));
-    }, [])
+      bumpPage();
+    }, [bumpPage])
   );
 
   useEffect(() => {
@@ -229,14 +248,14 @@ function TadabburPage() {
   }, [phase, status, ayahs, count, n]);
 
   // Each verse starts at the top: Next sits below the reflection area.
-  const scrollRef = useRef<ScrollView>(null);
-  const contentRef = useRef<View>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const contentRef = useRef<HostInstance>(null);
   useEffect(() => {
     scrollRef.current?.scrollTo({ animated: false, y: 0 });
   }, [phase]);
 
   // Keep the focused reflection input above the keyboard.
-  const focused = useRef<TextInput | null>(null);
+  const focused = useRef<TextInputInstance | null>(null);
   const revealFocused = useCallback(() => {
     const input = focused.current;
     const content = contentRef.current;
@@ -258,7 +277,7 @@ function TadabburPage() {
     return () => sub.remove();
   }, [revealFocused]);
   const onFocusInput = useCallback(
-    (input: TextInput) => {
+    (input: TextInputInstance) => {
       focused.current = input;
       if (Keyboard.isVisible()) {
         revealFocused();
@@ -297,6 +316,10 @@ function TadabburPage() {
 
   const share = useShareVerse("tadabbur");
 
+  const openPage = useCallback(() => {
+    router.push(surahPageHref(n) as Href);
+  }, [n]);
+
   const title = (
     <Stack.Screen
       options={{ title: validSurah && status === "ready" ? name : "Tadabbur" }}
@@ -332,10 +355,7 @@ function TadabburPage() {
     return page(
       <Card>
         <Text variant="h2">That surah isn’t here</Text>
-        <Text variant="muted">
-          Surahs run from 1 to 114. We couldn’t find the one this link points
-          to.
-        </Text>
+        <Text variant="muted">That surah doesn’t exist.</Text>
         <View style={{ alignItems: "flex-start" }}>
           <Button kind="secondary" title="Go back" onPress={leave} />
         </View>
@@ -375,6 +395,7 @@ function TadabburPage() {
   // About screen: background first, then the way in.
   if (phase < 0) {
     const resumeAyah = resumeAyahFor(saved, count);
+    const showPage = hasSurahPage(getEntries(), n);
     return page(
       <>
         <FadeRise reduce={reduce} style={{ gap: space.sm }}>
@@ -388,6 +409,14 @@ function TadabburPage() {
             <InfoText text={info.text} />
           </FadeRise>
         ) : null}
+        <FadeRise reduce={reduce} delay={90}>
+          <IntentionField
+            surah={n}
+            surahName={name}
+            onSaved={bumpPage}
+            onFocusInput={onFocusInput}
+          />
+        </FadeRise>
         <FadeRise
           reduce={reduce}
           delay={120}
@@ -409,12 +438,26 @@ function TadabburPage() {
             </>
           )}
         </FadeRise>
+        {showPage ? (
+          <FadeRise
+            reduce={reduce}
+            delay={150}
+            style={{ alignItems: "flex-start" }}
+          >
+            <Button
+              kind="ghost"
+              title={`Your page on ${name}`}
+              onPress={openPage}
+            />
+          </FadeRise>
+        ) : null}
       </>
     );
   }
 
   // Completion screen.
   if (phase >= count) {
+    const intention = currentIntention(getEntries(), n);
     return page(
       <>
         <FadeRise reduce={reduce} style={{ gap: space.sm }}>
@@ -424,6 +467,11 @@ function TadabburPage() {
             stay with you.
           </Text>
         </FadeRise>
+        {intention ? (
+          <FadeRise reduce={reduce} delay={30}>
+            <IntentionQuote label="You began with:" body={intention} />
+          </FadeRise>
+        ) : null}
         <FadeRise
           reduce={reduce}
           delay={60}
@@ -440,6 +488,11 @@ function TadabburPage() {
               }
             />
           ) : null}
+          <Button
+            kind="secondary"
+            title={`See your page on ${name}`}
+            onPress={openPage}
+          />
           <Button kind="secondary" title="Done" onPress={leave} />
         </FadeRise>
       </>

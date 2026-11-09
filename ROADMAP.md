@@ -2,14 +2,34 @@
 
 A **prioritized menu, not a to-do list.** Having the data is not a reason to build.
 
-## The gate — cleared (2026-09-15)
+## Positioning (2026-11-07)
+
+Quran.com is where you read. **MindfulVerse is where you sit with one surah, write the way a tadabbur journal asks you to, and get asked a week later whether you did what you wrote — all from real sources, never AI.**
+
+Most competing tadabbur apps (Tadabbur, ReflectQ, TadabburAI, Ask Quran) generate text with AI; Quran.com notes + QuranReflect is the free, trusted alternative. The daily verse and mood picker are what everyone has, so the app leads with the surah journal and keeps those second.
+
+## The launch test (2026-11-07) — rules written before testers arrive
+
+|  |  |
+| --- | --- |
+| **Who** | 50+ installs from 3+ Qur'an study circles (Nigeria + diaspora), via the design partner and circle teachers |
+| **Platforms** | Android app (Play internal → closed testing) + web app for iPhone. No paid Apple account until the bar is met |
+| **Language** | English only. Hausa / Yoruba come next, starting with a licensed translation |
+| **Bar** | Day-7 return ≥ 30% over 4 weeks |
+| **Second signal** | ≥ 20% of people who kept an action answer its week-later follow-up |
+| **Below 15%** | Stop building. Interview 5 testers who left; fix the first session |
+| **15–30%** | Keep the scope; change one thing at a time |
+| **Measured by** | Anonymous "active today" signal (random install id + date + platform, write-only table `active_days`) — query in `scripts/retention.sql` |
+| **Before launch** | Design partner walks the full Ash-Sharh flow; the first circle's teacher reviews hand-written prompts, session intros and emotion pairings (no endorsement claimed) |
+
+## The v0 gate — cleared (2026-09-15)
 
 |  |  |
 | --- | --- |
 | **Bar** | Day-7 return ≥ 25–30% on 50+ non-friend users within ~4 weeks |
 | **Outcome** | Cleared — v1 (accounts, sync, reminders) built and shipped 2026-09-15 |
 | **Measured by** | Vercel Analytics (visits) + testers' `/stats` copies (behavior) |
-| **Still gated** | Billing stays blocked on a commercial-safe translation license (see v1 row 3) |
+| **Pricing** | Free for everyone, decided 2026-11-07. No subscription or paywall is planned (see v1 row 3) |
 
 ## v0 — shipped (live at mindfulverse.vercel.app)
 
@@ -21,20 +41,20 @@ A **prioritized menu, not a to-do list.** Having the data is not a reason to bui
 | Dhikr & breath | 8 sets, breathing circle, tap counting, wake lock, adaptive sizing |
 | Journal | Local-only, verse/session attribution, export, backup nudge |
 | Search + topics browse | Translation search; verses-by-topic index into the reader |
-| Modern English translation | Talal Itani / ClearQuran (CC BY-NC-ND — non-commercial; see v1 billing blocker) |
+| Modern English translation | Talal Itani / ClearQuran (CC BY-NC-ND — non-commercial, which fits a free app; attribution required) |
 | User-controlled dark theme | Default light, user toggle; never follows OS |
 | Growth & measurement | Share-a-verse, OG preview card, PWA install prompt, `/stats`, WhatsApp feedback link, analytics |
 | Identity | West African indigo, adire band, Fraunces + KFGQPC Hafs, offline PWA |
 
-## v1 — shipped 2026-09-15 (monetization spine)
+## v1 — shipped 2026-09-15 (accounts, sync, reminders)
 
 | Priority | Feature | Status | Why | Effort | Depends on |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Accounts (email/OAuth) | **Shipped** | Identity for sync + billing | Medium | Backend (first server component) |
+| 1 | Accounts (email/OAuth) | **Shipped** | Identity for sync | Medium | Backend (first server component) |
 | 2 | Journal cloud sync | **Shipped** | The #1 trust gap — localStorage is fragile | Medium | Accounts |
-| 3 | Subscription billing (Stripe + Play) | Blocked | Diaspora-pays hypothesis; paywall sessions library + journal history — **never the Qur'an itself** | Medium | Accounts + **commercial-safe translation license** (current Itani translation is CC BY-NC-ND: non-commercial — obtain publisher permission or swap before any revenue) |
+| 3 | Subscription billing | **Dropped** (2026-11-07) | MindfulVerse stays free; the $3/month willingness-to-pay question was removed. If charging is ever reconsidered, the Itani translation's non-commercial licence must be cleared first | — | — |
 | 4 | Push notifications / daily reminder | **Shipped** | Biggest retention lever a PWA lacks | Medium | Backend |
-| 5 | React Native app | Deferred | Store presence, reliable notifications, better offline | High | v1 validated on web |
+| 5 | React Native app | **In testing** (Android) | Store presence, reliable notifications, better offline | High | v1 validated on web |
 
 ## v2 — deepen (pull by priority once v1 is stable)
 
@@ -49,7 +69,7 @@ A **prioritized menu, not a to-do list.** Having the data is not a reason to bui
 
 | Feature | Audience | Note |
 | --- | --- | --- |
-| Hausa / Yoruba | Nigeria growth base | Blocked on sourcing tafsir data in those languages |
+| Hausa / Yoruba | Nigeria growth base | **Next after the launch test.** Start with a licensed Hausa translation; tafsir data in those languages still unsourced |
 | Arabic tafsirs (Uthaymeen, Saadi) | Arabic readers | Data already in hand |
 | Mutashabihat pairs | Memorizers | Narrow but loyal audience |
 | Page-accurate mushaf view | Traditionalists | Heavy; layouts + fonts in hand |

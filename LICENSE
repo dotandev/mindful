@@ -1,0 +1,38 @@
+MIT License
+
+Copyright (c) 2026 Mohammed Firdous
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---------------------------------------------------------------------------
+
+This licence covers the MindfulVerse source code only. The Qur'anic content
+bundled with it is not covered and keeps its own terms:
+
+- English translation: ClearQuran by Talal Itani, CC BY-NC-ND 4.0
+  (https://www.clearquran.com). Shown word for word, with credit, for
+  non-commercial use only.
+- Arabic text, Ibn Kathir's commentary and related datasets: from the Quranic
+  Universal Library by Tarteel (https://qul.tarteel.ai), under its terms.
+- Arabic typeface: KFGQPC Uthmanic Hafs, King Fahd Glorious Qur'an Printing
+  Complex, under its terms.
+- Music in the promo videos: "Alhamdulilah" by Jawad Syed, CC BY 3.0.
+
+This includes the generated files in apps/web/public/data and their copies in
+the mobile app.
