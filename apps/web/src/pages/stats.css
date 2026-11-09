@@ -1,0 +1,26 @@
+/* /stats: a short list of private numbers. */
+.stats-page {
+  max-width: 420px;
+}
+.stats-account {
+  margin: 0;
+}
+.stats-list {
+  margin: 0;
+}
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.stats-row dt {
+  color: var(--ink-soft);
+}
+.stats-row dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
