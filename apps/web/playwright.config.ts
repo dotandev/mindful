@@ -1,7 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
 // Smoke-only config: one spec, real backend, skips cleanly without creds.
-// See e2e/account-sync.spec.ts and README.md "Accounts & sync (v1)".
+// See e2e/account-sync.spec.ts and README.md "Accounts and sync".
 export default defineConfig({
   fullyParallel: false,
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],

@@ -25,15 +25,27 @@ import ReadingText, { BASMALAH } from "../components/ReadingText";
 import VerseBlock from "../components/VerseBlock";
 import VerseSheet from "../components/VerseSheet";
 import { useLastReadTracker } from "../lib/useLastReadTracker";
+import NotFound from "./NotFound";
 
 import "./reader.css";
 
 type Status = "loading" | "ready" | "error";
 
+const SURAH_PARAM_RE = /^\d{1,3}$/u;
+const SURAH_COUNT = 114;
+
 // Keyed on the surah so moving to the next one starts from clean state — an
 // in-flight tafsir fetch can't land on the wrong surah.
 export default function Surah() {
   const { surah } = useParams<{ surah: string }>();
+  const surahNumber = Number(surah);
+  const isValid =
+    SURAH_PARAM_RE.test(surah ?? "") &&
+    surahNumber >= 1 &&
+    surahNumber <= SURAH_COUNT;
+  if (!isValid) {
+    return <NotFound />;
+  }
   return <SurahReader key={surah} />;
 }
 

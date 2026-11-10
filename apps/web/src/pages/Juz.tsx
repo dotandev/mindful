@@ -25,10 +25,19 @@ import ReadingText, { BASMALAH } from "../components/ReadingText";
 import VerseBlock from "../components/VerseBlock";
 import VerseSheet from "../components/VerseSheet";
 import { useLastReadTracker } from "../lib/useLastReadTracker";
+import NotFound from "./NotFound";
+
+const JUZ_PARAM_RE = /^\d{1,2}$/u;
+const JUZ_COUNT = 30;
 
 // Keyed on the juz so moving to the next one starts from clean state.
 export default function Juz() {
   const { n } = useParams<{ n: string }>();
+  const juz = Number(n);
+  const isValid = JUZ_PARAM_RE.test(n ?? "") && juz >= 1 && juz <= JUZ_COUNT;
+  if (!isValid) {
+    return <NotFound />;
+  }
   return <JuzReader key={n} />;
 }
 

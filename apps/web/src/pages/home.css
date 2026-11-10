@@ -101,7 +101,7 @@
   gap: 10px;
 }
 
-/* Section rows: icon well, title + description, chevron (or a Soon pill). */
+/* Section rows: icon well, title + description, chevron. */
 .home-entry {
   position: relative;
   display: flex;
@@ -141,9 +141,6 @@ a.home-entry:active {
   justify-content: center;
   color: var(--indigo);
 }
-.home-entry.inert .home-entry-well {
-  color: var(--ink-faint);
-}
 .home-entry-text {
   flex: 1;
   min-width: 0;
@@ -153,9 +150,6 @@ a.home-entry:active {
   font-size: 1.1rem;
   font-weight: 500;
   transition: color 0.15s ease;
-}
-.home-entry.inert .home-entry-title {
-  color: var(--ink-faint);
 }
 .home-entry-desc {
   display: block;
@@ -169,15 +163,6 @@ a.home-entry:active {
   display: inline-flex;
   color: var(--indigo);
   transition: transform 0.18s var(--ease-out);
-}
-.home-entry-soon {
-  flex: none;
-  font-size: 0.75rem;
-  line-height: 1.3;
-  color: var(--ink-faint);
-  border: 1px solid var(--line-strong);
-  border-radius: 10px;
-  padding: 2px 8px;
 }
 
 .home-attribution {

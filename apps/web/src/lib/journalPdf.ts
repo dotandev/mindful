@@ -24,8 +24,6 @@ const hex = (h: string) =>
 const C = {
   // The app's light palette (apps/web/src/index.css :root). Keep in step.
   cotton: hex("#f4f5f8"),
-  raised: hex("#fcfcfd"),
-  shea: hex("#e9ebf2"),
   indigo: hex("#2a3a8c"),
   indigoDeep: hex("#1b2559"),
   indigoWash: hex("#e3e7f4"),

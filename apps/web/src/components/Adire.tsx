@@ -118,29 +118,6 @@ export function TadabburIcon() {
   );
 }
 
-/** Dhikr: a ring of prayer beads. */
-export function DhikrIcon() {
-  const beads = Array.from({ length: 11 }, (_, i) => {
-    const a = (i / 11) * Math.PI * 2 - Math.PI / 2;
-    return [12 + Math.cos(a) * 7.6, 11 + Math.sin(a) * 7.6];
-  });
-  return (
-    <Icon>
-      {beads.map(([x, y], i) => (
-        <circle
-          key={i}
-          cx={x}
-          cy={y}
-          r="1.35"
-          fill="currentColor"
-          stroke="none"
-        />
-      ))}
-      <path d="M12 18.6v4M10.6 22.6h2.8" />
-    </Icon>
-  );
-}
-
 /** Read: an open mushaf. */
 export function ReadIcon() {
   return (
