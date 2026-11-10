@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "dev.mindfulverse.app",
+      "sha256_cert_fingerprints": [
+        "8B:D1:29:D2:F2:69:84:B3:11:13:32:6F:B3:4C:FF:0D:EC:21:3F:A7:36:11:C3:FF:9E:E1:1B:1C:E4:17:9D:15"
+      ]
+    }
+  }
+]
