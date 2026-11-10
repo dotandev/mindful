@@ -3,6 +3,8 @@ import { addEntry, getEntries } from "@mindfulverse/core/journal";
 import { surahJournal } from "@mindfulverse/core/surahJournal";
 import { useId, useState } from "react";
 
+import "../pages/tadabbur.css";
+
 function currentIntention(surah: number): string | null {
   return surahJournal(getEntries(), surah).intention?.body ?? null;
 }

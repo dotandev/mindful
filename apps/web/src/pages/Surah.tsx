@@ -14,16 +14,18 @@ import {
 } from "@mindfulverse/core/readingPrefs";
 import type { ReadView } from "@mindfulverse/core/readingPrefs";
 import type { Ayah, SurahMeta } from "@mindfulverse/core/types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { DyeRule, TitlePlate } from "../components/Adire";
+import BackLink from "../components/BackLink";
 import { CommentarySheet, useTafsir } from "../components/Commentary";
 import type { TafsirIndex } from "../components/Commentary";
 import ReaderTools from "../components/ReaderTools";
 import ReadingText, { BASMALAH } from "../components/ReadingText";
 import VerseBlock from "../components/VerseBlock";
 import VerseSheet from "../components/VerseSheet";
+import { findVerseElement, useHoldVerse } from "../lib/useHoldVerse";
 import { useLastReadTracker } from "../lib/useLastReadTracker";
 import NotFound from "./NotFound";
 
@@ -33,6 +35,7 @@ type Status = "loading" | "ready" | "error";
 
 const SURAH_PARAM_RE = /^\d{1,3}$/u;
 const SURAH_COUNT = 114;
+const FLASH_MS = 1600;
 
 // Keyed on the surah so moving to the next one starts from clean state — an
 // in-flight tafsir fetch can't land on the wrong surah.
@@ -109,31 +112,46 @@ function SurahReader() {
       : "Read | MindfulVerse";
   }, [meta]);
 
-  // Deep link (?v=n): scroll there once the surah renders, in either view.
+  // Deep link (?v=n): scroll there once per navigation, in either view. The
+  // guard keeps a view switch or a closing sheet from jumping back to it
+  // (this component is keyed on the surah, so the guard resets with it).
+  const jumpedTo = useRef<string | null>(null);
   useEffect(() => {
     if (status !== "ready") {
       return;
     }
-    const v = Number(params.get("v"));
+    const raw = params.get("v");
+    if (raw === jumpedTo.current) {
+      return;
+    }
+    jumpedTo.current = raw;
+    const v = Number(raw);
     if (!Number.isFinite(v) || v < 1) {
       return;
     }
-    const el = document.getElementById(
-      view === "reading" ? verseId(surahNumber, v) : `v${v}`
-    );
+    const el = findVerseElement(surahNumber, v, surahNumber);
     if (!el) {
       return;
     }
     el.scrollIntoView({ block: "start" });
     recordLastRead(surahNumber, v);
     setFlashKey(`${surahNumber}:${v}`);
-    const t = window.setTimeout(() => setFlashKey(null), 1600);
+  }, [status, params, surahNumber]);
+
+  // The glow on a jumped-to verse fades by itself.
+  useEffect(() => {
+    if (flashKey === null) {
+      return;
+    }
+    const t = window.setTimeout(() => setFlashKey(null), FLASH_MS);
     return () => window.clearTimeout(t);
-  }, [status, params, surahNumber, view]);
+  }, [flashKey]);
 
   useLastReadTracker(status === "ready", surahNumber, view);
+  const holdVerse = useHoldVerse(view, surahNumber);
 
   function chooseView(v: ReadView) {
+    holdVerse();
     setView(v);
     saveReadView(v);
   }
@@ -154,14 +172,11 @@ function SurahReader() {
     el.scrollIntoView({ behavior: "smooth", block: "start" });
     recordLastRead(surahNumber, n);
     setFlashKey(`${surahNumber}:${n}`);
-    window.setTimeout(() => setFlashKey(null), 1600);
   }
 
   return (
     <div style={{ ["--read-scale" as string]: String(scaleFor(sizeKey)) }}>
-      <Link to="/read" className="btn ghost">
-        ← All surahs
-      </Link>
+      <BackLink to="/read">All surahs</BackLink>
       <div className="surah-plate">
         <TitlePlate
           surah={surahNumber}
