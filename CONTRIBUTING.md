@@ -12,7 +12,7 @@ Thank you for wanting to help. MindfulVerse is a small, free app for pondering t
 
 ## Getting started
 
-You need Node 22.18 or later (the repo pins Node 24 in `.nvmrc`) and npm.
+You need Node 22.18 to 24 (the repo pins Node 24 in `.nvmrc`) and npm.
 
 ```bash
 git clone https://github.com/mohammedfirdouss/MindfulVerse.git
