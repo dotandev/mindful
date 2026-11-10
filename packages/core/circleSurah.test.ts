@@ -8,6 +8,7 @@ vi.stubGlobal("localStorage", {
 });
 
 import {
+  clearCircleSurah,
   getCircleSurah,
   parseSurahNumber,
   setCircleSurah,
@@ -20,6 +21,12 @@ describe("circleSurah", () => {
   });
 
   it("is empty until a circle link sets it", () => {
+    expect(getCircleSurah()).toBeNull();
+  });
+
+  it("forgets the surah when cleared", () => {
+    setCircleSurah(94);
+    clearCircleSurah();
     expect(getCircleSurah()).toBeNull();
   });
 

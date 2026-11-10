@@ -130,6 +130,18 @@ export function saveFollowUpState(
   }
 }
 
+/** Carries skipped follow-ups over to entries that were given new ids. */
+export function remapFollowUpIds(
+  state: FollowUpState,
+  idMap: ReadonlyMap<string, string>
+): FollowUpState {
+  const skipped: Record<string, number> = {};
+  for (const [id, at] of Object.entries(state.skipped)) {
+    skipped[idMap.get(id) ?? id] = at;
+  }
+  return { ...state, skipped };
+}
+
 export function skipFollowUp(
   state: FollowUpState,
   entryId: string,
