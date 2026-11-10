@@ -103,15 +103,6 @@ export const loadEmotions = () => getJson<EmotionMap>("emotions.json");
 /** Juz / hizb / quarter / sajdah boundaries (a few KB). */
 export const loadDivisions = () => getJson<Divisions>("divisions.json");
 
-/** Convenience: fetch a specific ayah (surah + translation + arabic). */
-export async function loadAyah(
-  surah: number,
-  ayah: number
-): Promise<Ayah | undefined> {
-  const ayahs = await loadSurahAyahs(surah);
-  return ayahs.find((a) => a.ayah === ayah);
-}
-
 /** Parse "2:255" -> { surah: 2, ayah: 255 }. */
 export function parseVerseKey(vk: string): { surah: number; ayah: number } {
   const [s, a] = vk.split(":").map(Number);
@@ -130,10 +121,13 @@ export async function loadAyahsByKeys(verseKeys: string[]): Promise<Ayah[]> {
     }
     ayahSet.add(ayah);
   }
+  const groups = [...bySurah];
+  const loaded = await Promise.all(
+    groups.map(([surah]) => loadSurahAyahs(surah))
+  );
   const out: Ayah[] = [];
-  for (const [surah, ayahs] of bySurah) {
-    const all = await loadSurahAyahs(surah);
-    for (const a of all) {
+  for (const [i, [, ayahs]] of groups.entries()) {
+    for (const a of loaded[i]) {
       if (ayahs.has(a.ayah)) {
         out.push(a);
       }

@@ -11,9 +11,10 @@
 // and gratitude. Permanently excluded despite fame: 65:2, 40:60, 14:7, 8:46,
 // 2:155 (alone), 3:173, 24:26, 9:129 (alone), 7:156, 21:87 (alone), 3:186.
 //
-// The day index is hash-scrambled so consecutive days land in different parts
-// of the pool (the pool contains near-twins like 94:5/94:6 — walked in order
-// they would read as "the verse never changed").
+// Each day steps a fixed stride through the pool (see verseKeyFor) so
+// consecutive days land in different parts of it (the pool contains near-twins
+// like 94:5/94:6 — walked in order they would read as "the verse never
+// changed").
 //
 // Mirrored in functions/send-reminders.ts (push reminders) — keep the two in sync.
 

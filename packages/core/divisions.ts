@@ -1,5 +1,5 @@
 // Mushaf divisions (juz, hizb, quarters, sajdah) — pure helpers over the data
-// in public/data/divisions.json. Verse keys are "surah:ayah".
+// in apps/web/public/data/divisions.json. Verse keys are "surah:ayah".
 import type { Division, Divisions } from "./types";
 
 function split(key: string): [number, number] {

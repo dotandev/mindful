@@ -109,13 +109,13 @@ export function statusLabel(s: SyncStatus): string {
       return "Backing up…";
     }
     case "offline": {
-      return "Offline — will sync when you're back";
+      return "Offline. Will sync when you're back.";
     }
     case "error": {
-      return "Backup hit a snag — will retry";
+      return "Backup hit a snag. Will retry.";
     }
     case "switched-account": {
-      return "This device holds another account's journal — open Account to resolve.";
+      return "This device holds another account's journal. Open Account to resolve.";
     }
     default: {
       return "";
@@ -132,9 +132,10 @@ export function makeDebounced(fn: () => void, ms: number): () => void {
 }
 
 let inFlight = false;
-// Set when a pass finds nobody signed in. Passive triggers (focus, reconnect)
-// skip while it's set so a signed-out user doesn't hammer /auth on every tab
-// focus; an explicit syncNow() always clears it and runs.
+// Set when a pass finds nobody signed in. Passive triggers (focus, reconnect,
+// the debounced dirty sync) skip while it's set so a signed-out user doesn't
+// hammer /auth on every tab focus or scroll pause; an explicit syncNow()
+// always clears it and runs.
 let knownSignedOut = false;
 
 const PULL_PAGE_SIZE = 1000;
@@ -293,11 +294,13 @@ export async function syncNow(): Promise<void> {
 
     // The pull above was exhaustive, so "absent remotely" is trustworthy:
     // retire tombstones older than the TTL whose deletion is confirmed.
-    const keptTombstones = pruneTombstones(merged.tombstones, remoteRows, {
+    // Read fresh: a delete made while the push was awaiting must survive.
+    const tombstones = getTombstones();
+    const keptTombstones = pruneTombstones(tombstones, remoteRows, {
       fullPull: true,
       now: Date.now(),
     });
-    if (keptTombstones.length !== merged.tombstones.length) {
+    if (keptTombstones.length !== tombstones.length) {
       replaceAll(getEntries(), keptTombstones);
     }
 
@@ -336,7 +339,11 @@ export async function resolveOwnerMismatch(
   await syncNow();
 }
 
-const debouncedSync = makeDebounced(() => void syncNow(), 3000);
+const debouncedSync = makeDebounced(() => {
+  if (!knownSignedOut) {
+    void syncNow();
+  }
+}, 3000);
 
 export function initSync(): void {
   const t = getTriggers();

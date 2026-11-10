@@ -65,7 +65,8 @@ apps/mobile/          the Android app, built with Expo
 apps/web/public/data/ the Qur'an, commentary, themes and sessions as JSON
 functions/            InsForge server functions (reminders, daily verse API)
 migrations/           InsForge database changes
-scripts/              build-data.mjs, which turns the source datasets into app data
+scripts/              build scripts for the app data, logo files and server
+                      functions, and retention.sql for the launch numbers
 ```
 
 The shared code never calls browser or phone features directly. Each app sets it up once when it starts, by calling `configureInsforge`, `configureData`, `configureSyncTriggers` and `configureAnalytics`.

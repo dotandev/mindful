@@ -28,13 +28,19 @@ function isIos(): boolean {
   return /iphone|ipad|ipod/iu.test(navigator.userAgent);
 }
 
+function readDismissed(): boolean {
+  try {
+    return localStorage.getItem(DISMISS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export default function InstallPrompt() {
   const [installEvent, setInstallEvent] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [earned, setEarned] = useState(() => getEntries().length > 0);
-  const [dismissed, setDismissed] = useState(
-    () => localStorage.getItem(DISMISS_KEY) === "1"
-  );
+  const [dismissed, setDismissed] = useState(readDismissed);
 
   // Chromium fires this once, early — hold on to it until the prompt is earned.
   useEffect(() => {
@@ -68,7 +74,11 @@ export default function InstallPrompt() {
 
   function dismiss() {
     setDismissed(true);
-    localStorage.setItem(DISMISS_KEY, "1");
+    try {
+      localStorage.setItem(DISMISS_KEY, "1");
+    } catch {
+      /* storage unavailable: dismissed for this visit only */
+    }
   }
 
   async function install() {

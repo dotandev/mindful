@@ -18,6 +18,7 @@ import {
   disableReminder,
   enableReminder,
   getReminder,
+  NOT_ALLOWED,
   pushSupport,
   updateReminderTime,
 } from "../../push";
@@ -26,8 +27,6 @@ import { Button } from "../../ui";
 import { DEFAULT_REMINDER_TIME, notificationsBlocked } from "./logic";
 import { FormError, LinkButton, Section, Small } from "./parts";
 import { TimeStepper } from "./TimeStepper";
-
-const NOT_ALLOWED = "Notifications were not allowed."; // push.ts's message for a refused prompt
 
 interface ReminderApi {
   get: () => Promise<{ time: string } | null>;
@@ -81,6 +80,10 @@ export function ReminderSection() {
 
   useEffect(() => {
     recheckPermission();
+    if (api === PUSH && getLocalReminder()) {
+      // Left over from a build without push: it would fire next to the push.
+      void disableLocalReminder();
+    }
     api
       .get()
       .then((r) => {
@@ -120,6 +123,10 @@ export function ReminderSection() {
           setError(failure);
         }
         return;
+      }
+      if (api === PUSH) {
+        // An on-device reminder from an earlier build would fire as a second one.
+        await disableLocalReminder();
       }
       track({ enabled: true, type: "reminder_set" });
       setReminderOn(true);

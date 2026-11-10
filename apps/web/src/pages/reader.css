@@ -19,9 +19,6 @@
   flex: 1;
   min-width: 0;
 }
-.continue-cloth .cloth-eyebrow {
-  display: block;
-}
 .continue-cloth .continue-name {
   display: block;
   font-size: 1.25rem;

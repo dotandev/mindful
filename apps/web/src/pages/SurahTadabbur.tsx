@@ -25,6 +25,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { Diamond, DyeRule, TitlePlate } from "../components/Adire";
 import IntentionField from "../components/IntentionField";
+import { coveringAyah } from "../lib/tafsirCovering";
 
 import "./tadabbur.css";
 
@@ -75,20 +76,6 @@ function useMounted(resetKey: unknown): boolean {
 }
 
 // Shared bits
-
-/** Ibn Kathir comments on passages: a run of ayahs stores its commentary under
- *  the first ayah of the group. Find the entry covering this ayah. */
-function coveringFromIndex(indexed: number[], ayah: number): number | null {
-  let best: number | null = null;
-  for (const n of indexed) {
-    if (n <= ayah) {
-      best = n;
-    } else {
-      break;
-    }
-  }
-  return best;
-}
 
 // The surah's background text, shown first (per user feedback). Long infos are
 // trimmed to the opening paragraphs with a "Read more" expander.
@@ -829,7 +816,7 @@ function SurahTadabburPage() {
 
   // One verse per step.
   const a = ayahs[phase];
-  const covering = coveringFromIndex(indexed, a.ayah);
+  const covering = coveringAyah(indexed, a.ayah);
 
   return (
     <div className="stack">

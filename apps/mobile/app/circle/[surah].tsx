@@ -1,7 +1,8 @@
-// A circle's invite link (https://mindfulverse.vercel.app/circle/abc234 or
-// mindfulverse://circle/abc234): join the circle on this device, then open its
-// surah at the focus verse. Old numeric links (/circle/94) still just remember
-// the surah. Anything else goes Home.
+// A circle's invite link, mindfulverse://circle/abc234: join the circle on this
+// device, then open its surah at the focus verse. The https link
+// (mindfulverse.vercel.app/circle/abc234) opens the website, not the app: there
+// is no Android intent filter or assetlinks for it. Old numeric links
+// (/circle/94) still just remember the surah. Anything else goes Home.
 import {
   fetchCircle,
   joinCircle,

@@ -140,12 +140,26 @@ function PersonIcon({ active }: NavIconProps) {
 const tabs = [
   { Icon: HomeIcon, end: true, label: "Home", phone: true, to: "/" },
   { Icon: HeartIcon, label: "Check-in", phone: false, to: "/checkin" },
-  { Icon: TadabburNavIcon, label: "Tadabbur", phone: false, to: "/sessions" },
+  {
+    Icon: TadabburNavIcon,
+    also: "/tadabbur",
+    label: "Tadabbur",
+    phone: false,
+    to: "/sessions",
+  },
   { Icon: CirclesNavIcon, label: "Circles", phone: false, to: "/circles" },
   { Icon: MushafIcon, label: "Read", phone: true, to: "/read" },
   { Icon: PenIcon, label: "Journal", phone: true, to: "/journal" },
   { Icon: PersonIcon, label: "Account", phone: true, to: "/account" },
 ];
+
+/** A section can own a second route prefix: surah tadabbur lives under
+ *  /tadabbur but belongs to the Tadabbur item, which links to /sessions. */
+function ownsPath(also: string | undefined, pathname: string): boolean {
+  return (
+    also !== undefined && (pathname === also || pathname.startsWith(`${also}/`))
+  );
+}
 
 const COLLAPSE_KEY = "mindfulverse.sidebarCollapsed.v1";
 
@@ -202,12 +216,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
               end={t.end}
               title={collapsed ? t.label : undefined}
               className={({ isActive }) =>
-                isActive ? "side-link active" : "side-link"
+                isActive || ownsPath(t.also, pathname)
+                  ? "side-link active"
+                  : "side-link"
               }
             >
               {({ isActive }) => (
                 <>
-                  <t.Icon active={isActive} />
+                  <t.Icon active={isActive || ownsPath(t.also, pathname)} />
                   <span className="side-label">{t.label}</span>
                 </>
               )}
@@ -244,11 +260,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
               key={t.to}
               to={t.to}
               end={t.end}
-              className={({ isActive }) => (isActive ? "tab active" : "tab")}
+              className={({ isActive }) =>
+                isActive || ownsPath(t.also, pathname) ? "tab active" : "tab"
+              }
             >
               {({ isActive }) => (
                 <>
-                  <t.Icon active={isActive} />
+                  <t.Icon active={isActive || ownsPath(t.also, pathname)} />
                   <span className="tab-label">{t.label}</span>
                 </>
               )}

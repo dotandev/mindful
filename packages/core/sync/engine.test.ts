@@ -11,6 +11,8 @@ vi.stubGlobal("localStorage", {
 
 let currentUserId: string | null = "user-b";
 let authCalls = 0;
+/** Runs while the pass awaits the progress pull, i.e. mid-push. */
+let duringPush: (() => void) | null = null;
 
 /** Every query builder method chains; awaiting one yields an empty result. */
 function query(): Record<string, unknown> {
@@ -31,8 +33,10 @@ function query(): Record<string, unknown> {
     chain[m] = () => chain;
   }
   chain.maybeSingle = () => ({
-    then: (resolve: (v: { data: null; error: null }) => unknown) =>
-      resolve({ data: null, error: null }),
+    then: (resolve: (v: { data: null; error: null }) => unknown) => {
+      duringPush?.();
+      return resolve({ data: null, error: null });
+    },
   });
   return chain;
 }
@@ -53,7 +57,7 @@ vi.mock(import("./insforge"), () => ({
   } as never,
 }));
 
-import { addEntry, getEntries, getTombstones } from "../journal";
+import { addEntry, deleteEntry, getEntries, getTombstones } from "../journal";
 import { recordVisit, recordLastRead, getLocalProgress } from "../progress";
 import {
   makeDebounced,
@@ -68,6 +72,7 @@ import {
 import type { SyncTriggers } from "./engine";
 
 const OWNER_KEY = "mindfulverse.sync.owner.v1";
+const DIRTY_DEBOUNCE_MS = 3000;
 
 // Always online; passive triggers never fire (these tests call syncNow directly).
 const testTriggers: SyncTriggers = {
@@ -83,6 +88,7 @@ const settle = () => new Promise((r) => setTimeout(r, 0));
 beforeEach(() => {
   store.clear();
   currentUserId = "user-b";
+  duringPush = null;
 });
 
 describe(makeDebounced, () => {
@@ -210,5 +216,44 @@ describe("sync triggers", () => {
     expect(authCalls).toBe(3);
     expect(getSyncStatus()).toBe("synced");
     configureSyncTriggers(testTriggers);
+  });
+
+  it("skips the debounced dirty sync while signed out, until an explicit syncNow", async () => {
+    configureSyncTriggers(testTriggers);
+    currentUserId = null;
+    initSync();
+    await settle();
+    expect(getSyncStatus()).toBe("signed-out");
+    authCalls = 0;
+
+    vi.useFakeTimers();
+    addEntry({ body: "b", prompt: "p" });
+    await vi.advanceTimersByTimeAsync(DIRTY_DEBOUNCE_MS);
+    expect(authCalls).toBe(0);
+
+    currentUserId = "user-b";
+    await syncNow(); // what the UI calls after sign-in
+    expect(authCalls).toBe(1);
+    addEntry({ body: "b2", prompt: "p" });
+    await vi.advanceTimersByTimeAsync(DIRTY_DEBOUNCE_MS);
+    expect(authCalls).toBe(2);
+    vi.useRealTimers();
+  });
+});
+
+describe("tombstone pruning", () => {
+  it("keeps a delete made while the push was in flight", async () => {
+    // Old enough to be pruned, so the pass rewrites the tombstone list.
+    store.set(
+      "mindfulverse.journal.deleted.v1",
+      JSON.stringify([{ deletedAt: 1, id: "long-gone" }])
+    );
+    const entry = addEntry({ body: "b", prompt: "p" });
+    duringPush = () => deleteEntry(entry.id);
+
+    await syncNow();
+
+    expect(getTombstones().map((t) => t.id)).toStrictEqual([entry.id]);
+    expect(getEntries()).toStrictEqual([]);
   });
 });

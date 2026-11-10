@@ -171,14 +171,11 @@ export default function FollowUpCard({
       aria-label="Follow-up"
       className={`card followup${phase === "kept" ? "" : " fade-rise"}${fading ? " leaving" : ""}`}
     >
-      <p aria-live="polite" className="followup-sr">
-        {phase === "kept" ? "Kept. May it stay with you." : ""}
-      </p>
       {phase === "kept" ? (
         <p
           ref={keptRef}
           tabIndex={-1}
-          aria-hidden="true"
+          role="status"
           className="soft"
           style={{ margin: 0, outline: "none" }}
         >

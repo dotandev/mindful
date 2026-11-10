@@ -1,5 +1,5 @@
 // Dirty-state bridge between the storage modules (journal/progress) and the
-// sync engine — its own module so journal.ts never imports sync.ts (no cycle).
+// sync engine — its own module so journal.ts never imports sync/engine.ts (no cycle).
 const DIRTY_KEY = "mindfulverse.sync.dirty.v1"; // "1" when a push is pending
 
 let listener: (() => void) | null = null;

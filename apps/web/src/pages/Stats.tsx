@@ -259,7 +259,7 @@ export default function Stats() {
   const resetTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    document.title = "Your progress | MindfulVerse";
+    document.title = "Your numbers | MindfulVerse";
   }, []);
 
   async function copyStats() {

@@ -29,24 +29,12 @@
 
   /* Motion — Emil Kowalski's curves. UI motion stays under 300ms. */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 
   /* Backward-compatible aliases so existing components inherit the identity. */
-  --paper: var(--cotton);
-  --paper-raised: var(--cotton-raised);
-  --lapis: var(--indigo);
-  --lapis-soft: var(--indigo-wash);
-  --gold: var(--kola);
-  --garnet: var(--kola);
-  --bg: var(--cotton);
   --surface: var(--cotton-raised);
   --surface-2: var(--shea);
-  --accent: var(--indigo);
-  --accent-soft: var(--indigo-wash);
   --radius: 4px;
-  --shadow: none;
-  --font-ui: var(--font-read);
 
   /* The adire band — dye-resist diamonds, drawn once, used as the one ornament. */
   /* Dyed cloth: deep indigo ground with faint resist motifs (mobile src/ui/adire.tsx). */
@@ -191,7 +179,7 @@ html {
   top: -120px;
   left: 20px;
   background: var(--indigo);
-  color: #fff;
+  color: var(--cotton-raised);
   padding: 8px 16px;
   font-weight: 600;
   border-radius: var(--radius);
@@ -469,11 +457,6 @@ p.eyebrow + h1 {
   justify-content: space-between;
   gap: 16px;
 }
-.sheet-head .arabic {
-  font-size: 1.55rem;
-  line-height: 1.8;
-  margin: 0;
-}
 .sheet-close {
   flex: none;
   background: var(--shea);
@@ -648,15 +631,6 @@ p.eyebrow + h1 {
 .notice-wash p {
   margin: 0;
 }
-/* Journal empty state: quiet, centered, minimal. */
-.empty-quiet {
-  text-align: center;
-  padding: 40px 20px;
-}
-.empty-quiet p {
-  max-width: 44ch;
-  margin: 0 auto 6px;
-}
 @keyframes fade {
   from {
     opacity: 0;
@@ -766,40 +740,6 @@ p.eyebrow + h1 {
 .ayah-end {
   color: var(--indigo);
   white-space: nowrap;
-}
-
-/* --- Read index: juz rows --- */
-.juz-card {
-  display: block;
-}
-.juz-main {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: var(--ink);
-}
-.juz-opening {
-  font-family: var(--font-arabic);
-  color: var(--indigo-deep);
-  font-size: 1.25rem;
-  line-height: 1.8;
-  flex: none;
-  max-width: 45%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.juz-range {
-  font-size: 0.9rem;
-}
-.juz-range > span {
-  white-space: nowrap;
-}
-.juz-hizbs {
-  display: flex;
-  gap: 16px;
-  margin: 8px 0 0;
-  font-size: 0.92rem;
 }
 
 /* ============================================================================

@@ -53,7 +53,7 @@ function variantStyle(v: TextVariant, c: Colors): TextStyle {
   }
 }
 
-/** Latin text in Fraunces. `variant` mirrors the web's h1/h2/.eyebrow/.soft/
+/** Latin text in Outfit (Literata for translations). `variant` mirrors the web's h1/h2/.eyebrow/.soft/
  *  .muted/.translation; `scale` multiplies size for the reader's A/A/A control. */
 export function Text({
   variant = "body",

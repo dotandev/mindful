@@ -28,6 +28,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import FeedbackLink from "../components/FeedbackLink";
+import { coveringAyah } from "../lib/tafsirCovering";
 import { usePrefersReducedMotion } from "../lib/usePrefersReducedMotion";
 
 // Motion helpers — transform + opacity only, all under 400ms. No index.css edits.
@@ -420,6 +421,9 @@ function StepView({ step, reduce }: { step: SessionStep; reduce: boolean }) {
 
 interface TafsirEntry {
   verseKey: string;
+  /** The ayah the commentary is stored under: the verse itself, or the first
+   *  verse of the passage that covers it. */
+  source: number;
   text: string;
 }
 type TafsirStatus =
@@ -492,11 +496,19 @@ function TafsirDisclosure({ verseKeys }: { verseKeys: string[] }) {
       const maps = await Promise.all(surahs.map((s) => loadSurahTafsir(s)));
       const bySurah = new Map(surahs.map((s, i) => [s, maps[i]]));
       const entries: TafsirEntry[] = [];
+      // Two verses of one passage share an entry; show it once.
+      const shown = new Set<string>();
       for (const vk of verseKeys) {
         const { surah, ayah } = parseVerseKey(vk);
-        const text = bySurah.get(surah)?.[String(ayah)];
-        if (text) {
-          entries.push({ text, verseKey: vk });
+        const map = bySurah.get(surah) ?? {};
+        // Integer keys come back in ascending order.
+        const indexed = Object.keys(map).map(Number);
+        const source = coveringAyah(indexed, ayah);
+        const text = source === null ? undefined : map[String(source)];
+        const id = `${surah}:${source}`;
+        if (source !== null && text && !shown.has(id)) {
+          shown.add(id);
+          entries.push({ source, text, verseKey: vk });
         }
       }
       setStatus({ entries, kind: "ready" });
@@ -537,6 +549,7 @@ function TafsirDisclosure({ verseKeys }: { verseKeys: string[] }) {
                     <span className="eyebrow">
                       {surahName ? `${surahName} ` : ""}
                       {e.verseKey}
+                      {e.source === ayah ? "" : ` (with verse ${e.source})`}
                     </span>
                     <span className="rule" />
                   </div>

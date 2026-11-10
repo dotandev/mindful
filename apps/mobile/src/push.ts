@@ -1,7 +1,6 @@
 import { insforge } from "@mindfulverse/core/sync/insforge";
 // Daily-reminder registration for native, mirroring apps/web/src/lib/push.ts
-// (same function names and results) over the Phase 3 contract
-// (docs/superpowers/plans/2026-10-06-rn-phase3-push-platform.md):
+// (same function names and results) over the Phase 3 contract:
 // one push_subscriptions row per device+account, endpoint = Expo push token,
 // platform = 'expo', keys omitted, user_id defaulted by the server.
 //
@@ -10,13 +9,14 @@ import { insforge } from "@mindfulverse/core/sync/insforge";
 //   - FCM: google-services.json referenced by `android.googleServicesFile`
 //     (app.config.js: the GOOGLE_SERVICES_JSON EAS file env var, or the local
 //     file), plus an FCM V1 service-account key uploaded to EAS credentials;
-//   - the Phase 3 migration + send-reminders deploy ("Apply later").
+//   - the push_subscriptions migration and the send-reminders function applied
+//     to the InsForge project.
 // pushSupport() is "not-configured" until android.googleServicesFile is set
 // (without it getExpoPushTokenAsync fails on Android with "Default FirebaseApp
 // is not initialized"), and "no-project" without a project id. iOS is not
 // shipping yet: its APNs setup can't be detected from app config, so it is
-// "not-configured" too. ReminderSection shows its "not in this version yet"
-// copy for anything but "ok"; enableReminder() returns a friendly error.
+// "not-configured" too. For anything but "ok", ReminderSection schedules the
+// reminder on the phone instead (localReminder.ts).
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
@@ -50,6 +50,8 @@ export function pushSupport(): PushSupport {
   return fcmConfigured() ? "ok" : "not-configured";
 }
 
+/** The OS prompt was dismissed or refused. Callers compare against it. */
+export const NOT_ALLOWED = "Notifications were not allowed.";
 const NOT_AVAILABLE_MESSAGE =
   "Reminders aren’t available in this version of the app yet.";
 const TOKEN_FAILED_MESSAGE =
@@ -92,7 +94,7 @@ async function obtainToken(): Promise<TokenResult> {
     ({ status } = await Notifications.requestPermissionsAsync());
   }
   if (status !== "granted") {
-    return { error: "Notifications were not allowed.", token: null };
+    return { error: NOT_ALLOWED, token: null };
   }
   try {
     const { data } = await Notifications.getExpoPushTokenAsync({

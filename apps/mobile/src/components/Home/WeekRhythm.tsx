@@ -8,7 +8,6 @@ export function WeekRhythm({ rhythm }: { rhythm: RhythmView }) {
   return (
     <Text
       variant="soft"
-      accessibilityLabel={rhythm.label}
       style={{ fontSize: 14.5, lineHeight: 20, marginTop: space.sm }}
     >
       {rhythm.line}

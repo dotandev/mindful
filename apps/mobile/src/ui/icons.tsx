@@ -127,33 +127,6 @@ export function TadabburIcon({
   );
 }
 
-/** Dhikr: a ring of prayer beads. */
-export function DhikrIcon({
-  color,
-  size = 24,
-}: {
-  color: string;
-  size?: number;
-}) {
-  const beads = Array.from({ length: 11 }, (_, i) => {
-    const a = (i / 11) * Math.PI * 2 - Math.PI / 2;
-    return [12 + Math.cos(a) * 7.6, 11 + Math.sin(a) * 7.6] as const;
-  });
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24">
-      {beads.map(([x, y], i) => (
-        <Circle key={i} cx={x} cy={y} r={1.35} fill={color} />
-      ))}
-      <Path
-        d="M12 18.6 V22.6 M10.6 22.6 H13.4"
-        stroke={color}
-        strokeWidth={STROKE}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
 /** A chevron for rows that open somewhere. */
 export function ChevronIcon({
   color,

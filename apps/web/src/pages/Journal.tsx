@@ -194,6 +194,10 @@ export default function Journal() {
   const [status, setStatus] = useState<SyncStatus>(getSyncStatus());
 
   useEffect(() => {
+    document.title = "Journal | MindfulVerse";
+  }, []);
+
+  useEffect(() => {
     setEntries(getEntries());
     loadSessions()
       .then((list) =>
@@ -224,6 +228,7 @@ export default function Journal() {
   const [exportError, setExportError] = useState<string | null>(null);
 
   const groups = groupEntries(entries);
+  const syncLabel = statusLabel(status);
 
   function remove(id: string) {
     deleteEntry(id);
@@ -289,31 +294,22 @@ export default function Journal() {
     <div className="stack">
       <header>
         <h1>Your reflections</h1>
-        {user && (
+        {user && syncLabel !== "" && (
           <p className="muted" style={{ marginTop: 0 }}>
-            Backed up to your account.
+            {syncLabel}
           </p>
         )}
       </header>
 
       {entries.length > 0 && (
         <div className="stack" style={{ marginTop: 4 }}>
-          {/* Signed in, the line only exists to carry the sync status — skip
-              it entirely when there is no wording for the current status. */}
-          {!loading &&
-            (entries.length >= 3 || user) &&
-            (!user || statusLabel(status) !== "") && (
-              <p className="soft" style={{ fontSize: ".92rem", margin: 0 }}>
-                {user ? (
-                  statusLabel(status)
-                ) : (
-                  <>
-                    Entries live only on this device.{" "}
-                    <Link to="/account">Sign in</Link> to back them up.
-                  </>
-                )}
-              </p>
-            )}
+          {/* Signed in, the sync status sits under the heading instead. */}
+          {!loading && !user && entries.length >= 3 && (
+            <p className="soft" style={{ fontSize: ".92rem", margin: 0 }}>
+              Entries live only on this device.{" "}
+              <Link to="/account">Sign in</Link> to back them up.
+            </p>
+          )}
           <div className="journal-export">
             <button
               type="button"
