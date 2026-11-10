@@ -15,11 +15,17 @@ import { insforge } from "@mindfulverse/core/sync/insforge";
 // (without it getExpoPushTokenAsync fails on Android with "Default FirebaseApp
 // is not initialized"), and "no-project" without a project id. iOS is not
 // shipping yet: its APNs setup can't be detected from app config, so it is
-// "not-configured" too. For anything but "ok", ReminderSection schedules the
-// reminder on the phone instead (localReminder.ts).
+// "not-configured" too. For anything but "ok", the reminder is scheduled on
+// the phone instead (localReminder.ts).
+// Push being configured does not mean it delivers. When enableReminder() fails,
+// or succeeds without the test push going out (`welcomed` false), reminder.ts
+// also schedules the on-device reminder as a backstop. The first daily verse
+// push that arrives cancels the backstop.
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+
+import { NOT_ALLOWED } from "./reminderModel";
 
 const TOKEN_KEY = "mindfulverse.expoPushToken.v1";
 // send-reminders sets no channelId, and Expo delivers those to the "default"
@@ -50,8 +56,6 @@ export function pushSupport(): PushSupport {
   return fcmConfigured() ? "ok" : "not-configured";
 }
 
-/** The OS prompt was dismissed or refused. Callers compare against it. */
-export const NOT_ALLOWED = "Notifications were not allowed.";
 const NOT_AVAILABLE_MESSAGE =
   "Reminders aren’t available in this version of the app yet.";
 const TOKEN_FAILED_MESSAGE =

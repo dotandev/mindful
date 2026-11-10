@@ -2,6 +2,8 @@
 // labels match web exactly. (Share text lives in src/share.ts.)
 import type { Ayah } from "@mindfulverse/core/types";
 
+import { coveringFromIndex } from "../Tadabbur/logic";
+
 /** Per-surah list of ayahs that carry a direct Ibn Kathir entry. */
 export type TafsirIndex = Record<string, number[]>;
 
@@ -16,18 +18,7 @@ export function showsBasmalah(surah: number): boolean {
 /** Ibn Kathir comments on passages: a run of ayahs stores its commentary under
  *  the first ayah of the group. Find the entry covering this ayah. */
 export function coveringFor(index: TafsirIndex | null, a: Ayah): number | null {
-  if (!index) {
-    return null;
-  }
-  let best: number | null = null;
-  for (const n of index[String(a.surah)] ?? []) {
-    if (n <= a.ayah) {
-      best = n;
-    } else {
-      break;
-    }
-  }
-  return best;
+  return index ? coveringFromIndex(index[String(a.surah)] ?? [], a.ayah) : null;
 }
 
 export function commentaryLabel(index: TafsirIndex | null, a: Ayah): string {
@@ -47,13 +38,6 @@ export function commentaryTitle(a: Ayah, source: number): string {
   return source === a.ayah
     ? `Ibn Kathir · ${a.surah}:${a.ayah}`
     : `Ibn Kathir · on the passage from ${a.surah}:${source}`;
-}
-
-export function splitParagraphs(text: string | null): string[] {
-  return (text ?? "")
-    .split("\n\n")
-    .map((p) => p.trim())
-    .filter(Boolean);
 }
 
 /** A `?v=` param as an ayah number, or null when absent/invalid. */

@@ -7,7 +7,6 @@ import {
   coveringFor,
   parseVerseParam,
   showsBasmalah,
-  splitParagraphs,
 } from "./commentary";
 
 const a = (surah: number, ayah: number): Ayah => ({
@@ -43,11 +42,6 @@ describe("commentary helpers (ported from web)", () => {
     expect(commentaryTitle(a(2, 7), 6)).toBe(
       "Ibn Kathir · on the passage from 2:6"
     );
-  });
-
-  it("splits tafsir into paragraphs", () => {
-    expect(splitParagraphs(" one \n\n\n\ntwo")).toStrictEqual(["one", "two"]);
-    expect(splitParagraphs(null)).toStrictEqual([]);
   });
 
   it("basmalah opens every surah but 1 and 9", () => {

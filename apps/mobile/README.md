@@ -80,6 +80,8 @@ npm run doctor -w @mindfulverse/mobile         # expo-doctor
 
 When `pushSupport()` is anything but `"ok"`, the reminder is scheduled on the phone instead (`src/localReminder.ts`): a daily local notification at the chosen time that opens `/checkin`. It works offline but cannot carry the day's verse text.
 
+The on-device reminder is also a backstop when push is configured but may not be delivering. If turning the reminder on fails to register for push, or registers but the test push does not go out, the on-device reminder is scheduled as well (`src/reminder.ts`, decisions in `src/reminderModel.ts`). Changing the time updates both and turning off cancels both. The first daily verse push that reaches the phone cancels the backstop, so only one reminder shows from then on.
+
 Status:
 
 1. **Firebase project** `mindfulverse-824bd` with Android app `dev.mindfulverse.app`: done. `google-services.json` is in `apps/mobile/` (gitignored) and uploaded to EAS as the secret file `GOOGLE_SERVICES_JSON` (development, preview, production).

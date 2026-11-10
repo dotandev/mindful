@@ -5,11 +5,12 @@ import { loadSurahTafsir, parseVerseKey } from "@mindfulverse/core/data";
 import { useState } from "react";
 import { View } from "react-native";
 
+import { splitParagraphs } from "../../text";
 import { radius, space, useTheme } from "../../theme";
 import { Diamond, Text } from "../../ui";
 import { ActionLink } from "../Reader/ActionLink";
 import { coveringFromIndex } from "../Tadabbur/logic";
-import { excerptCount, splitParagraphs, verseLabel } from "./logic";
+import { excerptCount, verseLabel } from "./logic";
 
 interface TafsirEntry {
   verseKey: string;

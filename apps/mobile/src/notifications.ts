@@ -5,11 +5,17 @@
 // web's), so a tap just pushes the URL. Both entry points are covered:
 //   - cold start: the response that launched the app (getLastNotificationResponse);
 //   - warm: addNotificationResponseReceivedListener.
+// A daily verse push that arrives (seen while the app runs, tapped, or still
+// in the tray at launch) proves push works on this phone, so the on-device
+// backstop reminder is dropped (reminder.ts).
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import type { Href } from "expo-router";
 import { useEffect } from "react";
 import { Platform } from "react-native";
+
+import { pushProvenWorking } from "./reminder";
+import { isServerDailyVerse } from "./reminderModel";
 
 // Foreground presentation. shouldShowAlert is deprecated in SDK 57 (F5).
 Notifications.setNotificationHandler({
@@ -30,6 +36,15 @@ export function routeForNotification(data: unknown): string | null {
   return url;
 }
 
+function notePush(notification: Notifications.Notification): void {
+  const { content, trigger } = notification.request;
+  const viaPush =
+    trigger !== null && "type" in trigger && trigger.type === "push";
+  if (isServerDailyVerse({ data: content.data, viaPush })) {
+    void pushProvenWorking().catch(() => {});
+  }
+}
+
 const handled = new Set<string>();
 
 function open(response: Notifications.NotificationResponse | null): void {
@@ -47,6 +62,7 @@ function open(response: Notifications.NotificationResponse | null): void {
     return;
   } // cold-start response can also reach the listener
   handled.add(key);
+  notePush(response.notification);
   // Forget it natively too: `handled` lives in JS memory, so after a JS reload
   // (dev reload, an update) getLastNotificationResponse() would return the same
   // tap again and re-route. Best effort (SDK 57: clearLastNotificationResponse;
@@ -70,6 +86,18 @@ export function useNotificationRouting(): void {
     } // the browser design preview has no notifications
     open(Notifications.getLastNotificationResponse());
     const sub = Notifications.addNotificationResponseReceivedListener(open);
-    return () => sub.remove();
+    const received = Notifications.addNotificationReceivedListener(notePush);
+    // Pushes delivered while the app was closed never reach the listener.
+    void Notifications.getPresentedNotificationsAsync()
+      .then((shown) => {
+        for (const notification of shown) {
+          notePush(notification);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      sub.remove();
+      received.remove();
+    };
   }, []);
 }

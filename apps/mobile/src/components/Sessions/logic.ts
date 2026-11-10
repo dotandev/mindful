@@ -52,13 +52,6 @@ export function resumeStepFor(
   return Math.min(p.step, stepCount - 1);
 }
 
-export function splitParagraphs(text: string): string[] {
-  return text
-    .split("\n\n")
-    .map((p) => p.trim())
-    .filter(Boolean);
-}
-
 /** How many whole paragraphs open a long commentary: up to ~700 chars, at
  *  least one, never cut mid-paragraph and never rewritten. */
 export function excerptCount(paragraphs: string[]): number {
