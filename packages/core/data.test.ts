@@ -14,6 +14,7 @@ import {
   loadSessions,
   loadEmotions,
   loadDivisions,
+  loadAyahsByKeys,
 } from "./data";
 
 describe(configureData, () => {
@@ -145,5 +146,39 @@ describe(configureData, () => {
     // Other files are never evicted.
     await loadSurahAyahs(3);
     expect(reads).toHaveLength(5);
+  });
+});
+
+describe(loadAyahsByKeys, () => {
+  it("reads each surah once, together, and returns the requested order", async () => {
+    const reads: string[] = [];
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    configureData(async (path) => {
+      reads.push(path);
+      await gate;
+      const surah = Number(path.slice("quran/".length, -".json".length));
+      return [1, 2, 3].map((ayah) => ({
+        ayah,
+        surah,
+        verseKey: `${surah}:${ayah}`,
+      }));
+    });
+    const pending = loadAyahsByKeys(["41:3", "40:1", "41:1", "42:2"]);
+    await Promise.resolve();
+    // All three surahs are requested before any of them resolves.
+    expect(reads).toStrictEqual([
+      "quran/41.json",
+      "quran/40.json",
+      "quran/42.json",
+    ]);
+    release();
+    const ayahs = await pending;
+    expect(ayahs.map((a) => a.verseKey)).toStrictEqual([
+      "41:3",
+      "40:1",
+      "41:1",
+      "42:2",
+    ]);
   });
 });

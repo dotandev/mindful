@@ -15,13 +15,14 @@ export function localDay(now: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-function randomId(): string {
+/** A UUID, with a fallback where crypto.randomUUID is missing. */
+export function randomId(): string {
   const host = globalThis as { crypto?: Partial<Crypto> };
   if (typeof host.crypto?.randomUUID === "function") {
     return host.crypto.randomUUID();
   }
   // Older browsers (Safari < 15.4) and plain-http dev hosts lack randomUUID;
-  // a weak id only risks two installs merging in the counts.
+  // a weak id only risks a rare collision.
   return UUID_V4_TEMPLATE.replaceAll(/[xy]/gu, (ch) => {
     const r = Math.floor(Math.random() * HEX_RADIX);
     // oxlint-disable-next-line no-bitwise -- UUID v4 variant bits

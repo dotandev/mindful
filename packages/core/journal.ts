@@ -1,5 +1,7 @@
+import { randomId } from "./installId";
 import { markJournalDirty } from "./syncFlags";
-// Local-only journal (v0 has no accounts or sync). Persists to localStorage.
+// The journal's local store (localStorage). sync/engine.ts backs it up when
+// signed in.
 import type { JournalEntry, JournalTombstone } from "./types";
 
 const KEY = "mindfulverse.journal.v1";
@@ -86,7 +88,7 @@ export function addEntry(
   const entry: JournalEntry = {
     ...input,
     createdAt: Date.now(),
-    id: crypto.randomUUID(),
+    id: randomId(),
   };
   const all = readAll();
   all.push(entry);
@@ -108,11 +110,13 @@ export function checkedInToday(now = new Date()): boolean {
 }
 
 export function deleteEntry(id: string): void {
-  writeAll(readAll().filter((e) => e.id !== id));
+  // Tombstone first: if this write fails the entry stays, rather than being
+  // removed with no marker and restored by the next sync.
   const tombs = getTombstones();
   if (!tombs.some((t) => t.id === id)) {
     tombs.push({ deletedAt: Date.now(), id });
     localStorage.setItem(TOMBSTONES_KEY, JSON.stringify(tombs));
   }
+  writeAll(readAll().filter((e) => e.id !== id));
   markJournalDirty();
 }

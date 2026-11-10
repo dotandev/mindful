@@ -25,7 +25,7 @@ export interface DueFollowUp {
   entry: JournalEntry;
   kind: FollowUpKind;
   ref: string;
-  /** Same as `ref`; kept for callers written before session follow-ups. */
+  /** Same as `ref`; the follow-up cards read this name. */
   verseKey: string;
   action: string;
 }
