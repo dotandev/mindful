@@ -4,15 +4,11 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 
 import { useShareVerse } from "../../share";
+import { splitParagraphs } from "../../text";
 import { space, useTheme } from "../../theme";
 import { ArabicText, Sheet, Text } from "../../ui";
 import { ActionLink } from "./ActionLink";
-import {
-  commentaryLabel,
-  commentaryTitle,
-  coveringFor,
-  splitParagraphs,
-} from "./commentary";
+import { commentaryLabel, commentaryTitle, coveringFor } from "./commentary";
 import type { TafsirIndex } from "./commentary";
 import type { Tafsir } from "./useTafsir";
 

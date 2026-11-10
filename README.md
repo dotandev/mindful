@@ -22,13 +22,13 @@ All Qur'an text, translation, and commentary are shown exactly as they are. The 
 
 ## Screenshots
 
-| Home | Reader | Daily check-in |
+| Home | A surah, verse by verse | Reader |
 | --- | --- | --- |
-| ![Home](docs/screenshots/home.png) | ![Reader](docs/screenshots/reader.png) | ![Daily check-in](docs/screenshots/checkin.png) |
+| ![Home](docs/screenshots/home.png) | ![A surah, verse by verse](docs/screenshots/surah.png) | ![Reader](docs/screenshots/reader.png) |
 
-| Tadabbur sessions | Browse by theme | Dhikr and breath |
+| Tadabbur | Circles | Daily check-in |
 | --- | --- | --- |
-| ![Tadabbur sessions](docs/screenshots/sessions.png) | ![Browse by theme](docs/screenshots/themes.png) | ![Dhikr and breath](docs/screenshots/dhikr.png) |
+| ![Tadabbur](docs/screenshots/sessions.png) | ![Circles](docs/screenshots/circles.png) | ![Daily check-in](docs/screenshots/checkin.png) |
 
 ## Run it
 

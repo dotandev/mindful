@@ -24,6 +24,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { Diamond, DyeRule, TitlePlate } from "../components/Adire";
+import BackLink from "../components/BackLink";
 import IntentionField from "../components/IntentionField";
 import { coveringAyah } from "../lib/tafsirCovering";
 
@@ -649,7 +650,7 @@ function SurahTadabburPage() {
           <p className="muted">That surah doesn’t exist.</p>
           <div>
             <Link to="/sessions" className="btn secondary">
-              Back to tadabbur
+              Tadabbur
             </Link>
           </div>
         </div>
@@ -673,7 +674,7 @@ function SurahTadabburPage() {
           <p className="muted">Check your connection and try again.</p>
           <div>
             <Link to="/sessions" className="btn secondary">
-              Back to tadabbur
+              Tadabbur
             </Link>
           </div>
         </div>
@@ -695,9 +696,7 @@ function SurahTadabburPage() {
     const hasPage = !surahJournal(getEntries(), surahNumber).isEmpty;
     return (
       <div className="stack">
-        <Link to="/sessions" className="muted back-link">
-          All tadabbur
-        </Link>
+        <BackLink to="/sessions">Tadabbur</BackLink>
         <FadeRise show={mounted} reduce={reduce}>
           <div className="stack">
             <TitlePlate surah={surahNumber} name={name} />
@@ -806,7 +805,7 @@ function SurahTadabburPage() {
               {`See your page on ${name}`}
             </Link>
             <Link to="/sessions" className="btn secondary">
-              Back to tadabbur
+              Tadabbur
             </Link>
           </div>
         </FadeRise>
@@ -820,9 +819,7 @@ function SurahTadabburPage() {
 
   return (
     <div className="stack">
-      <Link to="/sessions" className="muted back-link">
-        All tadabbur
-      </Link>
+      <BackLink to="/sessions">Tadabbur</BackLink>
 
       <p className="eyebrow" aria-live="polite">
         Verse {phase + 1} of {count}

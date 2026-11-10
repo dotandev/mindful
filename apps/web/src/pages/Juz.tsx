@@ -15,20 +15,26 @@ import {
 } from "@mindfulverse/core/readingPrefs";
 import type { ReadView } from "@mindfulverse/core/readingPrefs";
 import type { Ayah, Division } from "@mindfulverse/core/types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
+import BackLink from "../components/BackLink";
 import { CommentarySheet, useTafsir } from "../components/Commentary";
 import type { TafsirIndex } from "../components/Commentary";
 import ReaderTools from "../components/ReaderTools";
 import ReadingText, { BASMALAH } from "../components/ReadingText";
 import VerseBlock from "../components/VerseBlock";
 import VerseSheet from "../components/VerseSheet";
+import { useHoldVerse } from "../lib/useHoldVerse";
 import { useLastReadTracker } from "../lib/useLastReadTracker";
 import NotFound from "./NotFound";
 
+import "./reader.css";
+
 const JUZ_PARAM_RE = /^\d{1,2}$/u;
 const JUZ_COUNT = 30;
+const FLASH_MS = 1600;
+const VERSE_KEY_RE = /^\d+:\d+$/u;
 
 // Keyed on the juz so moving to the next one starts from clean state.
 export default function Juz() {
@@ -117,13 +123,20 @@ function JuzReader() {
     };
   }, [juz]);
 
-  // Deep link (?v=S:A): scroll there in either view and glow briefly.
+  // Deep link (?v=S:A): scroll there once per navigation and glow briefly.
+  // The guard keeps a view switch or a closing sheet from jumping back to it
+  // (this component is keyed on the juz, so the guard resets with it).
+  const jumpedTo = useRef<string | null>(null);
   useEffect(() => {
     if (status !== "ready") {
       return;
     }
     const key = params.get("v");
-    if (!key || !/^\d+:\d+$/u.test(key)) {
+    if (key === jumpedTo.current) {
+      return;
+    }
+    jumpedTo.current = key;
+    if (!key || !VERSE_KEY_RE.test(key)) {
       return;
     }
     const [s, a] = key.split(":").map(Number);
@@ -134,13 +147,22 @@ function JuzReader() {
     el.scrollIntoView({ block: "start" });
     recordLastRead(s, a);
     setFlashKey(key);
-    const t = window.setTimeout(() => setFlashKey(null), 1600);
+  }, [status, params]);
+
+  // The glow on a jumped-to verse fades by itself.
+  useEffect(() => {
+    if (flashKey === null) {
+      return;
+    }
+    const t = window.setTimeout(() => setFlashKey(null), FLASH_MS);
     return () => window.clearTimeout(t);
-  }, [status, params, view]);
+  }, [flashKey]);
 
   useLastReadTracker(status === "ready", null, view);
+  const holdVerse = useHoldVerse(view, null);
 
   function chooseView(v: ReadView) {
+    holdVerse();
     setView(v);
     saveReadView(v);
   }
@@ -172,9 +194,7 @@ function JuzReader() {
   return (
     <div style={{ ["--read-scale" as string]: String(scaleFor(sizeKey)) }}>
       <header style={{ marginBottom: 12 }}>
-        <Link to="/read?tab=juz" className="btn ghost">
-          ← All juz
-        </Link>
+        <BackLink to="/read?tab=juz">All juz</BackLink>
         <p className="eyebrow" style={{ marginTop: 14 }}>
           Juz
         </p>

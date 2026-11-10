@@ -91,6 +91,65 @@ export function mergeJournal(
   };
 }
 
+export interface AdoptResult {
+  entries: JournalEntry[];
+  /** Old id to new id, for every entry whose id changed. */
+  idMap: Map<string, string>;
+}
+
+const contentKey = (createdAt: number, prompt: string, body: string): string =>
+  JSON.stringify([createdAt, prompt, body]);
+
+/**
+ * Re-key local entries so they can be pushed into the account now signed in.
+ * Entry ids are a global primary key, so an entry first synced under another
+ * account can never be inserted again under its old id. An entry the account
+ * already holds keeps its id; one with the same time, prompt and body as an
+ * account row takes that row's id (no duplicate after switching back and
+ * forth); every other entry gets a fresh id. Follow-up answers point at an
+ * entry id through context.ref and are remapped to match.
+ */
+export function adoptEntries(
+  local: JournalEntry[],
+  remote: RemoteJournalRow[],
+  newId: () => string
+): AdoptResult {
+  const remoteIds = new Set(remote.map((r) => r.id));
+  const byContent = new Map<string, string>();
+  for (const row of remote) {
+    const key = contentKey(row.created_at, row.prompt, row.body);
+    if (!byContent.has(key)) {
+      byContent.set(key, row.id);
+    }
+  }
+  const idMap = new Map<string, string>();
+  for (const e of local) {
+    if (!remoteIds.has(e.id)) {
+      const twin = byContent.get(contentKey(e.createdAt, e.prompt, e.body));
+      idMap.set(e.id, twin ?? newId());
+    }
+  }
+  const seen = new Set<string>();
+  const entries: JournalEntry[] = [];
+  for (const e of local) {
+    const id = idMap.get(e.id) ?? e.id;
+    if (seen.has(id)) {
+      continue;
+    }
+    seen.add(id);
+    const ref =
+      e.context?.kind === "followup" && e.context.ref
+        ? idMap.get(e.context.ref)
+        : undefined;
+    entries.push({
+      ...e,
+      id,
+      ...(e.context && ref ? { context: { ...e.context, ref } } : {}),
+    });
+  }
+  return { entries, idMap };
+}
+
 /** Tombstones are kept this long before they become eligible for pruning. */
 export const TOMBSTONE_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 

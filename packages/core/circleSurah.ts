@@ -49,3 +49,12 @@ export function setCircleSurah(
   }
   return surah;
 }
+
+/** Forgets the circle's surah. Storage errors are ignored. */
+export function clearCircleSurah(): void {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // storage blocked: nothing to forget
+  }
+}

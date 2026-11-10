@@ -160,11 +160,15 @@ export const DAILY_VERSES: string[] = [
   "108:2",
 ];
 
-/** Days since epoch, local time — flips at the user's own midnight. */
-function localDayIndex(): number {
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return Math.floor(startOfDay.getTime() / 86_400_000);
+const MS_PER_DAY = 86_400_000;
+
+/** Days since epoch of the reader's local calendar date. Counts dates, not
+ *  local midnights, so a DST change never repeats or skips a day.
+ *  functions/send-reminders.ts localDayIndexInZone must give the same number. */
+export function localDayIndex(now: Date = new Date()): number {
+  return (
+    Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / MS_PER_DAY
+  );
 }
 
 /** Where this person's walk through the pool starts: FNV-1a of their seed. */

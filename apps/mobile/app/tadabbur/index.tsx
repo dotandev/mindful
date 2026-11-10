@@ -165,7 +165,7 @@ export default function TadabburPicker() {
 
   return (
     <View style={{ backgroundColor: colors.cotton, flex: 1 }}>
-      <Stack.Screen options={{ title: "By surah" }} />
+      <Stack.Screen options={{ title: "Tadabbur" }} />
       <FlatList
         data={status === "ready" ? filtered : []}
         extraData={pondered}

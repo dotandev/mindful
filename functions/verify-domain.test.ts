@@ -27,6 +27,18 @@ const wwwPrivateResolver = (host: string) =>
     host === "www.example.com" ? ["10.0.0.5"] : ["93.184.216.34"]
   );
 const emptyResolver = () => Promise.resolve([]);
+const wwwOnlyResolver = (host: string) =>
+  Promise.resolve(host === "www.example.com" ? ["93.184.216.34"] : []);
+const wwwOnlyThrowingResolver = (host: string) =>
+  host === "www.example.com"
+    ? Promise.resolve(["93.184.216.34"])
+    : Promise.reject(new Error("dns"));
+const apexEmptyWwwPrivateResolver = (host: string) =>
+  Promise.resolve(host === "www.example.com" ? ["10.0.0.5"] : []);
+const apexPrivateWwwPublicResolver = (host: string) =>
+  Promise.resolve(
+    host === "www.example.com" ? ["93.184.216.34"] : ["10.0.0.5"]
+  );
 const brokenResolver = () => Promise.reject(new Error("dns"));
 
 const respond = (body: string, status = 200): Response =>
@@ -340,6 +352,36 @@ describe(checkDomain, () => {
     ).resolves.toBeFalsy();
     await expect(
       checkDomain("example.com", TOKEN, fetchFn, brokenResolver)
+    ).resolves.toBeFalsy();
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it.each([wwwOnlyResolver, wwwOnlyThrowingResolver])(
+    "verifies a www-only site when the apex has no address",
+    async (resolver) => {
+      const fetchFn = vi.fn<typeof fetch>(() =>
+        Promise.resolve(respond(TOKEN))
+      );
+      await expect(
+        checkDomain("example.com", TOKEN, fetchFn, resolver)
+      ).resolves.toBeTruthy();
+      const urls = fetchFn.mock.calls.map((call) => String(call[0]));
+      expect(urls).toStrictEqual([WWW_FILE_URL]);
+    }
+  );
+
+  it("refuses a www-only site whose www resolves privately", async () => {
+    const fetchFn = vi.fn<typeof fetch>(() => Promise.resolve(respond(TOKEN)));
+    await expect(
+      checkDomain("example.com", TOKEN, fetchFn, apexEmptyWwwPrivateResolver)
+    ).resolves.toBeFalsy();
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("refuses a private apex even when www is public", async () => {
+    const fetchFn = vi.fn<typeof fetch>(() => Promise.resolve(respond(TOKEN)));
+    await expect(
+      checkDomain("example.com", TOKEN, fetchFn, apexPrivateWwwPublicResolver)
     ).resolves.toBeFalsy();
     expect(fetchFn).not.toHaveBeenCalled();
   });

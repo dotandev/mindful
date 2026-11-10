@@ -27,6 +27,7 @@ import {
 import type { ExportInput } from "../lib/journalExport";
 
 import "./journal-empty.css";
+import "./surah-journal.css";
 
 const VERSE_KEY_RE = /^\d{1,3}:\d{1,3}$/u;
 

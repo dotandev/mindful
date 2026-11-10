@@ -3,54 +3,23 @@ import * as Notifications from "expo-notifications";
 // Daily verse reminder: enable at a chosen time, change the time, turn off.
 // Ported from web's Account.tsx over src/push.ts (same results). Native
 // differences: no "install to Home Screen" / unsupported-browser branches;
-// instead a build without push (pushSupport() other than "ok") schedules the
-// reminder on the phone itself (localReminder.ts), and a permission the OS
-// will no longer prompt for can only be fixed in Settings.
+// the phone's own schedule stands in or backs push up (src/reminder.ts), and
+// a permission the OS will no longer prompt for can only be fixed in Settings.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Linking, View } from "react-native";
 
 import {
-  disableLocalReminder,
-  enableLocalReminder,
-  getLocalReminder,
-} from "../../localReminder";
-import {
-  disableReminder,
-  enableReminder,
-  getReminder,
-  NOT_ALLOWED,
-  pushSupport,
-  updateReminderTime,
-} from "../../push";
+  changeReminderTime,
+  currentReminder,
+  turnReminderOff,
+  turnReminderOn,
+} from "../../reminder";
+import { NOT_ALLOWED } from "../../reminderModel";
 import { space } from "../../theme";
 import { Button } from "../../ui";
 import { DEFAULT_REMINDER_TIME, notificationsBlocked } from "./logic";
 import { FormError, LinkButton, Section, Small } from "./parts";
 import { TimeStepper } from "./TimeStepper";
-
-interface ReminderApi {
-  get: () => Promise<{ time: string } | null>;
-  enable: (
-    time: string
-  ) => Promise<{ error: string | null; welcomed?: boolean }>;
-  update: (time: string) => Promise<{ error: string | null }>;
-  disable: () => Promise<{ error: string | null }>;
-}
-
-// Push from the server when this build has it; otherwise the phone's own
-// daily schedule, so the reminder works either way.
-const PUSH: ReminderApi = {
-  disable: disableReminder,
-  enable: enableReminder,
-  get: getReminder,
-  update: updateReminderTime,
-};
-const LOCAL: ReminderApi = {
-  disable: disableLocalReminder,
-  enable: enableLocalReminder,
-  get: async () => getLocalReminder(),
-  update: enableLocalReminder,
-};
 
 async function permissionBlocked(): Promise<boolean> {
   try {
@@ -61,7 +30,6 @@ async function permissionBlocked(): Promise<boolean> {
 }
 
 export function ReminderSection() {
-  const api = pushSupport() === "ok" ? PUSH : LOCAL;
   const [reminderOn, setReminderOn] = useState(false);
   const [reminderTime, setReminderTime] = useState(DEFAULT_REMINDER_TIME);
   // The time last saved to the subscription; a "Save" appears only when the
@@ -80,12 +48,7 @@ export function ReminderSection() {
 
   useEffect(() => {
     recheckPermission();
-    if (api === PUSH && getLocalReminder()) {
-      // Left over from a build without push: it would fire next to the push.
-      void disableLocalReminder();
-    }
-    api
-      .get()
+    currentReminder()
       .then((r) => {
         if (r && mounted.current) {
           setReminderOn(true);
@@ -103,13 +66,13 @@ export function ReminderSection() {
       }
     });
     return () => sub.remove();
-  }, [api, recheckPermission]);
+  }, [recheckPermission]);
 
   async function turnOn() {
     setBusy(true);
     setError(null);
     try {
-      const { error: failure, welcomed } = await api.enable(reminderTime);
+      const { error: failure, welcomed } = await turnReminderOn(reminderTime);
       if (failure) {
         if (await permissionBlocked()) {
           setBlocked(true);
@@ -123,10 +86,6 @@ export function ReminderSection() {
           setError(failure);
         }
         return;
-      }
-      if (api === PUSH) {
-        // An on-device reminder from an earlier build would fire as a second one.
-        await disableLocalReminder();
       }
       track({ enabled: true, type: "reminder_set" });
       setReminderOn(true);
@@ -145,7 +104,7 @@ export function ReminderSection() {
     setBusy(true);
     setError(null);
     try {
-      const { error: offError } = await api.disable();
+      const { error: offError } = await turnReminderOff();
       if (offError) {
         setError("Couldn't turn it off. Try again.");
         return;
@@ -172,7 +131,7 @@ export function ReminderSection() {
     setBusy(true);
     setError(null);
     try {
-      const { error: failure } = await api.update(reminderTime);
+      const { error: failure } = await changeReminderTime(reminderTime);
       if (failure) {
         return setError(failure);
       }

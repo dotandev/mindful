@@ -210,7 +210,7 @@ export function FinalScreen({
         delay={reduce ? 0 : 120}
         style={{ alignItems: "flex-start" }}
       >
-        <Button kind="ghost" title="Back to all sessions" onPress={onDone} />
+        <Button kind="ghost" title="Tadabbur" onPress={onDone} />
       </FadeRise>
     </>
   );

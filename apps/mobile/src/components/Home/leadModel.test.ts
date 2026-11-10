@@ -8,9 +8,11 @@ import {
   focusLine,
   namedAction,
   namedEyebrow,
+  namedLine,
   starterLabel,
   surahName,
   themePicks,
+  whereYouAre,
 } from "./leadModel";
 
 const session = (id: string): TadabburSession => ({
@@ -144,5 +146,31 @@ describe(starterLabel, () => {
 describe("begin copy", () => {
   it("keeps the agreed line", () => {
     expect(BEGIN_LINE).toContain("with Ibn Kathir");
+  });
+});
+
+describe(whereYouAre, () => {
+  it("places the verse in the surah", () => {
+    expect(whereYouAre(4, { ayahCount: 8 })).toBe("Verse 4 of 8");
+  });
+
+  it("says so when every verse is pondered", () => {
+    expect(whereYouAre(8, { ayahCount: 8 })).toBe(
+      "You’ve pondered all 8 verses."
+    );
+    expect(whereYouAre(9, { ayahCount: 8 })).toBe(
+      "You’ve pondered all 8 verses."
+    );
+  });
+
+  it("still reads well before the surah list has loaded", () => {
+    expect(whereYouAre(4, undefined)).toBe("You’ve pondered up to verse 4.");
+  });
+});
+
+describe(namedLine, () => {
+  it("shows the focus verse or the intro, never both", () => {
+    expect(namedLine(10)).toBe("Focus: verse 10");
+    expect(namedLine(null)).toBe(BEGIN_LINE);
   });
 });

@@ -1,3 +1,4 @@
+import { localDay } from "./installId";
 import { markProgressDirty } from "./syncFlags";
 // Progress: visit streak + tadabbur session completion/resume. Lives in
 // localStorage, mirroring journal.ts; sync/engine.ts backs it up when signed in.
@@ -14,12 +15,7 @@ export interface SessionProgress {
 
 type SessionProgressMap = Record<string, SessionProgress>;
 
-function today(): string {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
-}
+const today = (): string => localDay(new Date());
 
 /** Storage can be blocked or full; a failed write is dropped, never thrown. */
 function safeSet(key: string, value: unknown): boolean {
@@ -66,10 +62,7 @@ export function currentStreak(): number {
     cursor.setDate(cursor.getDate() - 1);
   }
   for (;;) {
-    const m = String(cursor.getMonth() + 1).padStart(2, "0");
-    const day = String(cursor.getDate()).padStart(2, "0");
-    const key = `${cursor.getFullYear()}-${m}-${day}`;
-    if (!visits.has(key)) {
+    if (!visits.has(localDay(cursor))) {
       break;
     }
     streak++;

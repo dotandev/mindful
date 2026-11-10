@@ -156,7 +156,7 @@ function SurahLead({
             to={`/tadabbur/${current.surah}/journal`}
             className="home-lead-quiet"
           >
-            Your page for {name}
+            Your page on {name}
           </Link>
         </div>
       </section>
@@ -393,9 +393,14 @@ export default function Home() {
 
         <div className="home-today">
           {doneToday ? (
-            <p className="soft" style={{ margin: 0 }}>
-              Today’s reflection is saved.
-            </p>
+            <>
+              <p className="soft" style={{ margin: 0 }}>
+                Today’s reflection is saved.
+              </p>
+              <Link to="/checkin" className="link-btn">
+                Open today’s check-in
+              </Link>
+            </>
           ) : (
             <Link to="/checkin" className="btn secondary">
               Reflect on today’s verse

@@ -6,7 +6,6 @@ import {
   resumeStepFor,
   sessionRows,
   sessionState,
-  splitParagraphs,
   stepCountLabel,
   verseLabel,
 } from "./logic";
@@ -84,15 +83,6 @@ describe(excerptCount, () => {
 
   it("takes everything when short", () => {
     expect(excerptCount(["one", "two"])).toBe(2);
-  });
-});
-
-describe(splitParagraphs, () => {
-  it("splits on blank lines and drops empties", () => {
-    expect(splitParagraphs(" one \n\n\n\ntwo\n\n")).toStrictEqual([
-      "one",
-      "two",
-    ]);
   });
 });
 

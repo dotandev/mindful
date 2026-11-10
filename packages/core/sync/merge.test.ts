@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import type { JournalEntry, LocalProgress } from "../types";
 import {
+  adoptEntries,
   mergeJournal,
   mergeProgress,
   rowToEntry,
@@ -62,6 +63,53 @@ describe(mergeJournal, () => {
   it("tombstone for an already-deleted remote row pushes nothing", () => {
     const res = mergeJournal([], [{ deletedAt: 5, id: "a" }], [r("a", 1, 5)]);
     expect(res.toDelete).toStrictEqual([]);
+  });
+});
+
+describe(adoptEntries, () => {
+  const ids = () => {
+    let n = 0;
+    return () => `new-${++n}`;
+  };
+
+  it("gives every entry the account does not hold a fresh id", () => {
+    const res = adoptEntries([e("a", 1), e("b", 2)], [r("b", 2)], ids());
+    expect(res.entries.map((x) => x.id)).toStrictEqual(["new-1", "b"]);
+    expect([...res.idMap]).toStrictEqual([["a", "new-1"]]);
+  });
+
+  it("points follow-up answers at the new id of their entry", () => {
+    const answer: JournalEntry = {
+      ...e("ans", 5),
+      context: { kind: "followup", ref: "a" },
+    };
+    const res = adoptEntries([e("a", 1), answer], [], ids());
+    expect(res.entries[1].context).toStrictEqual({
+      kind: "followup",
+      ref: "new-1",
+    });
+  });
+
+  it("leaves verse and session refs alone", () => {
+    const entry: JournalEntry = {
+      ...e("a", 1),
+      context: { kind: "tadabbur", ref: "2:255" },
+    };
+    const res = adoptEntries([entry], [], ids());
+    expect(res.entries[0].context).toStrictEqual({
+      kind: "tadabbur",
+      ref: "2:255",
+    });
+  });
+
+  it("reuses the id of an account row with the same time, prompt and body", () => {
+    const res = adoptEntries([e("a", 7)], [r("mine", 7)], ids());
+    expect(res.entries.map((x) => x.id)).toStrictEqual(["mine"]);
+  });
+
+  it("drops a local copy of an entry the device already holds", () => {
+    const res = adoptEntries([e("mine", 7), e("a", 7)], [r("mine", 7)], ids());
+    expect(res.entries.map((x) => x.id)).toStrictEqual(["mine"]);
   });
 });
 

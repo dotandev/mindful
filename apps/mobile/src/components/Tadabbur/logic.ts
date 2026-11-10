@@ -2,6 +2,8 @@
 // react-native imports, so vitest runs it.
 import { formatTadabburBody } from "@mindfulverse/core/tadabburBody";
 
+import { splitParagraphs } from "../../text";
+
 /** Ibn Kathir comments on passages: a run of ayahs stores its commentary under
  *  the first ayah of the group. Find the entry covering this ayah.
  *  `indexed` is ascending (tafsir-index.json). */
@@ -18,14 +20,6 @@ export function coveringFromIndex(
     }
   }
   return best;
-}
-
-/** Blank-line separated paragraphs, trimmed, empties dropped. */
-export function splitParagraphs(text: string | null | undefined): string[] {
-  return (text ?? "")
-    .split("\n\n")
-    .map((p) => p.trim())
-    .filter(Boolean);
 }
 
 /** The surah's "About" text opens trimmed to this many paragraphs. */

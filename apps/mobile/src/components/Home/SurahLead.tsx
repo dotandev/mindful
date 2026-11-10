@@ -10,16 +10,21 @@ import { fonts } from "../../theme";
 import { AdireCloth, Button, Text, useOnCloth } from "../../ui";
 import { FadeRise } from "../../ui/FadeRise";
 import { fittingVerse } from "../Circles/circleModel";
+import { surahPageLabel } from "../Tadabbur/intention";
 import {
   BEGIN_LINE,
   BEGIN_TITLE,
   CIRCLE_EYEBROW,
+  CONTINUE_EYEBROW,
   continueTitle,
-  focusLine,
   namedAction,
   namedEyebrow,
+  namedLine,
+  RESUME_ACTION,
   starterLabel,
   surahName,
+  whereYouAre,
+  YOUR_CIRCLE_LINK,
 } from "./leadModel";
 import type { Lead } from "./leadModel";
 
@@ -66,16 +71,20 @@ function LeadBody({
   if (lead.kind === "continue") {
     return (
       <>
-        <Text variant="h2" style={{ color: cloth.strong }}>
-          {continueTitle(lead.surah, surahNames)}
-        </Text>
+        <View style={{ gap: 4 }}>
+          <Eyebrow>{CONTINUE_EYEBROW}</Eyebrow>
+          <Text variant="h2" style={{ color: cloth.strong }}>
+            {continueTitle(lead.surah, surahNames)}
+          </Text>
+        </View>
+        <LeadLine>{whereYouAre(lead.ayah, surahs.get(lead.surah))}</LeadLine>
         <Button
           kind="cloth"
-          title={`Resume at verse ${lead.ayah}`}
+          title={RESUME_ACTION}
           onPress={() => router.push(surahHref(lead.surah, lead.ayah))}
         />
         <QuietLink
-          title="Open this surah’s page"
+          title={surahPageLabel(surahName(lead.surah, surahs))}
           href={{
             params: { surah: String(lead.surah) },
             pathname: "/tadabbur/journal/[surah]",
@@ -94,26 +103,17 @@ function LeadBody({
           <Text variant="h2" style={{ color: cloth.strong }}>
             {name}
           </Text>
-          {verse === null ? null : (
-            <Text
-              style={{
-                color: cloth.strong,
-                fontFamily: fonts.readMedium,
-                fontSize: 16,
-                lineHeight: 22,
-              }}
-            >
-              {focusLine(verse)}
-            </Text>
-          )}
         </View>
-        <BeginLine />
+        <LeadLine>{namedLine(verse)}</LeadLine>
         <Button
           kind="cloth"
           title={namedAction(name, verse)}
           onPress={() => router.push(surahHref(lead.surah, verse ?? undefined))}
         />
-        <QuietLink title="Choose another surah" href="/tadabbur" />
+        <View>
+          <QuietLink title="Choose another surah" href="/tadabbur" />
+          <QuietLink title={YOUR_CIRCLE_LINK} href="/circles" />
+        </View>
       </>
     );
   }
@@ -127,7 +127,7 @@ function LeadBody({
             {name}
           </Text>
         </View>
-        <BeginLine />
+        <LeadLine>{BEGIN_LINE}</LeadLine>
         <Button
           kind="cloth"
           title={`Begin ${name}`}
@@ -142,7 +142,7 @@ function LeadBody({
       <Text variant="h2" style={{ color: cloth.strong }}>
         {BEGIN_TITLE}
       </Text>
-      <BeginLine />
+      <LeadLine>{BEGIN_LINE}</LeadLine>
       <View
         accessibilityLabel="Short surahs"
         style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}
@@ -177,11 +177,11 @@ function Eyebrow({ children }: { children: string }) {
   );
 }
 
-function BeginLine() {
+function LeadLine({ children }: { children: string }) {
   const cloth = useOnCloth();
   return (
     <Text style={{ color: cloth.soft, fontSize: 16.5, lineHeight: 25 }}>
-      {BEGIN_LINE}
+      {children}
     </Text>
   );
 }
