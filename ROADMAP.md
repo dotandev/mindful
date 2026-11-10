@@ -36,15 +36,15 @@ Most competing tadabbur apps (Tadabbur, ReflectQ, TadabburAI, Ask Quran) generat
 | Feature | Notes |
 | --- | --- |
 | Reader (114 surahs) | Arabic (Uthmanic Hafs) + Itani/ClearQuran + Ibn Kathir, lazy-loaded, passage-grouped commentary, Arabic-only view toggle |
-| Daily check-in | Rotating vetted verse of the day (25-verse pool), neutral emotion picker (8 × 5 vetted verses) |
+| Daily check-in | Rotating vetted verse of the day (139-verse pool), neutral emotion picker (12 × 5 vetted verses) |
 | Tadabbur sessions | 20 sessions, verbatim assembly, progress + resume, tafsir excerpts |
 | Dhikr & breath | 8 sets, breathing circle, tap counting, wake lock, adaptive sizing |
-| Journal | Local-only, verse/session attribution, export, backup nudge |
+| Journal | Saved on the device first (cloud sync came in v1), verse/session attribution, export, backup nudge |
 | Search + topics browse | Translation search; verses-by-topic index into the reader |
 | Modern English translation | Talal Itani / ClearQuran (CC BY-NC-ND — non-commercial, which fits a free app; attribution required) |
 | User-controlled dark theme | Default light, user toggle; never follows OS |
 | Growth & measurement | Share-a-verse, OG preview card, PWA install prompt, `/stats`, WhatsApp feedback link, analytics |
-| Identity | West African indigo, adire band, Fraunces + KFGQPC Hafs, offline PWA |
+| Identity | West African indigo, adire band, Outfit + Literata + KFGQPC Hafs, offline PWA |
 
 ## v1 — shipped 2026-09-15 (accounts, sync, reminders)
 
@@ -54,7 +54,19 @@ Most competing tadabbur apps (Tadabbur, ReflectQ, TadabburAI, Ask Quran) generat
 | 2 | Journal cloud sync | **Shipped** | The #1 trust gap — localStorage is fragile | Medium | Accounts |
 | 3 | Subscription billing | **Dropped** (2026-11-07) | MindfulVerse stays free; the $3/month willingness-to-pay question was removed. If charging is ever reconsidered, the Itani translation's non-commercial licence must be cleared first | — | — |
 | 4 | Push notifications / daily reminder | **Shipped** | Biggest retention lever a PWA lacks | Medium | Backend |
-| 5 | React Native app | **In testing** (Android) | Store presence, reliable notifications, better offline | High | v1 validated on web |
+| 5 | React Native app | **Built** (Android); not on the Play Store yet | Store presence, reliable notifications, better offline | High | v1 validated on web |
+
+## Shipped since v1 (October to November 2026)
+
+| Feature | Notes |
+| --- | --- |
+| Surah journal | Home begins with a surah: its background, then verse by verse with Ibn Kathir, and a page that keeps everything written on it. Web and Android |
+| Week-later follow-up | "What will you do?" on surah tadabbur and theme sessions; seven days on, Home asks how it went |
+| Circles | Anyone signed in can start a named circle and share a link. Joining needs no account, journals stay private, and the circle sees only an anonymous weekly count of two or more |
+| Rhythm | Day count of returning, plus a private line for how many days this week a reflection was kept |
+| Android app | Surah journal, theme sessions, search, circles, journal export and reminders, sharing the core with the web app |
+| Daily verse API | Free, keyed, non-commercial API for other sites, at `/developers` |
+| Launch measurement | Anonymous `active_days` signal on web and Android |
 
 ## v2 — deepen (pull by priority once v1 is stable)
 
