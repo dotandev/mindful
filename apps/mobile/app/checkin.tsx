@@ -369,7 +369,7 @@ export default function CheckIn() {
         {atVerse ? (
           <Reveal reduce={reduce} style={{ gap: space.lg }}>
             {/* Verse of the day: the anchor, laid on the dyed cloth, as Home's
-                hero is. */}
+                surah lead card is. */}
             <AdireCloth style={{ paddingHorizontal: 20, paddingVertical: 18 }}>
               {dailyError ? (
                 <Text style={{ color: cloth.soft, marginTop: 10 }}>

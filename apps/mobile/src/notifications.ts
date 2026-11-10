@@ -39,11 +39,14 @@ function open(response: Notifications.NotificationResponse | null): void {
   ) {
     return;
   }
-  const id = response.notification.request.identifier;
-  if (handled.has(id)) {
+  // The on-device reminder reuses one identifier every day, so the delivery
+  // date tells one day's tap from the next.
+  const { date, request } = response.notification;
+  const key = `${request.identifier}:${date}`;
+  if (handled.has(key)) {
     return;
   } // cold-start response can also reach the listener
-  handled.add(id);
+  handled.add(key);
   // Forget it natively too: `handled` lives in JS memory, so after a JS reload
   // (dev reload, an update) getLastNotificationResponse() would return the same
   // tap again and re-route. Best effort (SDK 57: clearLastNotificationResponse;

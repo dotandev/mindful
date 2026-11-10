@@ -26,6 +26,7 @@ import {
 import { ReminderSection } from "../../src/components/Account/ReminderSection";
 import { SettingsSection } from "../../src/components/Account/SettingsSection";
 import { SyncSection } from "../../src/components/Account/SyncSection";
+import { disableLocalReminder } from "../../src/localReminder";
 import {
   disableReminder,
   forgetPushToken,
@@ -103,6 +104,9 @@ export default function Account() {
       /* best effort — sign-out must proceed regardless */
     }
     forgetPushToken();
+    // The on-device reminder too: its controls are only shown when signed in.
+    // Best effort: it reports a failure instead of throwing.
+    await disableLocalReminder();
     try {
       await endSession();
     } catch {

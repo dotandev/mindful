@@ -2,7 +2,7 @@ import type { Ayah } from "@mindfulverse/core/types";
 // A verse as the check-in shows it (web CheckIn.tsx AyahView): Arabic,
 // translation, then "Surah name · 2:255". `onCloth` lays it on an AdireCloth
 // panel (the verse of the day): cotton Arabic and translation, soft reference,
-// as Home's hero does. The reference row can carry a trailing action.
+// as Home's surah lead card does. The reference row can carry a trailing action.
 import type { ReactNode } from "react";
 import { View } from "react-native";
 

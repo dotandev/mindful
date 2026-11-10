@@ -1,4 +1,3 @@
-import { markBounds, markPath } from "@mindfulverse/core/brand";
 // Adire ornaments, drawn in SVG. Adire is Yoruba resist-dyed indigo cloth:
 // pale motifs left where the dye could not reach. The web uses one of them
 // (the band, index.css --adire-band); the app carries the same language a
@@ -257,33 +256,4 @@ export function useOnCloth() {
   return scheme === "dark"
     ? { accent: "#c5cff2", soft: colors.inkSoft, strong: colors.ink }
     : { accent: "#b9c4ec", soft: "#d6d9ea", strong: colors.cottonRaised };
-}
-
-/** The MindfulVerse mark: تدبر in square Kufic, left pale inside an indigo tile
- *  (packages/core/brand.ts, the same construction as the app icon). */
-export function BrandMark({ size = 28 }: { size?: number }) {
-  const { colors } = useTheme();
-  const b = markBounds();
-  const span = Math.max(b.width, b.height);
-  const box = span / (1 - 2 * 0.16);
-  const ox = b.minX - (box - b.width) / 2;
-  const oy = b.minY - (box - b.height) / 2;
-  return (
-    <View
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-    >
-      <Svg width={size} height={size} viewBox={`${ox} ${oy} ${box} ${box}`}>
-        <Rect
-          x={ox}
-          y={oy}
-          width={box}
-          height={box}
-          rx={box * 0.22}
-          fill={colors.indigo}
-        />
-        <Path d={markPath()} fill={colors.cotton} />
-      </Svg>
-    </View>
-  );
 }

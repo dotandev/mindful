@@ -5,13 +5,11 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
-import { REMINDER_CHANNEL } from "./push";
+import { NOT_ALLOWED, REMINDER_CHANNEL } from "./push";
 
 const KEY = "mindfulverse.localReminder.v1";
 const ID = "daily-verse-reminder";
 const TIME = /^(\d{2}):(\d{2})$/u;
-
-export const NOT_ALLOWED = "Notifications were not allowed.";
 
 export function getLocalReminder(): { time: string } | null {
   try {
