@@ -329,7 +329,7 @@ function SurahReader({ surah }: { surah: string }) {
           name={meta?.name}
           ayahCount={meta?.ayahCount}
         />
-        <ReaderToolbar onOpen={setPanel} />
+        <ReaderToolbar onOpen={setPanel} view={view} onView={chooseView} />
         {showsBasmalah(surahNumber) ? (
           <View style={{ paddingTop: 6 }}>
             <DyeRule />
@@ -343,7 +343,7 @@ function SurahReader({ surah }: { surah: string }) {
         ) : null}
       </View>
     ),
-    [meta, surahNumber, scale, view]
+    [meta, surahNumber, scale, view, chooseView]
   );
 
   const footer = useMemo(
@@ -447,8 +447,6 @@ function SurahReader({ surah }: { surah: string }) {
           onClose={() => setPanel(null)}
           sizeKey={sizeKey}
           onSize={chooseSize}
-          view={view}
-          onView={chooseView}
         />
       ) : null}
       {panel === "jump" ? (
