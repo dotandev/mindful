@@ -1,7 +1,7 @@
 import type { ReadView } from "@mindfulverse/core/readingPrefs";
-// The reader's quiet control row: "Aa" opens the display sheet (size + view),
-// the numbered diamond opens a small "go to a verse" sheet. Everything else
-// stays off the page so the reader opens on the Qur'an.
+// The reader's control row: the Translation / Reading switch in plain sight,
+// "Aa" for the text size sheet, and the numbered diamond for a small "go to a
+// verse" sheet. Everything else stays off the page.
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
@@ -49,6 +49,24 @@ export default function ReaderTools({
 
   return (
     <>
+      <div className="view-switch" role="group" aria-label="View">
+        <button
+          type="button"
+          className="view-switch-btn"
+          aria-pressed={view === "translation"}
+          onClick={() => onView("translation")}
+        >
+          Translation
+        </button>
+        <button
+          type="button"
+          className="view-switch-btn"
+          aria-pressed={view === "reading"}
+          onClick={() => onView("reading")}
+        >
+          Reading
+        </button>
+      </div>
       <div className="reader-tools">
         {onJump && (
           <button
@@ -81,9 +99,9 @@ export default function ReaderTools({
         <button
           type="button"
           className="reader-tool reader-tool-aa"
-          aria-label="Reading settings"
+          aria-label="Text size"
           aria-haspopup="dialog"
-          title="Reading settings"
+          title="Text size"
           onClick={() => setPanel("display")}
         >
           <span aria-hidden="true">Aa</span>
@@ -92,16 +110,11 @@ export default function ReaderTools({
 
       {panel === "display" && (
         <Sheet
-          label="Reading settings"
-          title="Reading settings"
+          label="Text size"
+          title="Text size"
           onClose={() => setPanel(null)}
         >
-          <ReadingControls
-            sizeKey={sizeKey}
-            onSize={onSize}
-            view={view}
-            onView={onView}
-          />
+          <ReadingControls sizeKey={sizeKey} onSize={onSize} />
           <button
             type="button"
             className="btn secondary display-done"

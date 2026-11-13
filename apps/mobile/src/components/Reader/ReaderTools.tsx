@@ -1,24 +1,31 @@
 import type { ReadView } from "@mindfulverse/core/readingPrefs";
-// Port of apps/web/src/components/ReaderTools.tsx: one quiet row under the
-// title plate — the numbered diamond ("Go to a verse") and "Aa" ("Reading
-// settings") — and the two sheets they open. The open sheet is owned by the
+// Port of apps/web/src/components/ReaderTools.tsx: one row under the title
+// plate with the Translation / Reading switch in plain sight, the numbered
+// diamond ("Go to a verse") and "Aa" ("Text size"), and the two sheets they
+// open. The open sheet is owned by the
 // screen, not this row: the list header remounts when the view changes, and
 // the settings sheet must stay open through that.
 import { useEffect, useState } from "react";
 import { Keyboard, Platform, Pressable, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
+import { tickSelection } from "../../platform/haptics";
 import { fonts, space, useTheme } from "../../theme";
 import { Button, Sheet, Text } from "../../ui";
 import { JumpToVerse } from "./JumpToVerse";
 import { ReadingControls } from "./ReadingControls";
+import { Segmented } from "./Segmented";
 
 export type ReaderPanel = "display" | "jump" | null;
 
 export function ReaderToolbar({
   onOpen,
+  view,
+  onView,
 }: {
   onOpen: (p: Exclude<ReaderPanel, null>) => void;
+  view: ReadView;
+  onView: (v: ReadView) => void;
 }) {
   const { colors } = useTheme();
   const tool = ({ pressed }: { pressed: boolean }) => ({
@@ -33,13 +40,37 @@ export function ReaderToolbar({
   return (
     <View
       style={{
+        alignItems: "center",
         flexDirection: "row",
         gap: space.xs,
-        justifyContent: "flex-end",
         paddingBottom: 2,
         paddingTop: 6,
       }}
     >
+      <View style={{ flex: 1, flexDirection: "row" }}>
+        <Segmented<ReadView>
+          accessibilityLabel="Reading view"
+          value={view}
+          onChange={(v) => {
+            if (v !== view) {
+              tickSelection();
+            }
+            onView(v);
+          }}
+          options={[
+            {
+              accessibilityLabel: "Translation view: Arabic with English",
+              key: "translation",
+              label: "Translation",
+            },
+            {
+              accessibilityLabel: "Reading view: Arabic only",
+              key: "reading",
+              label: "Reading",
+            },
+          ]}
+        />
+      </View>
       <Pressable
         onPress={() => onOpen("jump")}
         accessibilityRole="button"
@@ -81,7 +112,7 @@ export function ReaderToolbar({
       <Pressable
         onPress={() => onOpen("display")}
         accessibilityRole="button"
-        accessibilityLabel="Reading settings"
+        accessibilityLabel="Text size"
         hitSlop={4}
         style={tool}
       >
@@ -106,28 +137,14 @@ export function ReadingSettingsSheet({
   onClose,
   sizeKey,
   onSize,
-  view,
-  onView,
 }: {
   onClose: () => void;
   sizeKey: string;
   onSize: (k: string) => void;
-  view: ReadView;
-  onView: (v: ReadView) => void;
 }) {
   return (
-    <Sheet
-      label="Reading settings"
-      title="Reading settings"
-      onClose={onClose}
-      scroll
-    >
-      <ReadingControls
-        sizeKey={sizeKey}
-        onSize={onSize}
-        view={view}
-        onView={onView}
-      />
+    <Sheet label="Text size" title="Text size" onClose={onClose} scroll>
+      <ReadingControls sizeKey={sizeKey} onSize={onSize} />
       <View style={{ alignItems: "flex-start", paddingTop: space.xl }}>
         <Button title="Done" kind="secondary" onPress={onClose} />
       </View>

@@ -1,5 +1,4 @@
 import { SIZES } from "@mindfulverse/core/readingPrefs";
-import type { ReadView } from "@mindfulverse/core/readingPrefs";
 
 const SIZE_NAMES: Record<string, string> = {
   l: "large",
@@ -7,30 +6,20 @@ const SIZE_NAMES: Record<string, string> = {
   s: "small",
 };
 
-/** Size and view choices, shown inside the "Reading settings" sheet
- *  (components/ReaderTools.tsx). Each choice applies at once. */
+/** The text size choice, shown inside the "Text size" sheet
+ *  (components/ReaderTools.tsx). It applies at once. The Translation /
+ *  Reading switch lives on the toolbar itself. */
 export default function ReadingControls({
   sizeKey,
   onSize,
-  view,
-  onView,
 }: {
   sizeKey: string;
   onSize: (k: string) => void;
-  view: ReadView;
-  onView: (v: ReadView) => void;
 }) {
   return (
     <div className="display-choices">
       <div className="display-choice">
-        <p className="display-choice-label" id="rc-size">
-          Text size
-        </p>
-        <div
-          className="reading-controls"
-          role="group"
-          aria-labelledby="rc-size"
-        >
+        <div className="reading-controls" role="group" aria-label="Text size">
           {SIZES.map((s, i) => (
             <button
               type="button"
@@ -45,38 +34,6 @@ export default function ReadingControls({
             </button>
           ))}
         </div>
-      </div>
-      <div className="display-choice">
-        <p className="display-choice-label" id="rc-view">
-          View
-        </p>
-        <div
-          className="reading-controls"
-          role="group"
-          aria-labelledby="rc-view"
-        >
-          <button
-            type="button"
-            className="size-btn"
-            aria-pressed={view === "translation"}
-            onClick={() => onView("translation")}
-          >
-            Translation
-          </button>
-          <button
-            type="button"
-            className="size-btn"
-            aria-pressed={view === "reading"}
-            onClick={() => onView("reading")}
-          >
-            Reading
-          </button>
-        </div>
-        <p className="display-choice-hint">
-          {view === "translation"
-            ? "Arabic with English, verse by verse."
-            : "Arabic only, flowing as on the page."}
-        </p>
       </div>
     </div>
   );

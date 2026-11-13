@@ -168,10 +168,8 @@ async function scrollTo(page, locator, offset = 90) {
   await page.goto(`${BASE}/read/93`);
   await settle(page, 1500);
   await shot(page, "read-title");
-  await page.getByRole("button", { name: "Reading settings" }).click();
   await page.getByRole("button", { exact: true, name: "Reading" }).click();
   await page.waitForTimeout(400);
-  await page.keyboard.press("Escape");
   await page.mouse.move(2, 2);
   await page.evaluate(() => document.activeElement?.blur?.());
   await settle(page, 900);

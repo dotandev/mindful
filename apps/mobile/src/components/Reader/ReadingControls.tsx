@@ -1,10 +1,8 @@
 import { SIZES } from "@mindfulverse/core/readingPrefs";
-import type { ReadView } from "@mindfulverse/core/readingPrefs";
 import { View } from "react-native";
 
 import { tickSelection } from "../../platform/haptics";
 import { space } from "../../theme";
-import { Text } from "../../ui";
 import { Segmented } from "./Segmented";
 
 const SIZE_NAMES: Record<string, string> = {
@@ -13,26 +11,19 @@ const SIZE_NAMES: Record<string, string> = {
   s: "small",
 };
 
-/** Port of apps/web/src/components/ReadingControls.tsx: the size and the
- *  Translation / Reading (Arabic-only, flowing) choices, shown inside the
- *  "Reading settings" sheet (ReaderTools.tsx). Each choice applies at once. */
+/** Port of apps/web/src/components/ReadingControls.tsx: the text size choice,
+ *  shown inside the "Text size" sheet (ReaderTools.tsx). It applies at once.
+ *  The Translation / Reading switch lives on the toolbar itself. */
 export function ReadingControls({
   sizeKey,
   onSize,
-  view,
-  onView,
 }: {
   sizeKey: string;
   onSize: (k: string) => void;
-  view: ReadView;
-  onView: (v: ReadView) => void;
 }) {
   return (
     <View style={{ gap: space.lg }}>
       <View style={{ gap: space.sm }}>
-        <Text variant="muted" style={{ fontSize: 14, lineHeight: 20 }}>
-          Text size
-        </Text>
         <Segmented
           accessibilityLabel="Reading size"
           value={sizeKey}
@@ -50,38 +41,6 @@ export function ReadingControls({
             labelStyle: { fontSize: 14 + i * 3.2, lineHeight: 24 },
           }))}
         />
-      </View>
-      <View style={{ gap: space.sm }}>
-        <Text variant="muted" style={{ fontSize: 14, lineHeight: 20 }}>
-          View
-        </Text>
-        <Segmented<ReadView>
-          accessibilityLabel="Reading view"
-          value={view}
-          onChange={(v) => {
-            if (v !== view) {
-              tickSelection();
-            }
-            onView(v);
-          }}
-          options={[
-            {
-              accessibilityLabel: "Translation view: Arabic with English",
-              key: "translation",
-              label: "Translation",
-            },
-            {
-              accessibilityLabel: "Reading view: Arabic only",
-              key: "reading",
-              label: "Reading",
-            },
-          ]}
-        />
-        <Text variant="muted" style={{ fontSize: 14, lineHeight: 20 }}>
-          {view === "translation"
-            ? "Arabic with English, verse by verse."
-            : "Arabic only, flowing as on the page."}
-        </Text>
       </View>
     </View>
   );
