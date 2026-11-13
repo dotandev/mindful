@@ -12,7 +12,6 @@ import {
   infoBlocks,
   parseSurahParam,
   resumeAyahFor,
-  splitParagraphs,
   verseCount,
   loadTadabburDrafts,
   parseTadabburDrafts,
@@ -97,11 +96,6 @@ describe("reflection drafts", () => {
 });
 
 describe("text helpers", () => {
-  it("splits paragraphs", () => {
-    expect(splitParagraphs(" a \n\n\n\nb\n\n")).toStrictEqual(["a", "b"]);
-    expect(splitParagraphs(null)).toStrictEqual([]);
-  });
-
   it("collapses the About text and spots subheadings", () => {
     const paras = Array.from({ length: 7 }, (_, i) => `Paragraph ${i}.`);
     const text = ["Its Virtues", ...paras].join("\n\n");

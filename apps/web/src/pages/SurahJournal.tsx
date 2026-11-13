@@ -10,6 +10,7 @@ import type { Ayah } from "@mindfulverse/core/types";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
+import BackLink from "../components/BackLink";
 import { buildJournalText, formatDate, saveFile } from "../lib/journalExport";
 import { surahJournalSections } from "../lib/surahJournalExport";
 
@@ -132,7 +133,7 @@ function SurahJournalPage() {
 
   useEffect(() => {
     document.title = valid
-      ? `${name} · Your journal | MindfulVerse`
+      ? `Your page on ${name} | MindfulVerse`
       : "Journal | MindfulVerse";
   }, [valid, name]);
 
@@ -186,12 +187,10 @@ function SurahJournalPage() {
 
   return (
     <div className="stack">
-      <Link to="/journal" className="muted back-link">
-        Your reflections
-      </Link>
+      <BackLink to="/journal">Your reflections</BackLink>
       <header>
         <p className="eyebrow">{name}</p>
-        <h1>{`Your journal on ${name}`}</h1>
+        <h1>{`Your page on ${name}`}</h1>
       </header>
 
       {page.isEmpty ? (

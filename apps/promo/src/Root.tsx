@@ -2,6 +2,17 @@ import { Composition } from "remotion";
 
 import { DAY_DURATION, DAY_FPS, DayInTheLife } from "./DayInTheLife";
 import { DURATION, FPS, HeartPromo } from "./HeartPromo";
+import {
+  ONE_SURAH_DURATION,
+  ONE_SURAH_FPS,
+  OneSurahOneWeek,
+} from "./OneSurahOneWeek";
+import { STAND_DURATION, STAND_FPS, StandLoop } from "./StandLoop";
+import {
+  START_CIRCLE_DURATION,
+  START_CIRCLE_FPS,
+  StartACircle,
+} from "./StartACircle";
 import { WHATS_NEW_DURATION, WHATS_NEW_FPS, WhatsNew } from "./WhatsNew";
 
 export function Root() {
@@ -51,6 +62,65 @@ export function Root() {
         component={WhatsNew}
         durationInFrames={WHATS_NEW_DURATION}
         fps={WHATS_NEW_FPS}
+        width={1080}
+        height={1920}
+        defaultProps={{ withNasheed: false }}
+      />
+      {/* One surah, one week: screens from scripts/capture-three.mjs. */}
+      <Composition
+        id="OneSurahOneWeek"
+        component={OneSurahOneWeek}
+        durationInFrames={ONE_SURAH_DURATION}
+        fps={ONE_SURAH_FPS}
+        width={1080}
+        height={1920}
+        defaultProps={{ withNasheed: true }}
+      />
+      {/* For adding a sound from TikTok, Reels or CapCut when posting. */}
+      <Composition
+        id="OneSurahOneWeekSilent"
+        component={OneSurahOneWeek}
+        durationInFrames={ONE_SURAH_DURATION}
+        fps={ONE_SURAH_FPS}
+        width={1080}
+        height={1920}
+        defaultProps={{ withNasheed: false }}
+      />
+      {/* The exhibition stand loop: silent, and the end runs into the start. */}
+      <Composition
+        id="StandLoop"
+        component={StandLoop}
+        durationInFrames={STAND_DURATION}
+        fps={STAND_FPS}
+        width={1920}
+        height={1080}
+        defaultProps={{ vertical: false }}
+      />
+      <Composition
+        id="StandLoopVertical"
+        component={StandLoop}
+        durationInFrames={STAND_DURATION}
+        fps={STAND_FPS}
+        width={1080}
+        height={1920}
+        defaultProps={{ vertical: true }}
+      />
+      {/* Start a circle in three steps. */}
+      <Composition
+        id="StartACircle"
+        component={StartACircle}
+        durationInFrames={START_CIRCLE_DURATION}
+        fps={START_CIRCLE_FPS}
+        width={1080}
+        height={1920}
+        defaultProps={{ withNasheed: true }}
+      />
+      {/* For adding a sound from TikTok, Reels or CapCut when posting. */}
+      <Composition
+        id="StartACircleSilent"
+        component={StartACircle}
+        durationInFrames={START_CIRCLE_DURATION}
+        fps={START_CIRCLE_FPS}
         width={1080}
         height={1920}
         defaultProps={{ withNasheed: false }}

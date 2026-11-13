@@ -34,7 +34,6 @@ import {
   useFocusEffect,
   useLocalSearchParams,
 } from "expo-router";
-import type { Href } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -59,6 +58,7 @@ import {
   currentIntention,
   hasSurahPage,
   surahPageHref,
+  surahPageLabel,
 } from "../../src/components/Tadabbur/intention";
 import {
   IntentionField,
@@ -317,7 +317,7 @@ function TadabburPage() {
   const share = useShareVerse("tadabbur");
 
   const openPage = useCallback(() => {
-    router.push(surahPageHref(n) as Href);
+    router.push(surahPageHref(n));
   }, [n]);
 
   const title = (
@@ -446,7 +446,7 @@ function TadabburPage() {
           >
             <Button
               kind="ghost"
-              title={`Your page on ${name}`}
+              title={surahPageLabel(name)}
               onPress={openPage}
             />
           </FadeRise>

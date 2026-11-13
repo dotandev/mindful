@@ -31,8 +31,10 @@ QUL copy/
 .trae
 .windsurf
 
-# Local-only drafts
+# Local-only drafts, notes and plans
 translation-permission-email.txt
+play-submit-instructions.txt
+docs/superpowers/
 
 # tsc artifacts from vite.config.ts (see tsconfig.node.json)
 .ts-out-node

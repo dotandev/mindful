@@ -38,8 +38,3 @@ export function rhythmLine(count: number): string | null {
   const n = Math.min(Math.floor(count), RHYTHM_DAYS);
   return `You kept reflections on ${n} ${n === 1 ? "day" : "days"} this week.`;
 }
-
-/** Screen-reader label for the seven dots. */
-export function rhythmLabel(count: number): string {
-  return `Reflections on ${count} of the last ${RHYTHM_DAYS} days`;
-}

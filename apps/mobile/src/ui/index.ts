@@ -3,7 +3,6 @@
 export {
   AdireBand,
   AdireCloth,
-  BrandMark,
   Diamond,
   DyeRule,
   TopBand,

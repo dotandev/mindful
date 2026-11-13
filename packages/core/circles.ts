@@ -4,7 +4,7 @@
 // sends only the install id, circle code and local date, for an anonymous
 // weekly count. Membership is device-local: one joined circle, cached so Home
 // works offline.
-import { parseSurahNumber } from "./circleSurah";
+import { clearCircleSurah, parseSurahNumber } from "./circleSurah";
 import { getInstallId, localDay } from "./installId";
 import { onEntryAdded } from "./journal";
 import { insforge } from "./sync/insforge";
@@ -444,8 +444,6 @@ export async function fetchCircle(
 // ---- Device-local membership ----
 
 const JOINED_KEY = "mindfulverse.circle.v1";
-// circleSurah.ts's key: a named circle replaces an old numeric circle link.
-const LEGACY_SURAH_KEY = "mindfulverse.circleSurah.v1";
 
 type Listener = (circle: Circle | null) => void;
 const listeners = new Set<Listener>();
@@ -503,11 +501,8 @@ export function joinCircle(circle: Circle): boolean {
   if (!writeJoined(circle)) {
     return false;
   }
-  try {
-    localStorage.removeItem(LEGACY_SURAH_KEY);
-  } catch {
-    return true;
-  }
+  // A named circle replaces an old numeric circle link.
+  clearCircleSurah();
   return true;
 }
 

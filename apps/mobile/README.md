@@ -2,8 +2,6 @@
 
 The MindfulVerse Android app (iOS later). Expo SDK 58, React Native 0.88, React 19.3, Expo Router, TypeScript. It shares `packages/core` with the web app.
 
-Architecture and conventions for screen work: [`docs/superpowers/plans/2026-10-06-rn-phase2-mobile.md`](../../docs/superpowers/plans/2026-10-06-rn-phase2-mobile.md).
-
 ## Setup
 
 From the repo root:
@@ -42,7 +40,7 @@ After regenerating the web data (`npm run build:data` at the root), the next Met
 
 ## Run (development)
 
-MMKV (`react-native-mmkv` v4 + `react-native-nitro-modules`) is a native module, so **Expo Go is not enough**. In Expo Go, storage falls back to memory (`storageBackend === "memory"`, shown on the Account placeholder) and nothing survives a restart. Use a **development build**:
+MMKV (`react-native-mmkv` v4 + `react-native-nitro-modules`) is a native module, so **Expo Go is not enough**. In Expo Go, storage falls back to memory (a console warning says so) and nothing survives a restart. Use a **development build**:
 
 ```bash
 # Local, needs Android Studio (SDK + platform tools) and a device or emulator:
@@ -80,12 +78,16 @@ npm run doctor -w @mindfulverse/mobile         # expo-doctor
 
 `src/push.ts` implements registration per the Phase 3 contract. `pushSupport()` is `"ok"` on Android once the app config has `android.googleServicesFile`, which `app.config.js` sets from the `GOOGLE_SERVICES_JSON` EAS file env var (cloud builds) or `./google-services.json` (local, gitignored). iOS still returns `"not-configured"`.
 
+When `pushSupport()` is anything but `"ok"`, the reminder is scheduled on the phone instead (`src/localReminder.ts`): a daily local notification at the chosen time that opens `/checkin`. It works offline but cannot carry the day's verse text.
+
+The on-device reminder is also a backstop when push is configured but may not be delivering. If turning the reminder on fails to register for push, or registers but the test push does not go out, the on-device reminder is scheduled as well (`src/reminder.ts`, decisions in `src/reminderModel.ts`). Changing the time updates both and turning off cancels both. The first daily verse push that reaches the phone cancels the backstop, so only one reminder shows from then on.
+
 Status:
 
 1. **Firebase project** `mindfulverse-824bd` with Android app `dev.mindfulverse.app`: done. `google-services.json` is in `apps/mobile/` (gitignored) and uploaded to EAS as the secret file `GOOGLE_SERVICES_JSON` (development, preview, production).
 2. **App config:** done (`app.config.js`). Needs a new native build.
 3. **FCM V1 key:** in Firebase, create a service-account key (Project settings → Service accounts), then upload it with `npx eas credentials` (Android → production → Google Service Account → FCM V1). Expo's push service uses it to deliver to FCM.
-4. **Backend:** apply the Phase 3 migration and redeploy the `send-reminders` function, as described under "Apply later" in `docs/superpowers/plans/2026-10-06-rn-phase3-push-platform.md`.
+4. **Backend:** the push_subscriptions migration and the `send-reminders` function must be applied to the InsForge project with the InsForge CLI.
 5. Test end to end on a device: turn the reminder on (the welcome push should arrive), tap it (opens `/checkin`), change the time, turn it off.
 
 For iOS later: APNs credentials via `eas credentials`, then change `fcmConfigured()` in `src/push.ts` to accept iOS.
@@ -99,7 +101,7 @@ For iOS later: APNs credentials via `eas credentials`, then change `fcmConfigure
 The app carries the web's West African indigo identity (see the header of `apps/web/src/index.css`) a little further, using the ornaments in `src/ui/adire.tsx`:
 
 - **Adire band** across the top of every tab screen (`TopBand`), as on the web.
-- **Dyed cloth** (`AdireCloth`) only for the verse that matters: today's verse on Home and Check-in, Continue reading, and each surah's `TitlePlate`. Text on cloth uses `useOnCloth()`; buttons on it use `Button kind="cloth"`.
+- **Dyed cloth** (`AdireCloth`) only for the verse that matters: the surah lead card on Home, today's verse on Check-in, Continue reading, and each surah's `TitlePlate`. Text on cloth uses `useOnCloth()`; buttons on it use `Button kind="cloth"`.
 - **Diamond** numerals for surahs, juz and verses; **DyeRule** for section breaks.
 - Icons in `src/ui/icons.tsx` share the band's line weight. Haptics live in `src/platform/haptics.ts` (selection on choices, success on save).
 

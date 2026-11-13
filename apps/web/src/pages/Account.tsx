@@ -1,4 +1,5 @@
 import { track } from "@mindfulverse/core/analytics";
+import { getJoinedCircle, leaveCircle } from "@mindfulverse/core/circles";
 import { useAccount } from "@mindfulverse/core/sync/auth";
 import {
   getSyncStatus,
@@ -312,7 +313,7 @@ export default function Account() {
     }
     // oxlint-disable-next-line no-alert -- native confirm is the intended destructive-action prompt
     const sure = window.confirm(
-      "Delete your synced data? This device keeps its entries."
+      "Delete your synced data and any circles you started? This device keeps its entries."
     );
     if (!sure) {
       return;
@@ -321,7 +322,12 @@ export default function Account() {
     try {
       // Only sign out once every delete succeeded — signing out on a partial
       // failure would strand data the user believes is gone.
-      const results = await Promise.all([
+      const [circles, ...rest] = await Promise.all([
+        insforge.database
+          .from("circles")
+          .delete()
+          .eq("owner_id", user.id)
+          .select("code"),
         insforge.database
           .from("journal_entries")
           .delete()
@@ -332,10 +338,16 @@ export default function Account() {
           .delete()
           .eq("user_id", user.id),
       ]);
-      if (results.some((r) => r.error)) {
+      if (circles.error || rest.some((r) => r.error)) {
         setNotice(null);
         setError("Couldn't delete everything. Please try again.");
         return;
+      }
+      // A deleted circle no longer exists for anyone, this device included.
+      const joined = getJoinedCircle()?.code;
+      const deleted = (circles.data ?? []) as { code: string }[];
+      if (joined && deleted.some((c) => c.code === joined)) {
+        leaveCircle();
       }
       setError(null);
       await signOut();

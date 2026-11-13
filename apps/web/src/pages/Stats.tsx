@@ -18,6 +18,7 @@ import { Link } from "react-router-dom";
 
 import "./journal-empty.css";
 import "./stats.css";
+import { tallyCheckins } from "./stats-view";
 
 const FIRST_SEEN_KEY = "mindfulverse.firstSeen.v1";
 
@@ -71,7 +72,6 @@ function computeStats(): StatsSnapshot {
   let sessionsStarted = 0;
   let surahTadabburStarted = 0;
   let sessionsCompleted = 0;
-  let checkinViews = 0;
   let versesShared = 0;
   let dhikrCompleted = 0;
   let readViewSwitches = 0;
@@ -83,7 +83,9 @@ function computeStats(): StatsSnapshot {
     Partly: 0,
     Yes: 0,
   };
-  const emotions = new Map<string, number>();
+  const { checkins: checkinViews, emotions } = tallyCheckins(
+    events.map(({ e }) => e)
+  );
 
   for (const { t, e } of events) {
     switch (e.type) {
@@ -101,13 +103,6 @@ function computeStats(): StatsSnapshot {
       }
       case "session_complete": {
         sessionsCompleted++;
-        break;
-      }
-      case "checkin_view": {
-        checkinViews++;
-        if (e.emotion) {
-          emotions.set(e.emotion, (emotions.get(e.emotion) ?? 0) + 1);
-        }
         break;
       }
       case "share_verse": {
@@ -259,8 +254,10 @@ export default function Stats() {
   const resetTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    document.title = "Your progress | MindfulVerse";
+    document.title = "Your numbers | MindfulVerse";
   }, []);
+
+  useEffect(() => () => window.clearTimeout(resetTimer.current), []);
 
   async function copyStats() {
     try {

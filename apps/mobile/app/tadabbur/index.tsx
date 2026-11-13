@@ -2,7 +2,7 @@
 // Home's "Choose another surah" lands here, so a chosen surah opens in tadabbur
 // rather than in the reader.
 import { loadSurahs } from "@mindfulverse/core/data";
-import { getSurahTadabbur } from "@mindfulverse/core/progress";
+import { getLocalProgress } from "@mindfulverse/core/progress";
 import type { SurahMeta } from "@mindfulverse/core/types";
 import { Stack, useFocusEffect } from "expo-router";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
@@ -16,6 +16,8 @@ import { Button, Card, Diamond, LinkPressable, Text } from "../../src/ui";
 import { ChevronIcon } from "../../src/ui/icons";
 
 type Status = "loading" | "ready" | "error";
+
+const readPondered = () => getLocalProgress().surahTadabbur;
 
 const PickerRow = memo(
   ({ surah, pondered }: { surah: SurahMeta; pondered: number | null }) => {
@@ -68,10 +70,11 @@ export default function TadabburPicker() {
   const [status, setStatus] = useState<Status>("loading");
   const [attempt, setAttempt] = useState(0);
   const [query, setQuery] = useState("");
-  const [visit, setVisit] = useState(0);
+  const [pondered, setPondered] = useState(readPondered);
 
-  // Progress changes inside the tadabbur screen; re-read it on return.
-  useFocusEffect(useCallback(() => setVisit((v) => v + 1), []));
+  // Progress changes inside the tadabbur screen; re-read it on return. One
+  // read of the whole map per visit, not one per row.
+  useFocusEffect(useCallback(() => setPondered(readPondered()), []));
 
   useEffect(() => {
     let active = true;
@@ -162,15 +165,15 @@ export default function TadabburPicker() {
 
   return (
     <View style={{ backgroundColor: colors.cotton, flex: 1 }}>
-      <Stack.Screen options={{ title: "By surah" }} />
+      <Stack.Screen options={{ title: "Tadabbur" }} />
       <FlatList
         data={status === "ready" ? filtered : []}
-        extraData={visit}
+        extraData={pondered}
         keyExtractor={(s) => String(s.number)}
         renderItem={({ item }) => (
           <PickerRow
             surah={item}
-            pondered={getSurahTadabbur(item.number)?.ayah ?? null}
+            pondered={pondered[String(item.number)]?.ayah ?? null}
           />
         )}
         ItemSeparatorComponent={IndexDivider}

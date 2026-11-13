@@ -1,7 +1,10 @@
-// A circle's invite link (https://mindfulverse.vercel.app/circle/abc234 or
-// mindfulverse://circle/abc234): join the circle on this device, then open its
-// surah at the focus verse. Old numeric links (/circle/94) still just remember
-// the surah. Anything else goes Home.
+// A circle's invite link: join the circle on this device, then open its surah
+// at the focus verse. It arrives as mindfulverse://circle/abc234 or as the
+// shared https://mindfulverse.vercel.app/circle/abc234; expo-router maps both
+// to this route with the code as the param. The https link only opens the app
+// once the website serves assetlinks.json for this package (app.json has the
+// intent filter); until then it opens the website. Old numeric links
+// (/circle/94) still just remember the surah. Anything else goes Home.
 import {
   fetchCircle,
   joinCircle,

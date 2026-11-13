@@ -22,13 +22,11 @@ describe(rhythmView, () => {
 
   it("says one day in the singular", () => {
     expect(rhythmView([entryAt(new Date(2026, 10, 8, 8))], now)).toStrictEqual({
-      days: [false, false, false, false, false, false, true],
-      label: "Reflections on 1 of the last 7 days",
       line: "You kept reflections on 1 day this week.",
     });
   });
 
-  it("counts days, not entries, oldest first", () => {
+  it("counts days, not entries", () => {
     const view = rhythmView(
       [
         entryAt(new Date(2026, 10, 2, 12)),
@@ -38,17 +36,7 @@ describe(rhythmView, () => {
       ],
       now
     );
-    expect(view?.days).toStrictEqual([
-      true,
-      false,
-      false,
-      true,
-      false,
-      false,
-      true,
-    ]);
     expect(view?.line).toBe("You kept reflections on 3 days this week.");
-    expect(view?.label).toBe("Reflections on 3 of the last 7 days");
   });
 });
 

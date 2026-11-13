@@ -190,21 +190,12 @@ export function localDateInZone(utcMs: number, timeZone: string): string {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-/** Replicates the client: floor(epoch-of-local-midnight / 86_400_000).
- *  Samples the zone offset AT local midnight (not at `utcMs`) so DST-transition
- *  days — where the offset at "now" can differ from the offset at 00:00 local —
- *  still resolve to the correct day index. */
+/** Days since epoch of the local calendar date in the zone. Same number as
+ *  localDayIndex in packages/core/dailyVerse.ts for a reader in that zone;
+ *  counting dates (not local midnights) keeps one step per day across DST. */
 export function localDayIndexInZone(utcMs: number, timeZone: string): number {
   const { year, month, day } = partsInZone(utcMs, timeZone);
-  // Guess: local midnight is numerically this UTC instant, then correct by the
-  // zone's actual offset at that guessed instant (wall-clock reinterpreted as
-  // UTC, minus the guess itself).
-  const guessUtc = Date.UTC(year, month - 1, day);
-  const p = partsInZone(guessUtc, timeZone);
-  const wallAsUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute);
-  const offsetMs = wallAsUtc - guessUtc;
-  const localMidnightUtc = guessUtc - offsetMs;
-  return Math.floor(localMidnightUtc / 86_400_000);
+  return Date.UTC(year, month - 1, day) / 86_400_000;
 }
 
 /** Where a person's walk through the pool starts: FNV-1a of their user id.
@@ -224,15 +215,150 @@ export function verseKeyForDayIndex(dayIndex: number, userId: string): string {
   return DAILY_VERSES[(((dayIndex * 53 + verseOffset(userId)) % n) + n) % n];
 }
 
-/** Due when reminderTime ('HH:MM') falls in [now, now+15min), wrapping midnight. */
+/** Twice the 15-minute schedule, so a run that starts late still catches the
+ *  reminder; dueOccurrence() keeps the second run from sending again. */
+export const DUE_WINDOW_MINUTES = 30;
+const MINUTES_PER_DAY = 1440;
+const MS_PER_MINUTE = 60_000;
+
+/** Minutes since reminderTime ('HH:MM') last passed, wrapping midnight. */
+function minutesSince(reminderTime: string, nowMinutes: number): number {
+  const [h, m] = reminderTime.split(":").map(Number);
+  const reminder = h * 60 + m;
+  return (nowMinutes - reminder + MINUTES_PER_DAY) % MINUTES_PER_DAY;
+}
+
+/** Due when reminderTime passed less than windowMinutes ago. */
 export function isDue(
   reminderTime: string,
   nowMinutes: number,
-  windowMinutes = 15
+  windowMinutes = DUE_WINDOW_MINUTES
 ): boolean {
-  const [h, m] = reminderTime.split(":").map(Number);
-  const reminder = h * 60 + m;
-  return (nowMinutes - reminder + 1440) % 1440 < windowMinutes;
+  return minutesSince(reminderTime, nowMinutes) < windowMinutes;
+}
+
+/** The local date ('YYYY-MM-DD') of the reminder to send now, or null when
+ *  none is due or it was already sent. The date is the day the reminder time
+ *  fell on, not the day of the run: a 23:50 reminder caught at 00:10 belongs
+ *  to yesterday, so the 23:55 run's stamp stops a second send. */
+export function dueOccurrence(
+  reminderTime: string,
+  nowMs: number,
+  timeZone: string,
+  lastSentDate: string | null | undefined,
+  windowMinutes = DUE_WINDOW_MINUTES
+): string | null {
+  const elapsed = minutesSince(
+    reminderTime,
+    minutesOfDayInZone(nowMs, timeZone)
+  );
+  if (!(elapsed < windowMinutes)) {
+    return null;
+  }
+  const date = localDateInZone(nowMs - elapsed * MS_PER_MINUTE, timeZone);
+  // A later stamp (the welcome push after midnight) also counts as sent.
+  return lastSentDate && lastSentDate >= date ? null : date;
+}
+
+/** Web Push services we are willing to POST to. A stored endpoint is user
+ *  input, so anything else is skipped rather than fetched. */
+const PUSH_HOSTS = new Set([
+  "fcm.googleapis.com",
+  "updates.push.services.mozilla.com",
+]);
+const PUSH_HOST_SUFFIXES = [
+  ".push.services.mozilla.com",
+  ".notify.windows.com",
+  ".push.apple.com",
+];
+
+export function isAllowedPushEndpoint(endpoint: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:" || url.port || url.username || url.password) {
+    return false;
+  }
+  const host = url.hostname.toLowerCase();
+  return (
+    PUSH_HOSTS.has(host) ||
+    PUSH_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix))
+  );
+}
+
+export const SUBSCRIPTION_PAGE_SIZE = 1000;
+
+interface PageResult<T> {
+  data: T[] | null;
+  error: unknown;
+}
+
+/** Reads every row, a page at a time, until a short page. `fetchPage` gets
+ *  inclusive row bounds (as .range() takes) and must use a stable order. */
+export async function fetchAllRows<T>(
+  fetchPage: (from: number, to: number) => PromiseLike<PageResult<T>>,
+  pageSize = SUBSCRIPTION_PAGE_SIZE
+): Promise<{ rows: T[]; error: unknown }> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await fetchPage(from, from + pageSize - 1);
+    if (error) {
+      return { error, rows };
+    }
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < pageSize) {
+      return { error: null, rows };
+    }
+  }
+}
+
+/** Keeps the user_id list of one progress query well inside URL limits. */
+export const PROGRESS_CHUNK_SIZE = 100;
+
+interface ProgressRow {
+  user_id: string;
+  surah_tadabbur?: Record<string, TadabburEntry> | null;
+}
+
+/** surah_tadabbur for many users in one query per chunk. A user with no row,
+ *  or in a chunk that failed, is simply absent (the reminder falls back to
+ *  the daily verse). */
+export async function loadTadabburByUser(
+  userIds: string[],
+  fetchChunk: (ids: string[]) => PromiseLike<PageResult<ProgressRow>>,
+  chunkSize = PROGRESS_CHUNK_SIZE
+): Promise<Map<string, Record<string, TadabburEntry>>> {
+  const unique = [...new Set(userIds)];
+  const byUser = new Map<string, Record<string, TadabburEntry>>();
+  for (let i = 0; i < unique.length; i += chunkSize) {
+    try {
+      const { data, error } = await fetchChunk(unique.slice(i, i + chunkSize));
+      if (error) {
+        console.error("send-reminders: progress lookup failed for a chunk");
+        continue;
+      }
+      for (const row of data ?? []) {
+        if (row.surah_tadabbur) {
+          byUser.set(row.user_id, row.surah_tadabbur);
+        }
+      }
+    } catch {
+      console.error("send-reminders: progress lookup failed for a chunk");
+    }
+  }
+  return byUser;
+}
+
+/** Throws when an SDK write came back with `{ error }`; the SDK resolves
+ *  rather than rejects, so an unread error would look like success. */
+export function assertWritten(result: { error?: unknown }, what: string): void {
+  if (result?.error) {
+    throw new Error(`${what} failed`);
+  }
 }
 
 export interface TadabburEntry {
@@ -280,7 +406,7 @@ export function pickContinueTarget(
 }
 
 // --- Send step: the only place web and native diverge. Everything upstream
-// (cron auth, the 15-minute window, pickContinueTarget, last_sent_date per
+// (cron auth, the due window, pickContinueTarget, last_sent_date per
 // row) is shared; a row's `platform` only picks the transport here.
 
 export const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
@@ -310,9 +436,16 @@ export interface SendDeps {
 }
 
 export interface SendCounts {
+  /** Pushes accepted by the push service. */
   sent: number;
   pruned: number;
+  /** Pushes that were not delivered. */
   failed: number;
+  /** Stamps or deletes that failed after the push step. A sent row whose
+   *  stamp failed is in both `sent` and here. */
+  writeFailed: number;
+  /** Web rows skipped because the endpoint is not a known push service. */
+  blocked: number;
 }
 
 export interface ExpoMessage {
@@ -358,8 +491,33 @@ export async function deliverReminders(
   items: DueSend[],
   deps: SendDeps
 ): Promise<SendCounts> {
-  const counts: SendCounts = { failed: 0, pruned: 0, sent: 0 };
+  const counts: SendCounts = {
+    blocked: 0,
+    failed: 0,
+    pruned: 0,
+    sent: 0,
+    writeFailed: 0,
+  };
   const expo: DueSend[] = [];
+  // The push has gone out by now, so a failed stamp is not a failed send.
+  const stamp = async (item: DueSend): Promise<void> => {
+    counts.sent++;
+    try {
+      await deps.markSent(item.endpoint, item.today);
+    } catch {
+      counts.writeFailed++;
+      console.error("send-reminders: could not stamp last_sent_date");
+    }
+  };
+  const prune = async (item: DueSend): Promise<void> => {
+    try {
+      await deps.prune(item.endpoint);
+      counts.pruned++;
+    } catch {
+      counts.writeFailed++;
+      console.error("send-reminders: could not prune a dead subscription");
+    }
+  };
 
   for (const item of items) {
     const platform = item.platform ?? "web";
@@ -374,24 +532,17 @@ export async function deliverReminders(
       );
       continue;
     }
-    // Web path: unchanged from the original single-transport loop.
+    if (!isAllowedPushEndpoint(item.endpoint)) {
+      counts.blocked++;
+      console.error("send-reminders: web endpoint is not a push service");
+      continue;
+    }
     try {
       await deps.sendWeb(item.endpoint, item.keys, item.payload);
-      await deps.markSent(item.endpoint, item.today);
-      counts.sent++;
     } catch (error) {
       const status = (error as { statusCode?: number }).statusCode;
       if (status === 404 || status === 410) {
-        try {
-          await deps.prune(item.endpoint);
-          counts.pruned++;
-        } catch (error_) {
-          counts.failed++;
-          console.error(
-            `send-reminders: prune failed for ${webHost(item.endpoint)}`,
-            error_
-          );
-        }
+        await prune(item);
       } else {
         counts.failed++;
         console.error(
@@ -399,7 +550,9 @@ export async function deliverReminders(
           error
         );
       }
+      continue;
     }
+    await stamp(item);
   }
 
   for (let i = 0; i < expo.length; i += EXPO_BATCH_SIZE) {
@@ -440,23 +593,16 @@ export async function deliverReminders(
     for (let j = 0; j < batch.length; j++) {
       const item = batch[j];
       const ticket = tickets[j];
-      try {
-        if (ticket?.status === "ok") {
-          await deps.markSent(item.endpoint, item.today);
-          counts.sent++;
-        } else if (ticket?.details?.error === "DeviceNotRegistered") {
-          await deps.prune(item.endpoint);
-          counts.pruned++;
-        } else {
-          counts.failed++;
-          console.error(
-            `send-reminders: expo push failed (${ticket?.details?.error ?? ticket?.status ?? "no ticket"})`,
-            redactTokens(ticket?.message ?? "")
-          );
-        }
-      } catch (error) {
+      if (ticket?.status === "ok") {
+        await stamp(item);
+      } else if (ticket?.details?.error === "DeviceNotRegistered") {
+        await prune(item);
+      } else {
         counts.failed++;
-        console.error("send-reminders: expo ticket handling failed", error);
+        console.error(
+          `send-reminders: expo push failed (${ticket?.details?.error ?? ticket?.status ?? "no ticket"})`,
+          redactTokens(ticket?.message ?? "")
+        );
       }
     }
   }
@@ -474,15 +620,58 @@ const CORS = {
 };
 const JSON_HEADERS = { ...CORS, "Content-Type": "application/json" };
 
+const jsonResponse = (body: unknown, status: number): Response =>
+  new Response(JSON.stringify(body), { headers: JSON_HEADERS, status });
+
+/** Never lets an internal error (or its message) reach the caller. */
 export default async function handler(req: Request): Promise<Response> {
+  try {
+    return await handle(req);
+  } catch (error) {
+    console.error("send-reminders: unhandled error", error);
+    return jsonResponse({ error: "internal error" }, 500);
+  }
+}
+
+async function handle(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: CORS, status: 204 });
   }
+  // Authenticate before loading the push library or touching its secrets.
   const auth = req.headers.get("Authorization") ?? "";
   const cronSecret = Deno.env.get("CRON_SECRET");
   const isCron = !!cronSecret && auth === `Bearer ${cronSecret}`;
 
+  let welcome: { endpoint: string; token: string } | null = null;
+  if (!isCron) {
+    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+    const endpoint = await req
+      .json()
+      .then((b: { endpoint?: unknown }) => b?.endpoint)
+      .catch(() => {});
+    if (!token || typeof endpoint !== "string" || !endpoint) {
+      return jsonResponse({ error: "unauthorized" }, 401);
+    }
+    welcome = { endpoint, token };
+  }
+
   const { createAdminClient, createClient } = await import("npm:@insforge/sdk");
+
+  const userClient = welcome
+    ? createClient({
+        accessToken: welcome.token,
+        baseUrl: Deno.env.get("INSFORGE_BASE_URL"),
+      })
+    : null;
+  let welcomeUserId = "";
+  if (userClient) {
+    const { data: userData } = await userClient.auth.getCurrentUser();
+    if (!userData?.user?.id) {
+      return jsonResponse({ error: "unauthorized" }, 401);
+    }
+    welcomeUserId = userData.user.id;
+  }
+
   const webpush = (await import("npm:web-push")).default;
 
   // oxlint-disable typescript/no-non-null-assertion -- deploy-time secrets; web-push validates them
@@ -502,16 +691,22 @@ export default async function handler(req: Request): Promise<Response> {
       expoAccessToken: Deno.env.get("EXPO_ACCESS_TOKEN") || undefined,
       fetch: (input, init) => fetch(input, init),
       markSent: async (endpoint, today) => {
-        await db.database
-          .from("push_subscriptions")
-          .update({ last_sent_date: today })
-          .eq("endpoint", endpoint);
+        assertWritten(
+          await db.database
+            .from("push_subscriptions")
+            .update({ last_sent_date: today })
+            .eq("endpoint", endpoint),
+          "stamp"
+        );
       },
       prune: async (endpoint) => {
-        await db.database
-          .from("push_subscriptions")
-          .delete()
-          .eq("endpoint", endpoint);
+        assertWritten(
+          await db.database
+            .from("push_subscriptions")
+            .delete()
+            .eq("endpoint", endpoint),
+          "prune"
+        );
       },
       sendWeb: async (endpoint, keys, payload) => {
         await webpush.sendNotification({ endpoint, keys } as never, payload);
@@ -603,95 +798,42 @@ export default async function handler(req: Request): Promise<Response> {
   // --- Welcome path: a signed-in user just subscribed on a device and asks
   // for today's verse immediately, as live confirmation the pipeline works.
   // Stamping last_sent_date means the scheduled send skips today (no double).
-  if (!isCron) {
-    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-    const endpoint = await req
-      .json()
-      .then((b: { endpoint?: string }) => b?.endpoint)
-      .catch(() => {});
-    if (!token || !endpoint) {
-      return new Response(JSON.stringify({ error: "unauthorized" }), {
-        headers: JSON_HEADERS,
-        status: 401,
-      });
-    }
-    const userClient = createClient({
-      accessToken: token,
-      baseUrl: Deno.env.get("INSFORGE_BASE_URL"),
-    });
-    const { data: userData } = await userClient.auth.getCurrentUser();
-    if (!userData?.user?.id) {
-      return new Response(JSON.stringify({ error: "unauthorized" }), {
-        headers: JSON_HEADERS,
-        status: 401,
-      });
-    }
+  if (welcome && userClient) {
     // RLS scopes this to the caller's own rows — no one can target another
     // user's endpoint.
     const { data: sub, error } = await userClient.database
       .from("push_subscriptions")
       .select("endpoint, platform, keys, timezone")
-      .eq("endpoint", endpoint)
+      .eq("endpoint", welcome.endpoint)
       .maybeSingle();
     if (error || !sub) {
-      return new Response(JSON.stringify({ error: "subscription not found" }), {
-        headers: JSON_HEADERS,
-        status: 404,
-      });
+      return jsonResponse({ error: "subscription not found" }, 404);
     }
-    if (sub.platform === "expo") {
-      // Native welcome: same payload and last_sent_date stamp, Expo transport.
-      let sent = 0;
-      try {
-        ({ sent } = await deliverReminders(
-          [
-            {
-              endpoint: sub.endpoint,
-              keys: null,
-              payload: await todaysPayload(sub.timezone, userData.user.id),
-              platform: "expo",
-              today: localDateInZone(now, sub.timezone),
-            },
-          ],
-          sendDeps(userClient)
-        ));
-      } catch (error_) {
-        console.error("send-reminders: welcome expo push failed", error_);
-      }
-      return sent === 1
-        ? new Response(JSON.stringify({ sent: 1 }), {
-            headers: JSON_HEADERS,
-            status: 200,
-          })
-        : new Response(JSON.stringify({ error: "push failed" }), {
-            headers: JSON_HEADERS,
-            status: 502,
-          });
-    }
+    // Same transports, endpoint allowlist and stamp as the cron. Only native
+    // rows are pruned here, as before.
+    const deps = sendDeps(userClient);
+    let counts: SendCounts | null = null;
     try {
-      await webpush.sendNotification(
-        { endpoint: sub.endpoint, keys: sub.keys },
-        await todaysPayload(sub.timezone, userData.user.id)
+      counts = await deliverReminders(
+        [
+          {
+            endpoint: sub.endpoint,
+            keys: sub.keys,
+            payload: await todaysPayload(sub.timezone, welcomeUserId),
+            platform: sub.platform,
+            today: localDateInZone(now, sub.timezone),
+          },
+        ],
+        sub.platform === "expo"
+          ? deps
+          : { ...deps, prune: () => Promise.resolve() }
       );
-      await userClient.database
-        .from("push_subscriptions")
-        .update({ last_sent_date: localDateInZone(now, sub.timezone) })
-        .eq("endpoint", sub.endpoint);
-      return new Response(JSON.stringify({ sent: 1 }), {
-        headers: JSON_HEADERS,
-        status: 200,
-      });
     } catch (error_) {
-      const status = (error_ as { statusCode?: number }).statusCode;
-      console.error(
-        `send-reminders: welcome push failed (status ${status ?? "unknown"})`,
-        error_
-      );
-      return new Response(JSON.stringify({ error: "push failed" }), {
-        headers: JSON_HEADERS,
-        status: 502,
-      });
+      console.error("send-reminders: welcome push failed", error_);
     }
+    return counts?.sent === 1
+      ? jsonResponse({ sent: 1, writeFailed: counts.writeFailed }, 200)
+      : jsonResponse({ error: "push failed" }, 502);
   }
 
   // --- Cron path: the 15-minute schedule fanning out to everyone due.
@@ -702,69 +844,49 @@ export default async function handler(req: Request): Promise<Response> {
     apiKey: Deno.env.get("API_KEY")!,
   });
 
-  const { data: subs, error } = await admin.database
-    .from("push_subscriptions")
-    .select(
-      "endpoint, platform, keys, reminder_time, timezone, last_sent_date, user_id"
-    )
-    // Deterministic order so the 1000-row cap truncates the same tail every
-    // run (rather than silently rotating which subscribers get dropped).
-    .order("endpoint")
-    .limit(1000);
+  interface SubRow {
+    endpoint: string;
+    platform?: string | null;
+    keys: unknown;
+    reminder_time: string;
+    timezone: string;
+    last_sent_date: string | null;
+    user_id: string;
+  }
+  // Stable order so pages neither overlap nor skip rows.
+  const { rows: subs, error } = await fetchAllRows<SubRow>((from, to) =>
+    admin.database
+      .from("push_subscriptions")
+      .select(
+        "endpoint, platform, keys, reminder_time, timezone, last_sent_date, user_id"
+      )
+      .order("endpoint")
+      .range(from, to)
+  );
   if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: JSON_HEADERS,
-      status: 500,
-    });
+    console.error("send-reminders: subscription read failed", error);
+    return jsonResponse({ error: "internal error" }, 500);
   }
-  // Logged so hitting the cap is observable in function logs.
-  console.log(`send-reminders: fetched ${subs?.length ?? 0} subscription rows`);
-
-  // One progress lookup per due user per run (a user can have several devices).
-  const tadabburCache = new Map<string, Record<string, TadabburEntry> | null>();
-  async function tadabburFor(
-    userId: string
-  ): Promise<Record<string, TadabburEntry> | null> {
-    const cached = tadabburCache.get(userId);
-    if (cached !== undefined) {
-      return cached;
-    }
-    const { data } = await admin.database
-      .from("progress")
-      .select("surah_tadabbur")
-      .eq("user_id", userId)
-      .maybeSingle();
-    const value = data?.surah_tadabbur ?? null;
-    tadabburCache.set(userId, value);
-    return value;
-  }
+  console.log(`send-reminders: fetched ${subs.length} subscription rows`);
 
   let prepFailed = 0;
   let skipped = 0;
-  const due: DueSend[] = [];
-  for (const sub of subs ?? []) {
-    // Whole per-subscription body is guarded: an invalid user-supplied IANA
-    // timezone (minutesOfDayInZone/localDayIndexInZone throw RangeError) or a
-    // verse-fetch failure must not abort the remaining subscriptions.
+  const dueSubs: { sub: SubRow; today: string }[] = [];
+  for (const sub of subs) {
+    // Guarded per row: an invalid user-supplied IANA timezone throws
+    // RangeError and must not abort the remaining subscriptions.
     try {
-      const nowMin = minutesOfDayInZone(now, sub.timezone);
-      const today = localDateInZone(now, sub.timezone);
-      if (!isDue(sub.reminder_time, nowMin) || sub.last_sent_date === today) {
-        skipped++;
-        continue;
-      }
-      const payload = await reminderPayload(
+      const today = dueOccurrence(
+        sub.reminder_time,
+        now,
         sub.timezone,
-        sub.user_id,
-        await tadabburFor(sub.user_id)
+        sub.last_sent_date
       );
-      due.push({
-        endpoint: sub.endpoint,
-        keys: sub.keys,
-        payload,
-        platform: sub.platform,
-        today,
-      });
+      if (today === null) {
+        skipped++;
+      } else {
+        dueSubs.push({ sub, today });
+      }
     } catch (error_) {
       prepFailed++;
       console.error(
@@ -773,14 +895,47 @@ export default async function handler(req: Request): Promise<Response> {
       );
     }
   }
+
+  // One progress query per chunk of due users, not one per user.
+  const tadabburByUser = await loadTadabburByUser(
+    dueSubs.map((d) => d.sub.user_id),
+    (ids) =>
+      admin.database
+        .from("progress")
+        .select("user_id, surah_tadabbur")
+        .in("user_id", ids)
+  );
+
+  const due: DueSend[] = [];
+  for (const { sub, today } of dueSubs) {
+    // A verse-fetch failure for one row must not abort the rest.
+    try {
+      due.push({
+        endpoint: sub.endpoint,
+        keys: sub.keys,
+        payload: await reminderPayload(
+          sub.timezone,
+          sub.user_id,
+          tadabburByUser.get(sub.user_id)
+        ),
+        platform: sub.platform,
+        today,
+      });
+    } catch (error_) {
+      prepFailed++;
+      console.error("send-reminders: payload build failed", error_);
+    }
+  }
   const {
     sent,
     pruned,
     failed: sendFailed,
+    writeFailed,
+    blocked,
   } = await deliverReminders(due, sendDeps(admin));
   const failed = prepFailed + sendFailed;
-  return new Response(JSON.stringify({ failed, pruned, sent, skipped }), {
-    headers: JSON_HEADERS,
-    status: 200,
-  });
+  return jsonResponse(
+    { blocked, failed, pruned, sent, skipped, writeFailed },
+    200
+  );
 }

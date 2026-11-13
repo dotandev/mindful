@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { rhythmLabel, rhythmLine, weekRhythm } from "./rhythm";
+import { rhythmLine, weekRhythm } from "./rhythm";
 import type { JournalEntry } from "./types";
 
 function entryAt(date: Date): JournalEntry {
@@ -108,11 +108,5 @@ describe(rhythmLine, () => {
   it("uses the plural otherwise", () => {
     expect(rhythmLine(4)).toBe("You kept reflections on 4 days this week.");
     expect(rhythmLine(7)).toBe("You kept reflections on 7 days this week.");
-  });
-});
-
-describe(rhythmLabel, () => {
-  it("describes the dots for screen readers", () => {
-    expect(rhythmLabel(4)).toBe("Reflections on 4 of the last 7 days");
   });
 });

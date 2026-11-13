@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 // Env-gated smoke test: sign in, write a journal entry, confirm it syncs to
 // a second signed-in device. Skips cleanly when no credentials are supplied
 // (CI / local dev without a verified test account). See README.md
-// "Accounts & sync (v1)" for how to create a verified test account.
+// "Accounts and sync" for how to create a verified test account.
 const EMAIL = process.env.E2E_EMAIL;
 const PASSWORD = process.env.E2E_PASSWORD;
 
@@ -33,10 +33,17 @@ test("sign in, write an entry, sync round-trip", async ({ page }) => {
   // page itself (Journal only lists/exports/deletes).
   await page.goto("/checkin");
   const marker = `e2e-${Date.now()}`;
+  // A fresh visit opens on the feelings step; the reflection box only
+  // appears once the verse is showing.
+  await page
+    .getByRole("button", { name: "Just show me today’s verse" })
+    .click();
   const journalBox = page.locator("#checkin-journal");
   await expect(journalBox).toBeVisible({ timeout: 15_000 });
   await journalBox.fill(marker);
-  await page.getByRole("button", { exact: true, name: "Save" }).click();
+  await page
+    .getByRole("button", { exact: true, name: "Keep in journal" })
+    .click();
   await expect(page.getByText(/kept in your journal/iu)).toBeVisible();
 
   // Force the push instead of racing the 3s debounce — deterministic rather

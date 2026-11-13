@@ -25,7 +25,7 @@ export interface DueFollowUp {
   entry: JournalEntry;
   kind: FollowUpKind;
   ref: string;
-  /** Same as `ref`; kept for callers written before session follow-ups. */
+  /** Same as `ref`; the follow-up cards read this name. */
   verseKey: string;
   action: string;
 }
@@ -128,6 +128,18 @@ export function saveFollowUpState(
   } catch {
     // storage blocked or full: the card may reappear, nothing is lost
   }
+}
+
+/** Carries skipped follow-ups over to entries that were given new ids. */
+export function remapFollowUpIds(
+  state: FollowUpState,
+  idMap: ReadonlyMap<string, string>
+): FollowUpState {
+  const skipped: Record<string, number> = {};
+  for (const [id, at] of Object.entries(state.skipped)) {
+    skipped[idMap.get(id) ?? id] = at;
+  }
+  return { ...state, skipped };
 }
 
 export function skipFollowUp(

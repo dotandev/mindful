@@ -6,10 +6,12 @@ import { VitePWA } from "vite-plugin-pwa";
 // then cached by the service worker so the app works fully offline after first load.
 export default defineConfig({
   // .env / .env.local stay at the repo root (shared with the InsForge CLI setup).
-  envDir: "../..", // resolved against this app root
+  // The PDF export (pdf-lib and its fonts) is one large chunk, loaded only
+  // when someone exports their journal. Everything else is well under this.
   build: {
-    chunkSizeWarningLimit: 1200,
+    chunkSizeWarningLimit: 1100,
   },
+  envDir: "../..", // resolved against this app root
   plugins: [
     react(),
     VitePWA({

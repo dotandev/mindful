@@ -18,7 +18,21 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#2a3a8c"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "mindfulverse.vercel.app",
+              "pathPrefix": "/circle/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
       "expo-router",

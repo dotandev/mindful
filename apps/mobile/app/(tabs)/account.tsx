@@ -1,4 +1,5 @@
 import { track } from "@mindfulverse/core/analytics";
+import { getJoinedCircle, leaveCircle } from "@mindfulverse/core/circles";
 import { useAccount } from "@mindfulverse/core/sync/auth";
 import {
   getSyncStatus,
@@ -15,7 +16,10 @@ import { Alert, KeyboardAvoidingView, Platform, View } from "react-native";
 
 import { AuthForm } from "../../src/components/Account/AuthForm";
 import type { AuthMode } from "../../src/components/Account/AuthForm";
-import { NETWORK_ERROR } from "../../src/components/Account/logic";
+import {
+  joinedCircleDeleted,
+  NETWORK_ERROR,
+} from "../../src/components/Account/logic";
 import {
   FormError,
   LinkButton,
@@ -26,6 +30,7 @@ import {
 import { ReminderSection } from "../../src/components/Account/ReminderSection";
 import { SettingsSection } from "../../src/components/Account/SettingsSection";
 import { SyncSection } from "../../src/components/Account/SyncSection";
+import { disableLocalReminder } from "../../src/localReminder";
 import {
   disableReminder,
   forgetPushToken,
@@ -103,6 +108,9 @@ export default function Account() {
       /* best effort — sign-out must proceed regardless */
     }
     forgetPushToken();
+    // The on-device reminder too: its controls are only shown when signed in.
+    // Best effort: it reports a failure instead of throwing.
+    await disableLocalReminder();
     try {
       await endSession();
     } catch {
@@ -132,7 +140,13 @@ export default function Account() {
     try {
       // Only sign out once every delete succeeded — signing out on a partial
       // failure would strand data the user believes is gone.
-      const results = await Promise.all([
+      const [circles, ...results] = await Promise.all([
+        // The circles this account started. Returns their codes.
+        insforge.database
+          .from("circles")
+          .delete()
+          .eq("owner_id", userId)
+          .select("code"),
         insforge.database
           .from("journal_entries")
           .delete()
@@ -140,7 +154,14 @@ export default function Account() {
         insforge.database.from("progress").delete().eq("user_id", userId),
         unregisterPush(userId), // every device's reminder for this account
       ]);
-      if (results.some((r) => r.error)) {
+      // A deleted circle is gone for everyone, this device included.
+      if (
+        !circles.error &&
+        joinedCircleDeleted(getJoinedCircle()?.code ?? null, circles.data)
+      ) {
+        leaveCircle();
+      }
+      if (circles.error || results.some((r) => r.error)) {
         setNotice(null);
         setError("Couldn't delete everything. Please try again.");
         setBusy(false);

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   feedbackMailto,
   formatTime,
+  joinedCircleDeleted,
   normalizeOtp,
   notificationsBlocked,
   parseTime,
@@ -129,5 +130,19 @@ describe(feedbackMailto, () => {
     expect(decodeURIComponent(href.split("body=")[1])).toBe(
       "Salaam alaykum warahmatullah wabarakatuh!\n\n"
     );
+  });
+});
+
+describe(joinedCircleDeleted, () => {
+  it("is true when the joined circle was one of the deleted ones", () => {
+    expect(
+      joinedCircleDeleted("abc234", [{ code: "zzz999" }, { code: "abc234" }])
+    ).toBeTruthy();
+  });
+
+  it("is false for someone else's circle, no circle or no rows", () => {
+    expect(joinedCircleDeleted("abc234", [{ code: "zzz999" }])).toBeFalsy();
+    expect(joinedCircleDeleted(null, [{ code: "abc234" }])).toBeFalsy();
+    expect(joinedCircleDeleted("abc234", null)).toBeFalsy();
   });
 });

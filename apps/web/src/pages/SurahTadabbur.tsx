@@ -24,7 +24,9 @@ import type { CSSProperties, ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { Diamond, DyeRule, TitlePlate } from "../components/Adire";
+import BackLink from "../components/BackLink";
 import IntentionField from "../components/IntentionField";
+import { coveringAyah } from "../lib/tafsirCovering";
 
 import "./tadabbur.css";
 
@@ -75,20 +77,6 @@ function useMounted(resetKey: unknown): boolean {
 }
 
 // Shared bits
-
-/** Ibn Kathir comments on passages: a run of ayahs stores its commentary under
- *  the first ayah of the group. Find the entry covering this ayah. */
-function coveringFromIndex(indexed: number[], ayah: number): number | null {
-  let best: number | null = null;
-  for (const n of indexed) {
-    if (n <= ayah) {
-      best = n;
-    } else {
-      break;
-    }
-  }
-  return best;
-}
 
 // The surah's background text, shown first (per user feedback). Long infos are
 // trimmed to the opening paragraphs with a "Read more" expander.
@@ -662,7 +650,7 @@ function SurahTadabburPage() {
           <p className="muted">That surah doesn’t exist.</p>
           <div>
             <Link to="/sessions" className="btn secondary">
-              Back to tadabbur
+              Tadabbur
             </Link>
           </div>
         </div>
@@ -686,7 +674,7 @@ function SurahTadabburPage() {
           <p className="muted">Check your connection and try again.</p>
           <div>
             <Link to="/sessions" className="btn secondary">
-              Back to tadabbur
+              Tadabbur
             </Link>
           </div>
         </div>
@@ -708,9 +696,7 @@ function SurahTadabburPage() {
     const hasPage = !surahJournal(getEntries(), surahNumber).isEmpty;
     return (
       <div className="stack">
-        <Link to="/sessions" className="muted back-link">
-          All tadabbur
-        </Link>
+        <BackLink to="/sessions">Tadabbur</BackLink>
         <FadeRise show={mounted} reduce={reduce}>
           <div className="stack">
             <TitlePlate surah={surahNumber} name={name} />
@@ -819,7 +805,7 @@ function SurahTadabburPage() {
               {`See your page on ${name}`}
             </Link>
             <Link to="/sessions" className="btn secondary">
-              Back to tadabbur
+              Tadabbur
             </Link>
           </div>
         </FadeRise>
@@ -829,13 +815,11 @@ function SurahTadabburPage() {
 
   // One verse per step.
   const a = ayahs[phase];
-  const covering = coveringFromIndex(indexed, a.ayah);
+  const covering = coveringAyah(indexed, a.ayah);
 
   return (
     <div className="stack">
-      <Link to="/sessions" className="muted back-link">
-        All tadabbur
-      </Link>
+      <BackLink to="/sessions">Tadabbur</BackLink>
 
       <p className="eyebrow" aria-live="polite">
         Verse {phase + 1} of {count}

@@ -288,27 +288,29 @@ const fetchBody = async (
   }
 };
 
-const resolvesPublicly = async (
-  domain: string,
+type Resolution = "public" | "private" | "none";
+
+/** "none" covers both no A/AAAA records and a failed lookup. */
+const resolution = async (
+  host: string,
   resolve: (host: string) => Promise<string[]>
-): Promise<boolean> => {
+): Promise<Resolution> => {
   try {
-    const addresses = await resolve(domain);
-    return addresses.length > 0 && !addresses.some(isPrivateAddress);
+    const addresses = await resolve(host);
+    if (addresses.length === 0) {
+      return "none";
+    }
+    return addresses.some(isPrivateAddress) ? "private" : "public";
   } catch {
-    return false;
+    return "none";
   }
 };
 
 const checkHost = async (
   host: string,
   token: string,
-  fetchFn: typeof fetch,
-  resolve?: (host: string) => Promise<string[]>
+  fetchFn: typeof fetch
 ): Promise<boolean> => {
-  if (resolve && !(await resolvesPublicly(host, resolve))) {
-    return false;
-  }
   const fileBody = await fetchBody(
     `https://${host}${WELL_KNOWN_PATH}`,
     fetchFn
@@ -329,13 +331,19 @@ export const checkDomain = async (
   if (normalizeDomain(domain) !== domain) {
     return false;
   }
-  if (resolve && !(await resolvesPublicly(domain, resolve))) {
+  const apex = resolve ? await resolution(domain, resolve) : "public";
+  if (apex === "private") {
     return false;
   }
-  if (await checkHost(domain, token, fetchFn)) {
+  // An apex with no address is skipped, not refused: some sites only serve www.
+  if (apex === "public" && (await checkHost(domain, token, fetchFn))) {
     return true;
   }
-  return checkHost(`${WWW_PREFIX}${domain}`, token, fetchFn, resolve);
+  const www = `${WWW_PREFIX}${domain}`;
+  if (resolve && (await resolution(www, resolve)) !== "public") {
+    return false;
+  }
+  return checkHost(www, token, fetchFn);
 };
 
 const randomBase64Url = (byteCount: number): string => {

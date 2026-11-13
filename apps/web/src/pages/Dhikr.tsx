@@ -163,16 +163,32 @@ function readSoundPref(): boolean {
   }
 }
 
-function playTick() {
-  try {
+// One shared context for every sound: browsers cap how many can be open.
+let audioContext: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  if (!audioContext) {
     const AudioCtx =
       window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext;
     if (!AudioCtx) {
+      return null;
+    }
+    audioContext = new AudioCtx();
+  }
+  if (audioContext.state === "suspended") {
+    void audioContext.resume().catch(() => {});
+  }
+  return audioContext;
+}
+
+function playTick() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) {
       return;
     }
-    const ctx = new AudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "sine";
@@ -191,14 +207,10 @@ function playTick() {
 
 function playCompletionChime() {
   try {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    if (!AudioCtx) {
+    const ctx = getAudioContext();
+    if (!ctx) {
       return;
     }
-    const ctx = new AudioCtx();
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();

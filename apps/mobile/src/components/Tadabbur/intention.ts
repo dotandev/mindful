@@ -34,6 +34,11 @@ export function composeIntention(
   };
 }
 
-export function surahPageHref(surah: number): string {
+/** What a surah's own journal page is called, in links and as its heading. */
+export function surahPageLabel(name: string): string {
+  return `Your page on ${name}`;
+}
+
+export function surahPageHref(surah: number): `/tadabbur/journal/${number}` {
   return `/tadabbur/journal/${surah}`;
 }

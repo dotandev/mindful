@@ -17,6 +17,30 @@ export const CIRCLE_EYEBROW = "Your circle is reading";
 export const namedEyebrow = (name: string): string => `${name} is reading`;
 export const focusLine = (verse: number): string => `Focus: verse ${verse}`;
 
+/** The named-circle card's one line: the focus verse when the circle has one,
+ *  else the intro. Never both. */
+export function namedLine(verse: number | null): string {
+  return verse === null ? BEGIN_LINE : focusLine(verse);
+}
+
+export const CONTINUE_EYEBROW = "Your surah";
+export const RESUME_ACTION = "Resume";
+export const YOUR_CIRCLE_LINK = "Your circle";
+
+/** Where the surah in progress stands, under "Continue Al-Kahf". */
+export function whereYouAre(
+  ayah: number,
+  meta: Pick<SurahMeta, "ayahCount"> | undefined
+): string {
+  if (!meta) {
+    return `You’ve pondered up to verse ${ayah}.`;
+  }
+  if (ayah >= meta.ayahCount) {
+    return `You’ve pondered all ${meta.ayahCount} verses.`;
+  }
+  return `Verse ${ayah} of ${meta.ayahCount}`;
+}
+
 /** "Go to verse 10" when the circle has a focus verse, else "Begin Al-Kahf". */
 export function namedAction(surahTitle: string, verse: number | null): string {
   return verse === null ? `Begin ${surahTitle}` : `Go to verse ${verse}`;

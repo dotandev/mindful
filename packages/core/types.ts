@@ -51,7 +51,7 @@ export interface SessionStep {
   reflection?: string; // OPTIONAL hand-written reflection prompt for this step
 }
 
-/** A curated tadabbur session. Served from /data/sessions.json (array of 10). */
+/** A curated tadabbur session. Served from /data/sessions.json (array of 20). */
 export interface TadabburSession {
   id: string; // stable slug, e.g. "patience-in-hardship"
   title: string;
@@ -73,7 +73,7 @@ export interface EmotionEntry {
 /** Served from /data/emotions.json (array). */
 export type EmotionMap = EmotionEntry[];
 
-/** A saved journal entry (local-only, localStorage). */
+/** A saved journal entry (localStorage; synced when signed in). */
 export interface JournalEntry {
   id: string;
   createdAt: number; // epoch ms
@@ -114,7 +114,7 @@ export interface Division {
   opening?: string;
 }
 
-/** Mushaf divisions from QUL metadata (public/data/divisions.json). */
+/** Mushaf divisions from QUL metadata (apps/web/public/data/divisions.json). */
 export interface Divisions {
   juz: Division[]; // 30
   hizb: Division[]; // 60

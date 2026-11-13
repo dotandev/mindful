@@ -1,6 +1,6 @@
 // Lightweight, privacy-respecting event logging for the v0 retention experiment.
-// No third-party SDK: events are buffered in localStorage so we can inspect
-// return-visit behaviour without a backend.
+// No third-party SDK: events stay in localStorage on this device (never
+// uploaded) and the Stats page reads them from there.
 //
 // The kill/greenlight metrics from the plan are all derivable from these events:
 //   - Day-1/3/7 return  -> "app_open" timestamps
@@ -43,13 +43,15 @@ export function configureAnalytics(opts: {
 
 const KEY = "mindfulverse.events.v1";
 const FIRST_SEEN = "mindfulverse.firstSeen.v1";
+/** Only the newest events are kept, so the log cannot grow without bound. */
+export const MAX_EVENTS = 3000;
 
 export function track(e: AnalyticsEvent): void {
   try {
     const raw = localStorage.getItem(KEY);
     const events: StoredEvent[] = raw ? JSON.parse(raw) : [];
     events.push({ e, t: Date.now() });
-    localStorage.setItem(KEY, JSON.stringify(events));
+    localStorage.setItem(KEY, JSON.stringify(events.slice(-MAX_EVENTS)));
     onTrack?.(e);
   } catch {
     /* analytics must never break the app */
@@ -67,8 +69,12 @@ export function getEvents(): StoredEvent[] {
 
 /** Records first-seen once, then fires app_open every load. */
 export function trackAppOpen(): void {
-  if (!localStorage.getItem(FIRST_SEEN)) {
-    localStorage.setItem(FIRST_SEEN, String(Date.now()));
+  try {
+    if (!localStorage.getItem(FIRST_SEEN)) {
+      localStorage.setItem(FIRST_SEEN, String(Date.now()));
+    }
+  } catch {
+    /* storage blocked or full: still try to log the open */
   }
   track({ type: "app_open" });
 }

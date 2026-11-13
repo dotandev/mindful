@@ -27,7 +27,9 @@ import { useEffect, useId, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 
+import BackLink from "../components/BackLink";
 import FeedbackLink from "../components/FeedbackLink";
+import { coveringAyah } from "../lib/tafsirCovering";
 import { usePrefersReducedMotion } from "../lib/usePrefersReducedMotion";
 
 // Motion helpers — transform + opacity only, all under 400ms. No index.css edits.
@@ -127,7 +129,7 @@ export default function SessionPlayer() {
           <h2>We couldn’t open this session</h2>
           <p className="muted">Check your connection and try again.</p>
           <Link to="/sessions" className="btn secondary">
-            Back to sessions
+            Tadabbur
           </Link>
         </div>
       </div>
@@ -141,7 +143,7 @@ export default function SessionPlayer() {
           <h2>This session isn’t here</h2>
           <p className="muted">This session couldn’t be found.</p>
           <Link to="/sessions" className="btn secondary">
-            Back to sessions
+            Tadabbur
           </Link>
         </div>
       </div>
@@ -200,9 +202,7 @@ function SessionFlow({ session }: { session: TadabburSession }) {
   if (phase < 0) {
     return (
       <div className="stack">
-        <Link to="/sessions" className="muted">
-          All sessions
-        </Link>
+        <BackLink to="/sessions">Tadabbur</BackLink>
         <FadeRise show={mounted} reduce={reduce}>
           <div className="stack">
             <p className="eyebrow">{session.theme}</p>
@@ -263,9 +263,7 @@ function SessionFlow({ session }: { session: TadabburSession }) {
   const step = session.steps[phase];
   return (
     <div className="stack">
-      <Link to="/sessions" className="muted">
-        All sessions
-      </Link>
+      <BackLink to="/sessions">Tadabbur</BackLink>
 
       <p className="eyebrow" aria-live="polite">
         Step {phase + 1} of {stepCount}
@@ -420,6 +418,9 @@ function StepView({ step, reduce }: { step: SessionStep; reduce: boolean }) {
 
 interface TafsirEntry {
   verseKey: string;
+  /** The ayah the commentary is stored under: the verse itself, or the first
+   *  verse of the passage that covers it. */
+  source: number;
   text: string;
 }
 type TafsirStatus =
@@ -492,11 +493,19 @@ function TafsirDisclosure({ verseKeys }: { verseKeys: string[] }) {
       const maps = await Promise.all(surahs.map((s) => loadSurahTafsir(s)));
       const bySurah = new Map(surahs.map((s, i) => [s, maps[i]]));
       const entries: TafsirEntry[] = [];
+      // Two verses of one passage share an entry; show it once.
+      const shown = new Set<string>();
       for (const vk of verseKeys) {
         const { surah, ayah } = parseVerseKey(vk);
-        const text = bySurah.get(surah)?.[String(ayah)];
-        if (text) {
-          entries.push({ text, verseKey: vk });
+        const map = bySurah.get(surah) ?? {};
+        // Integer keys come back in ascending order.
+        const indexed = Object.keys(map).map(Number);
+        const source = coveringAyah(indexed, ayah);
+        const text = source === null ? undefined : map[String(source)];
+        const id = `${surah}:${source}`;
+        if (source !== null && text && !shown.has(id)) {
+          shown.add(id);
+          entries.push({ source, text, verseKey: vk });
         }
       }
       setStatus({ entries, kind: "ready" });
@@ -537,6 +546,7 @@ function TafsirDisclosure({ verseKeys }: { verseKeys: string[] }) {
                     <span className="eyebrow">
                       {surahName ? `${surahName} ` : ""}
                       {e.verseKey}
+                      {e.source === ayah ? "" : ` (with verse ${e.source})`}
                     </span>
                     <span className="rule" />
                   </div>
@@ -695,9 +705,7 @@ function FinalScreen({
         />
       </FadeRise>
 
-      <Link to="/sessions" className="muted">
-        Back to all sessions
-      </Link>
+      <BackLink to="/sessions">Tadabbur</BackLink>
     </div>
   );
 }

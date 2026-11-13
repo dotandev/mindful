@@ -157,7 +157,7 @@ export default function Reader() {
                     <Link to={`/read/${s.number}`} className="index-row">
                       <Diamond n={s.number} outline />
                       <span className="row-text">
-                        <span className="read-sr">Surah {s.number}, </span>
+                        <span className="sr-only">Surah {s.number}, </span>
                         <span className="row-title">{s.name}</span>
                         <span className="row-meta">
                           {place ? `${place} · ` : ""}

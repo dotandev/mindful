@@ -12,7 +12,14 @@
     "render:day": "remotion render src/index.ts DayInTheLife out/day-in-the-life.mp4",
     "capture:whatsnew": "node scripts/capture-whatsnew.mjs",
     "render:whatsnew": "remotion render src/index.ts WhatsNew out/whats-new.mp4",
-    "render:whatsnew:silent": "remotion render src/index.ts WhatsNewSilent out/whats-new-silent.mp4"
+    "render:whatsnew:silent": "remotion render src/index.ts WhatsNewSilent out/whats-new-silent.mp4",
+    "capture:three": "node scripts/capture-three.mjs",
+    "render:onesurah": "remotion render src/index.ts OneSurahOneWeek out/one-surah-one-week.mp4",
+    "render:onesurah:silent": "remotion render src/index.ts OneSurahOneWeekSilent out/one-surah-one-week-silent.mp4",
+    "render:stand": "remotion render src/index.ts StandLoop out/stand-loop-landscape.mp4",
+    "render:stand:vertical": "remotion render src/index.ts StandLoopVertical out/stand-loop-vertical.mp4",
+    "render:circle": "remotion render src/index.ts StartACircle out/start-a-circle.mp4",
+    "render:circle:silent": "remotion render src/index.ts StartACircleSilent out/start-a-circle-silent.mp4"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.534",

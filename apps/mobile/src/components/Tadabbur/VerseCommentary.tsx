@@ -7,10 +7,11 @@ import { memo, useState } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 
+import { splitParagraphs } from "../../text";
 import { radius, space, useTheme } from "../../theme";
 import { Text } from "../../ui";
 import { ActionLink } from "../Reader/ActionLink";
-import { commentaryToggleLabel, splitParagraphs } from "./logic";
+import { commentaryToggleLabel } from "./logic";
 
 export const VerseCommentary = memo(
   ({

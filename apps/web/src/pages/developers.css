@@ -73,14 +73,6 @@
   flex: none;
   min-height: 44px;
 }
-.dev-sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
 .dev-code {
   margin: 0;
   padding: 14px 16px;

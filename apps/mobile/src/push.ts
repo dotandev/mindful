@@ -1,7 +1,6 @@
 import { insforge } from "@mindfulverse/core/sync/insforge";
 // Daily-reminder registration for native, mirroring apps/web/src/lib/push.ts
-// (same function names and results) over the Phase 3 contract
-// (docs/superpowers/plans/2026-10-06-rn-phase3-push-platform.md):
+// (same function names and results) over the Phase 3 contract:
 // one push_subscriptions row per device+account, endpoint = Expo push token,
 // platform = 'expo', keys omitted, user_id defaulted by the server.
 //
@@ -10,16 +9,23 @@ import { insforge } from "@mindfulverse/core/sync/insforge";
 //   - FCM: google-services.json referenced by `android.googleServicesFile`
 //     (app.config.js: the GOOGLE_SERVICES_JSON EAS file env var, or the local
 //     file), plus an FCM V1 service-account key uploaded to EAS credentials;
-//   - the Phase 3 migration + send-reminders deploy ("Apply later").
+//   - the push_subscriptions migration and the send-reminders function applied
+//     to the InsForge project.
 // pushSupport() is "not-configured" until android.googleServicesFile is set
 // (without it getExpoPushTokenAsync fails on Android with "Default FirebaseApp
 // is not initialized"), and "no-project" without a project id. iOS is not
 // shipping yet: its APNs setup can't be detected from app config, so it is
-// "not-configured" too. ReminderSection shows its "not in this version yet"
-// copy for anything but "ok"; enableReminder() returns a friendly error.
+// "not-configured" too. For anything but "ok", the reminder is scheduled on
+// the phone instead (localReminder.ts).
+// Push being configured does not mean it delivers. When enableReminder() fails,
+// or succeeds without the test push going out (`welcomed` false), reminder.ts
+// also schedules the on-device reminder as a backstop. The first daily verse
+// push that arrives cancels the backstop.
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+
+import { NOT_ALLOWED } from "./reminderModel";
 
 const TOKEN_KEY = "mindfulverse.expoPushToken.v1";
 // send-reminders sets no channelId, and Expo delivers those to the "default"
@@ -92,7 +98,7 @@ async function obtainToken(): Promise<TokenResult> {
     ({ status } = await Notifications.requestPermissionsAsync());
   }
   if (status !== "granted") {
-    return { error: "Notifications were not allowed.", token: null };
+    return { error: NOT_ALLOWED, token: null };
   }
   try {
     const { data } = await Notifications.getExpoPushTokenAsync({

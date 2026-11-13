@@ -11,9 +11,10 @@
 // and gratitude. Permanently excluded despite fame: 65:2, 40:60, 14:7, 8:46,
 // 2:155 (alone), 3:173, 24:26, 9:129 (alone), 7:156, 21:87 (alone), 3:186.
 //
-// The day index is hash-scrambled so consecutive days land in different parts
-// of the pool (the pool contains near-twins like 94:5/94:6 — walked in order
-// they would read as "the verse never changed").
+// Each day steps a fixed stride through the pool (see verseKeyFor) so
+// consecutive days land in different parts of it (the pool contains near-twins
+// like 94:5/94:6 — walked in order they would read as "the verse never
+// changed").
 //
 // Mirrored in functions/send-reminders.ts (push reminders) — keep the two in sync.
 
@@ -159,11 +160,15 @@ export const DAILY_VERSES: string[] = [
   "108:2",
 ];
 
-/** Days since epoch, local time — flips at the user's own midnight. */
-function localDayIndex(): number {
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return Math.floor(startOfDay.getTime() / 86_400_000);
+const MS_PER_DAY = 86_400_000;
+
+/** Days since epoch of the reader's local calendar date. Counts dates, not
+ *  local midnights, so a DST change never repeats or skips a day.
+ *  functions/send-reminders.ts localDayIndexInZone must give the same number. */
+export function localDayIndex(now: Date = new Date()): number {
+  return (
+    Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / MS_PER_DAY
+  );
 }
 
 /** Where this person's walk through the pool starts: FNV-1a of their seed. */

@@ -54,13 +54,11 @@ function greeting(hour: number): string {
 
 // The surah journal leads; these are
 // the places to go when there is more time, or a need.
-// An entry with `soon` renders inert, with a "Soon" pill instead of a chevron.
 interface Entry {
   to: string;
   title: string;
   desc: string;
   Icon: () => JSX.Element;
-  soon?: boolean;
 }
 
 /** Circles: three readers around one centre. */
@@ -158,7 +156,7 @@ function SurahLead({
             to={`/tadabbur/${current.surah}/journal`}
             className="home-lead-quiet"
           >
-            Your page for {name}
+            Your page on {name}
           </Link>
         </div>
       </section>
@@ -299,12 +297,16 @@ export default function Home() {
         }
       })
       .catch(() => {});
-    const id = requestAnimationFrame(() => active && setMounted(true));
     return () => {
       active = false;
-      cancelAnimationFrame(id);
     };
   }, [accountId, accountLoading]);
+
+  // Reveal the page straight away; only the verse waits for the account.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   const reveal = (delay: number): React.CSSProperties =>
     reduced
@@ -391,9 +393,14 @@ export default function Home() {
 
         <div className="home-today">
           {doneToday ? (
-            <p className="soft" style={{ margin: 0 }}>
-              Today’s reflection is saved.
-            </p>
+            <>
+              <p className="soft" style={{ margin: 0 }}>
+                Today’s reflection is saved.
+              </p>
+              <Link to="/checkin" className="link-btn">
+                Open today’s check-in
+              </Link>
+            </>
           ) : (
             <Link to="/checkin" className="btn secondary">
               Reflect on today’s verse
@@ -403,35 +410,20 @@ export default function Home() {
       </section>
 
       <nav aria-label="Sections" className="home-entries" style={reveal(260)}>
-        {navEntries.map((e) => {
-          const body = (
-            <>
-              <span className="home-entry-well" aria-hidden="true">
-                <e.Icon />
-              </span>
-              <span className="home-entry-text">
-                <span className="home-entry-title">{e.title}</span>
-                <span className="home-entry-desc">{e.desc}</span>
-              </span>
-              {e.soon ? (
-                <span className="home-entry-soon">Soon</span>
-              ) : (
-                <span className="home-entry-chevron" aria-hidden="true">
-                  <ChevronIcon />
-                </span>
-              )}
-            </>
-          );
-          return e.soon ? (
-            <div key={e.to} className="home-entry inert">
-              {body}
-            </div>
-          ) : (
-            <Link key={e.to} to={e.to} className="home-entry">
-              {body}
-            </Link>
-          );
-        })}
+        {navEntries.map((e) => (
+          <Link key={e.to} to={e.to} className="home-entry">
+            <span className="home-entry-well" aria-hidden="true">
+              <e.Icon />
+            </span>
+            <span className="home-entry-text">
+              <span className="home-entry-title">{e.title}</span>
+              <span className="home-entry-desc">{e.desc}</span>
+            </span>
+            <span className="home-entry-chevron" aria-hidden="true">
+              <ChevronIcon />
+            </span>
+          </Link>
+        ))}
       </nav>
 
       <footer style={reveal(320)}>

@@ -3,7 +3,7 @@ import {
   TRANSLATION_LICENSE,
   TRANSLATION_SOURCE_URL,
 } from "@mindfulverse/core/translation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import { functionsBase, startVerification, verifyDomain } from "../lib/apiKeys";
@@ -26,12 +26,16 @@ interface CopyButtonProps {
 
 const CopyButton = ({ label, text }: CopyButtonProps) => {
   const [copied, setCopied] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
-      window.setTimeout(() => setCopied(false), COPIED_MS);
+      window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => setCopied(false), COPIED_MS);
     } catch {
       setCopied(false);
     }
@@ -47,7 +51,7 @@ const CopyButton = ({ label, text }: CopyButtonProps) => {
       >
         {copied ? "Copied" : "Copy"}
       </button>
-      <output className="dev-sr">{copied ? "Copied to clipboard" : ""}</output>
+      <output className="sr-only">{copied ? "Copied to clipboard" : ""}</output>
     </>
   );
 };

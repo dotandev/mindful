@@ -1,3 +1,9 @@
+import {
+  loadFollowUpState,
+  remapFollowUpIds,
+  saveFollowUpState,
+} from "../followUps";
+import { randomId } from "../installId";
 import { getEntries, getTombstones, replaceAll } from "../journal";
 import {
   getLocalProgress,
@@ -12,6 +18,7 @@ import type { LocalProgress } from "../types";
 // trigger — they never surface as exceptions to callers.
 import { insforge } from "./insforge";
 import {
+  adoptEntries,
   mergeJournal,
   mergeProgress,
   entryToRow,
@@ -78,6 +85,33 @@ function setSyncOwner(userId: string): void {
   }
 }
 
+// Set when local entries must be re-keyed for this account before the next
+// push: after a "merge" account switch, or after a push found an id that
+// belongs to another account. Kept in storage so a failed pass retries it.
+const ADOPT_KEY = "mindfulverse.sync.adopt.v1";
+
+function adoptPendingFor(userId: string): boolean {
+  try {
+    return localStorage.getItem(ADOPT_KEY) === userId;
+  } catch {
+    return false;
+  }
+}
+function requestAdopt(userId: string): void {
+  try {
+    localStorage.setItem(ADOPT_KEY, userId);
+  } catch {
+    /* storage full/blocked */
+  }
+}
+function clearAdopt(): void {
+  try {
+    localStorage.removeItem(ADOPT_KEY);
+  } catch {
+    /* storage blocked */
+  }
+}
+
 /** True when this device already holds a *different* account's data. */
 export function ownerMismatch(stored: string | null, current: string): boolean {
   return stored !== null && stored !== undefined && stored !== current;
@@ -109,13 +143,13 @@ export function statusLabel(s: SyncStatus): string {
       return "Backing up…";
     }
     case "offline": {
-      return "Offline — will sync when you're back";
+      return "Offline. Will sync when you're back.";
     }
     case "error": {
-      return "Backup hit a snag — will retry";
+      return "Backup hit a snag. Will retry.";
     }
     case "switched-account": {
-      return "This device holds another account's journal — open Account to resolve.";
+      return "This device holds another account's journal. Open Account to resolve.";
     }
     default: {
       return "";
@@ -132,15 +166,16 @@ export function makeDebounced(fn: () => void, ms: number): () => void {
 }
 
 let inFlight = false;
-// Set when a pass finds nobody signed in. Passive triggers (focus, reconnect)
-// skip while it's set so a signed-out user doesn't hammer /auth on every tab
-// focus; an explicit syncNow() always clears it and runs.
+// Set when a pass finds nobody signed in. Passive triggers (focus, reconnect,
+// the debounced dirty sync) skip while it's set so a signed-out user doesn't
+// hammer /auth on every tab focus or scroll pause; an explicit syncNow()
+// always clears it and runs.
 let knownSignedOut = false;
 
 const PULL_PAGE_SIZE = 1000;
 const PUSH_BATCH_SIZE = 100;
 
-/** A row this device already pushed (PK collision) — not a real failure. */
+/** A primary-key collision. Only harmless when the id is in this account. */
 function isDuplicateKey(err: unknown): boolean {
   const e = err as {
     code?: string | number;
@@ -214,8 +249,19 @@ export async function syncNow(): Promise<void> {
         break;
       }
     }
-    const merged = mergeJournal(getEntries(), getTombstones(), remoteRows);
+    let localEntries = getEntries();
+    if (adoptPendingFor(userId)) {
+      const adopted = adoptEntries(localEntries, remoteRows, randomId);
+      localEntries = adopted.entries;
+      replaceAll(localEntries, getTombstones());
+      if (adopted.idMap.size > 0) {
+        saveFollowUpState(remapFollowUpIds(loadFollowUpState(), adopted.idMap));
+      }
+      clearAdopt();
+    }
+    const merged = mergeJournal(localEntries, getTombstones(), remoteRows);
     replaceAll(merged.entries, merged.tombstones);
+    const remoteIds = new Set(remoteRows.map((r) => r.id));
 
     let pushFailed = false;
     const toInsert = merged.toInsert.map(entryToRow);
@@ -227,14 +273,23 @@ export async function syncNow(): Promise<void> {
       if (!error) {
         continue;
       }
-      // One bad row must not sink the batch: retry row-by-row and treat
-      // duplicate-key failures as "already synced".
+      // One bad row must not sink the batch: retry row-by-row.
       for (const row of batch) {
         const { error: rowErr } = await insforge.database
           .from("journal_entries")
           .insert([row]);
-        if (rowErr && !isDuplicateKey(rowErr)) {
-          pushFailed = true;
+        if (!rowErr) {
+          continue;
+        }
+        const duplicate = isDuplicateKey(rowErr);
+        if (duplicate && remoteIds.has(row.id)) {
+          continue; // already in this account
+        }
+        pushFailed = true;
+        if (duplicate) {
+          // The id exists but not in this account, so it belongs to another
+          // one and can never be inserted here. Re-key on the next pass.
+          requestAdopt(userId);
         }
       }
     }
@@ -293,11 +348,13 @@ export async function syncNow(): Promise<void> {
 
     // The pull above was exhaustive, so "absent remotely" is trustworthy:
     // retire tombstones older than the TTL whose deletion is confirmed.
-    const keptTombstones = pruneTombstones(merged.tombstones, remoteRows, {
+    // Read fresh: a delete made while the push was awaiting must survive.
+    const tombstones = getTombstones();
+    const keptTombstones = pruneTombstones(tombstones, remoteRows, {
       fullPull: true,
       now: Date.now(),
     });
-    if (keptTombstones.length !== merged.tombstones.length) {
+    if (keptTombstones.length !== tombstones.length) {
       replaceAll(getEntries(), keptTombstones);
     }
 
@@ -314,6 +371,8 @@ export async function syncNow(): Promise<void> {
 /**
  * Resolve a "switched-account" standoff, then sync normally.
  * - "merge": adopt whatever is on this device into the account now signed in.
+ *   Entries get new ids on the next pass (ids are global, so the old ones
+ *   stay with the previous account).
  * - "fresh": wipe this device's journal, tombstones and progress first, so the
  *   new account starts from its own server state only.
  */
@@ -330,13 +389,20 @@ export async function resolveOwnerMismatch(
   if (choice === "fresh") {
     replaceAll([], []);
     clearLocalProgress();
+    clearAdopt();
+  } else {
+    requestAdopt(userId);
   }
   setSyncOwner(userId);
   clearDirty();
   await syncNow();
 }
 
-const debouncedSync = makeDebounced(() => void syncNow(), 3000);
+const debouncedSync = makeDebounced(() => {
+  if (!knownSignedOut) {
+    void syncNow();
+  }
+}, 3000);
 
 export function initSync(): void {
   const t = getTriggers();

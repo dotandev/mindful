@@ -25,6 +25,7 @@ import { Linking, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
 import { CirclesIcon } from "../../src/components/Circles/CirclesIcon";
+import { createThrottle } from "../../src/components/Circles/throttle";
 import { useCircleCountLine } from "../../src/components/Circles/useCircleCount";
 import { FollowUpCard } from "../../src/components/Home/FollowUpCard";
 import {
@@ -47,6 +48,8 @@ import { space, useTheme } from "../../src/theme";
 import { ArabicText, Button, Card, DyeRule, Screen, Text } from "../../src/ui";
 import { useReducedMotion } from "../../src/ui/FadeRise";
 import { ReadIcon, TadabburIcon } from "../../src/ui/icons";
+
+const circleRefresh = createThrottle();
 
 interface Local {
   hour: number;
@@ -99,7 +102,11 @@ export default function Home() {
       setLocal(readLocal());
       setJoined(getJoinedCircle());
       // The owner may have moved the circle on to another surah or verse.
-      void refreshJoinedCircle();
+      // Asked at most once every two minutes per circle.
+      const joinedCode = getJoinedCircle()?.code;
+      if (joinedCode && circleRefresh.due(joinedCode, Date.now())) {
+        void refreshJoinedCircle();
+      }
       // The day can turn while the app sits in the background. Each person
       // has their own verse; wait for the account so it doesn't flip.
       if (!accountLoading) {
@@ -182,9 +189,10 @@ export default function Home() {
           {circleCount}
         </Text>
       ) : null}
-      {rhythm ? <WeekRhythm rhythm={rhythm} /> : null}
 
       <FollowUpCard surahNames={surahNames} reduce={reduce} />
+
+      {rhythm ? <WeekRhythm rhythm={rhythm} /> : null}
 
       <Card accessibilityLabel="Today’s verse" style={{ marginTop: space.sm }}>
         {hero ? (
@@ -238,13 +246,6 @@ export default function Home() {
         />
         <HomeEntryDivider />
         <HomeEntry
-          Icon={CirclesIcon}
-          title="Circles"
-          desc="Read a surah together with friends."
-          href="/circles"
-        />
-        <HomeEntryDivider />
-        <HomeEntry
           Icon={ReadIconFlat}
           title="Read"
           desc={readDesc(lastRead)}
@@ -259,6 +260,13 @@ export default function Home() {
                 }
               : "/read"
           }
+        />
+        <HomeEntryDivider />
+        <HomeEntry
+          Icon={CirclesIcon}
+          title="Circles"
+          desc="Read a surah together with friends."
+          href="/circles"
         />
       </View>
 

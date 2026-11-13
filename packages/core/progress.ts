@@ -1,6 +1,7 @@
+import { localDay } from "./installId";
 import { markProgressDirty } from "./syncFlags";
-// Local-only progress: visit streak + tadabbur session completion/resume.
-// v0 has no accounts — everything lives in localStorage, mirroring journal.ts.
+// Progress: visit streak + tadabbur session completion/resume. Lives in
+// localStorage, mirroring journal.ts; sync/engine.ts backs it up when signed in.
 import type { LocalProgress } from "./types";
 
 const VISITS_KEY = "mindfulverse.visits.v1"; // string[] of YYYY-MM-DD
@@ -14,11 +15,16 @@ export interface SessionProgress {
 
 type SessionProgressMap = Record<string, SessionProgress>;
 
-function today(): string {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
+const today = (): string => localDay(new Date());
+
+/** Storage can be blocked or full; a failed write is dropped, never thrown. */
+function safeSet(key: string, value: unknown): boolean {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function readVisits(): string[] {
@@ -37,8 +43,9 @@ export function recordVisit(): void {
   if (!visits.includes(t)) {
     visits.push(t);
     // keep at most a year of history
-    localStorage.setItem(VISITS_KEY, JSON.stringify(visits.slice(-366)));
-    markProgressDirty();
+    if (safeSet(VISITS_KEY, visits.slice(-366))) {
+      markProgressDirty();
+    }
   }
 }
 
@@ -55,10 +62,7 @@ export function currentStreak(): number {
     cursor.setDate(cursor.getDate() - 1);
   }
   for (;;) {
-    const m = String(cursor.getMonth() + 1).padStart(2, "0");
-    const day = String(cursor.getDate()).padStart(2, "0");
-    const key = `${cursor.getFullYear()}-${m}-${day}`;
-    if (!visits.has(key)) {
+    if (!visits.has(localDay(cursor))) {
       break;
     }
     streak++;
@@ -80,8 +84,8 @@ function readSessions(): SessionProgressMap {
   }
 }
 
-function writeSessions(map: SessionProgressMap): void {
-  localStorage.setItem(SESSIONS_KEY, JSON.stringify(map));
+function writeSessions(map: SessionProgressMap): boolean {
+  return safeSet(SESSIONS_KEY, map);
 }
 
 export function getSessionProgress(id: string): SessionProgress | undefined {
@@ -98,8 +102,9 @@ export function recordSessionStep(id: string, step: number): void {
   const prev = map[id];
   if (!prev || step > prev.step) {
     map[id] = { ...prev, step };
-    writeSessions(map);
-    markProgressDirty();
+    if (writeSessions(map)) {
+      markProgressDirty();
+    }
   }
 }
 
@@ -128,8 +133,9 @@ export function recordSurahTadabbur(surah: number, ayah: number): void {
   const prev = map[String(surah)];
   if (!prev || ayah > prev.ayah) {
     map[String(surah)] = { ayah, updatedAt: Date.now() };
-    localStorage.setItem(SURAH_TADABBUR_KEY, JSON.stringify(map));
-    markProgressDirty();
+    if (safeSet(SURAH_TADABBUR_KEY, map)) {
+      markProgressDirty();
+    }
   }
 }
 
@@ -160,11 +166,14 @@ export interface LastRead {
 }
 
 export function recordLastRead(surah: number, ayah: number): void {
-  localStorage.setItem(
-    LAST_READ_KEY,
-    JSON.stringify({ at: Date.now(), ayah, surah } satisfies LastRead)
-  );
-  markProgressDirty();
+  const prev = getLastRead();
+  if (prev?.surah === surah && prev.ayah === ayah) {
+    return; // same place: nothing to write or sync
+  }
+  const next: LastRead = { at: Date.now(), ayah, surah };
+  if (safeSet(LAST_READ_KEY, next)) {
+    markProgressDirty();
+  }
 }
 
 export function getLastRead(): LastRead | null {
@@ -179,8 +188,9 @@ export function getLastRead(): LastRead | null {
 export function recordSessionComplete(id: string): void {
   const map = readSessions();
   map[id] = { ...(map[id] ?? { step: 0 }), completedAt: Date.now() };
-  writeSessions(map);
-  markProgressDirty();
+  if (writeSessions(map)) {
+    markProgressDirty();
+  }
 }
 
 export function getLocalProgress(): LocalProgress {
@@ -194,11 +204,11 @@ export function getLocalProgress(): LocalProgress {
 
 /** Sync engine writes merged state back; never marks dirty. */
 export function replaceLocalProgress(p: LocalProgress): void {
-  localStorage.setItem(VISITS_KEY, JSON.stringify(p.visits));
-  localStorage.setItem(SESSIONS_KEY, JSON.stringify(p.sessionProgress));
-  localStorage.setItem(SURAH_TADABBUR_KEY, JSON.stringify(p.surahTadabbur));
+  safeSet(VISITS_KEY, p.visits);
+  safeSet(SESSIONS_KEY, p.sessionProgress);
+  safeSet(SURAH_TADABBUR_KEY, p.surahTadabbur);
   if (p.lastRead) {
-    localStorage.setItem(LAST_READ_KEY, JSON.stringify(p.lastRead));
+    safeSet(LAST_READ_KEY, p.lastRead);
   }
 }
 
@@ -210,6 +220,10 @@ export function clearLocalProgress(): void {
     SURAH_TADABBUR_KEY,
     LAST_READ_KEY,
   ]) {
-    localStorage.removeItem(key);
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      /* storage blocked */
+    }
   }
 }

@@ -27,6 +27,7 @@ import {
   surahJournalSections,
   titledJournalText,
 } from "../../../src/components/SurahJournal/sections";
+import { surahPageLabel } from "../../../src/components/Tadabbur/intention";
 import { parseSurahParam } from "../../../src/components/Tadabbur/logic";
 import { space, useTheme } from "../../../src/theme";
 import { Button, Card, Screen, Text } from "../../../src/ui";
@@ -175,7 +176,7 @@ function SurahJournalPage({ surah }: { surah: number | null }) {
       <FadeRise reduce={reduce} style={{ gap: space.md }}>
         <View>
           <Text variant="eyebrow">{name}</Text>
-          <Text variant="h1">{`Your journal on ${name}`}</Text>
+          <Text variant="h1">{surahPageLabel(name)}</Text>
         </View>
 
         {page.isEmpty ? (

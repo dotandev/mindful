@@ -2,26 +2,18 @@ import { loadSurahTafsir } from "@mindfulverse/core/data";
 import type { Ayah, SurahTafsir } from "@mindfulverse/core/types";
 import { useCallback, useEffect, useState } from "react";
 
+import { coveringAyah } from "../lib/tafsirCovering";
 import Sheet from "./Sheet";
 
 /** Per-surah list of ayahs that carry a direct Ibn Kathir entry. */
 export type TafsirIndex = Record<string, number[]>;
 
-/** Ibn Kathir comments on passages: a run of ayahs stores its commentary under
- *  the first ayah of the group. Find the entry covering this ayah. */
+/** The entry covering this ayah (see coveringAyah), or null without one. */
 export function coveringFor(index: TafsirIndex | null, a: Ayah): number | null {
   if (!index) {
     return null;
   }
-  let best: number | null = null;
-  for (const n of index[String(a.surah)] ?? []) {
-    if (n <= a.ayah) {
-      best = n;
-    } else {
-      break;
-    }
-  }
-  return best;
+  return coveringAyah(index[String(a.surah)] ?? [], a.ayah);
 }
 
 export function commentaryLabel(index: TafsirIndex | null, a: Ayah): string {

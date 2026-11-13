@@ -6,6 +6,7 @@ import {
   currentIntention,
   hasSurahPage,
   surahPageHref,
+  surahPageLabel,
 } from "./intention";
 
 const entry = (
@@ -47,6 +48,12 @@ describe(hasSurahPage, () => {
         94
       )
     ).toBeTruthy();
+  });
+});
+
+describe(surahPageLabel, () => {
+  it("names the surah's page", () => {
+    expect(surahPageLabel("Al-Kahf")).toBe("Your page on Al-Kahf");
   });
 });
 

@@ -14,22 +14,17 @@ interface KV {
   clearAll(): void;
 }
 
-/** "memory" means MMKV's native module was missing (Expo Go): data won't
- *  survive a restart. Use a development build (see README). */
-// oxlint-disable-next-line import/no-mutable-exports -- live binding read by the UI; flips to "memory" on fallback
-export let storageBackend: "mmkv" | "memory" = "mmkv";
-
 function openStore(): KV {
   try {
     // require() inside try: in Expo Go the nitro native module is missing and
     // the import itself throws. v4 API: createMMKV() + remove(), not v3's
-    // new MMKV() + delete() (F3).
+    // new MMKV() + delete() (F3). The memory fallback doesn't survive a
+    // restart: use a development build (see README).
     const { createMMKV } = require("react-native-mmkv") as {
       createMMKV: typeof CreateMMKV;
     };
     return createMMKV({ id: "mindfulverse" });
   } catch (error) {
-    storageBackend = "memory";
     console.warn("[storage] MMKV unavailable, falling back to memory:", error);
     const m = new Map<string, string>();
     return {

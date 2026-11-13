@@ -10,6 +10,7 @@ import {
   parseFollowUpBody,
   saveFollowUpState,
   skipFollowUp,
+  remapFollowUpIds,
 } from "./followUps";
 import type { FollowUpState } from "./followUps";
 import { addEntry } from "./journal";
@@ -279,6 +280,19 @@ describe("skipFollowUp / answerFollowUp", () => {
     expect(parseFollowUpBody("Maybe\n\nx")).toStrictEqual({
       answer: null,
       note: "Maybe\n\nx",
+    });
+  });
+});
+
+describe(remapFollowUpIds, () => {
+  it("moves skips to the new ids and keeps the rest", () => {
+    const state: FollowUpState = {
+      lastActedDay: "Fri Oct 30 2026",
+      skipped: { kept: 2, old: 1 },
+    };
+    expect(remapFollowUpIds(state, new Map([["old", "new"]]))).toStrictEqual({
+      lastActedDay: "Fri Oct 30 2026",
+      skipped: { kept: 2, new: 1 },
     });
   });
 });

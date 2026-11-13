@@ -1,7 +1,7 @@
 import { loadSessions, loadSurahs } from "@mindfulverse/core/data";
 import {
   getAllSessionProgress,
-  getSurahTadabbur,
+  getLocalProgress,
   latestSurahTadabbur,
 } from "@mindfulverse/core/progress";
 import type { SurahMeta, TadabburSession } from "@mindfulverse/core/types";
@@ -29,6 +29,12 @@ function SurahPicker({ surahs }: { surahs: SurahMeta[] }) {
       (s) => s.name.toLowerCase().includes(q) || String(s.number) === q
     );
   }, [query, surahs]);
+
+  // Read once per visit, not once per row on every keystroke.
+  const progressBySurah = useMemo(
+    () => (surahs.length > 0 ? getLocalProgress().surahTadabbur : {}),
+    [surahs]
+  );
 
   const filtering = query.trim().length > 0;
   const visible =
@@ -61,7 +67,7 @@ function SurahPicker({ surahs }: { surahs: SurahMeta[] }) {
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {visible.map((s) => {
-            const progress = getSurahTadabbur(s.number);
+            const progress = progressBySurah[String(s.number)];
             return (
               <li key={s.number}>
                 <Link
@@ -146,7 +152,7 @@ export default function Sessions() {
   return (
     <div className="stack">
       <header>
-        <h1>Ponder the Qur’an</h1>
+        <h1>Tadabbur</h1>
         <p className="soft">A few verses at a time.</p>
       </header>
 
