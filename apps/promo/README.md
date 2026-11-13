@@ -29,3 +29,27 @@ npm run render:whatsnew:silent -w @mindfulverse/promo                # out/whats
 ```
 
 Audio: the 46 s nasheed plays twice, crossfaded over two seconds, and fades out on the end card. The licence (CC BY 3.0) requires credit: the end card of `WhatsNew` reads "Nasheed: “Alhamdulilah” by Jawad Syed, CC BY 3.0", and any caption or post using the video should carry it too. `WhatsNewSilent` has no music and no credit line. See `public/audio/CREDITS.md`.
+
+## OneSurahOneWeek, StandLoop and StartACircle
+
+Three shorter videos that share one set of screens and one helper file (`src/threeKit.tsx`).
+
+- **OneSurahOneWeek** (39 s, 9:16, with nasheed; `OneSurahOneWeekSilent` has no music). One person stays with Ash-Sharh: picks it on Home, says why, reads verse 94:5 with Ibn Kathir, writes a reflection and an action, and a week later Home asks "Did you do it?". Scene lengths live in `LENGTHS` in `src/OneSurahOneWeek.tsx`.
+- **StandLoop** (31 s, 16:9) and **StandLoopVertical** (31 s, 9:16), silent, for a laptop or phone on an exhibition stand. Six large-type scenes with a small QR code for the site in a corner all the way through, and the large code at the end. The video loops without a jump: the last scene hands back to the first inside the timeline, so the final frame runs straight into frame 0. Set the player to repeat. The QR code is drawn from `QR_PATH` in `src/StandLoop.tsx`; if the site address changes, replace that path.
+- **StartACircle** (30.5 s, 9:16, with nasheed; `StartACircleSilent` has no music). How to start a circle in three steps (name it, pick a surah, share the link), then what a friend sees after tapping the link: the circle's surah on Home and the anonymous weekly count. The chat message is a plain drawn bubble with the app's own share text.
+
+Screens come from `scripts/capture-three.mjs` (output in `public/screens/three`, with measured positions in `layout.json`). Like the WhatsNew script, it uses invented data only ("Friday friends", a test account, one week-old journal entry) and answers every backend request itself, so nothing reaches the real project. Verse text, translation and commentary are whatever the app renders from its bundled data. It needs the web preview running:
+
+```bash
+npm run build                                                        # repo root
+npx vite preview --config apps/web/vite.config.ts --port 4300 --strictPort apps/web
+npm run capture:three -w @mindfulverse/promo
+npm run render:onesurah -w @mindfulverse/promo          # out/one-surah-one-week.mp4
+npm run render:onesurah:silent -w @mindfulverse/promo   # out/one-surah-one-week-silent.mp4
+npm run render:stand -w @mindfulverse/promo             # out/stand-loop-landscape.mp4
+npm run render:stand:vertical -w @mindfulverse/promo    # out/stand-loop-vertical.mp4
+npm run render:circle -w @mindfulverse/promo            # out/start-a-circle.mp4
+npm run render:circle:silent -w @mindfulverse/promo     # out/start-a-circle-silent.mp4
+```
+
+Credits: the translation credit ("English translation by Talal Itani (ClearQuran)") is on screen whenever English verse text shows. The versions with the nasheed carry "Nasheed: “Alhamdulilah” by Jawad Syed, CC BY 3.0" on the closing card, and any caption or post should carry it too. The nasheed plays once through with a fade in and out.
